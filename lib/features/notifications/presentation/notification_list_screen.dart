@@ -64,6 +64,183 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     _load();
   }
 
+  void _showDetail(AppNotification item) {
+    if (!item.isRead) {
+      _markRead(item);
+    }
+
+    final color = _colorForType(item.type);
+    final icon = _iconForType(item.type);
+    final typeName = _typeName(item.type);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(icon, color: color, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            typeName,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          compactDate(item.createdAt),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                item.title.isEmpty ? 'Chi tiết thông báo' : item.title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 0.8),
+                ),
+                child: Text(
+                  item.message,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    color: AppColors.textPrimary,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              if (item.meta.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if ((item.meta['activity_name'] ?? '').toString().isNotEmpty)
+                      _Badge(
+                        label: 'Hoạt động: ${item.meta['activity_name']}',
+                        color: AppColors.primary,
+                      ),
+                    if ((item.meta['appellation_name'] ?? '').toString().isNotEmpty)
+                      _Badge(
+                        label: 'Danh hiệu: ${item.meta['appellation_name']}',
+                        color: const Color(0xFFF59E0B),
+                      ),
+                    if ((item.meta['points'] ?? '').toString().isNotEmpty)
+                      _Badge(
+                        label: 'Điểm: ${item.meta['points']}',
+                        color: const Color(0xFF10B981),
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Đóng',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _typeName(String type) {
+    return switch (type) {
+      'drl_deduction' => 'TRỪ ĐIỂM DRL',
+      'drl_award' => 'CỘNG ĐIỂM DRL',
+      'appellation_approved' => 'DANH HIỆU ĐẠT',
+      'appellation_rejected' => 'DANH HIỆU KHÔNG ĐẠT',
+      'appellation_needs_revision' => 'CẦN BỔ SUNG HỒ SƠ',
+      _ => 'THÔNG BÁO HỆ THỐNG',
+    };
+  }
+
+  Color _colorForType(String type) {
+    return switch (type) {
+      'drl_deduction' || 'appellation_rejected' => AppColors.danger,
+      'drl_award' || 'appellation_approved' => const Color(0xFF059669),
+      'appellation_needs_revision' => const Color(0xFFF59E0B),
+      _ => AppColors.primary,
+    };
+  }
+
+  IconData _iconForType(String type) {
+    return switch (type) {
+      'drl_deduction' => Icons.remove_circle_outline_rounded,
+      'drl_award' => Icons.add_circle_outline_rounded,
+      'appellation_approved' => Icons.emoji_events_rounded,
+      'appellation_rejected' => Icons.cancel_outlined,
+      'appellation_needs_revision' => Icons.edit_note_rounded,
+      _ => Icons.notifications_none_rounded,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = _list;
@@ -133,7 +310,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 ...list.items.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _NotificationCard(item: item, onMarkRead: () => _markRead(item)),
+                    child: _NotificationCard(
+                      item: item,
+                      onTap: () => _showDetail(item),
+                      onMarkRead: () => _markRead(item),
+                    ),
                   ),
                 ),
             ],
@@ -159,11 +340,18 @@ class _HeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 42),
+          const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 40),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -171,12 +359,12 @@ class _HeaderCard extends StatelessWidget {
               children: [
                 const Text(
                   'Thông báo của bạn',
-                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   unreadCount > 0 ? '$unreadCount thông báo chưa đọc' : 'Không có thông báo chưa đọc',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontWeight: FontWeight.w700),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -188,79 +376,15 @@ class _HeaderCard extends StatelessWidget {
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({required this.item, required this.onMarkRead});
+  const _NotificationCard({
+    required this.item,
+    required this.onTap,
+    required this.onMarkRead,
+  });
 
   final AppNotification item;
+  final VoidCallback onTap;
   final VoidCallback onMarkRead;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _colorForType(item.type);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: item.isRead ? AppColors.card : color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: item.isRead ? Colors.transparent : color.withValues(alpha: 0.20)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkBlue.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(_iconForType(item.type), color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title.isEmpty ? 'Thông báo' : item.title,
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 5),
-                Text(item.message, style: const TextStyle(color: AppColors.textSecondary, height: 1.35)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _Badge(label: compactDate(item.createdAt), color: AppColors.textSecondary),
-                    if ((item.meta['activity_name'] ?? '').toString().isNotEmpty)
-                      _Badge(label: item.meta['activity_name'].toString(), color: AppColors.primary),
-                    if ((item.meta['appellation_name'] ?? '').toString().isNotEmpty)
-                      _Badge(label: item.meta['appellation_name'].toString(), color: const Color(0xFFF59E0B)),
-                  ],
-                ),
-                if (!item.isRead)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: onMarkRead,
-                      icon: const Icon(Icons.done_all_rounded),
-                      label: const Text('Đã đọc'),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Color _colorForType(String type) {
     return switch (type) {
@@ -281,6 +405,114 @@ class _NotificationCard extends StatelessWidget {
       _ => Icons.notifications_none_rounded,
     };
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _colorForType(item.type);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: item.isRead ? AppColors.card : color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: item.isRead ? AppColors.border : color.withValues(alpha: 0.25),
+              width: 0.8,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(_iconForType(item.type), color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title.isEmpty ? 'Thông báo' : item.title,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: item.isRead ? FontWeight.w700 : FontWeight.w900,
+                              fontSize: 14.5,
+                            ),
+                          ),
+                        ),
+                        if (!item.isRead)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.danger,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      item.message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          compactDate(item.createdAt),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Text(
+                          'Xem chi tiết >',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Badge extends StatelessWidget {
@@ -295,12 +527,12 @@ class _Badge extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w900)),
+      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
     );
   }
 }

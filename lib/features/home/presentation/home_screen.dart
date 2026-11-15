@@ -1005,123 +1005,11 @@ class _Dashboard3DGrid extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        // 2 Thẻ phụ 3D: Thông báo & Hồ sơ
-        Row(
-          children: [
-            Expanded(
-              child: _Small3DCard(
-                icon: Icons.notifications_active_rounded,
-                iconColor: AppColors.danger,
-                title: 'Thông báo',
-                value: data.unreadNotifications == 0
-                    ? 'Đã đọc hết'
-                    : '${data.unreadNotifications} tin mới',
-                isHighlighted: data.unreadNotifications > 0,
-                onTap: onNotificationsTap,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _Small3DCard(
-                icon: profileStatus == 'Đầy đủ'
-                    ? Icons.verified_user_rounded
-                    : Icons.warning_amber_rounded,
-                iconColor: profileStatus == 'Đầy đủ'
-                    ? AppColors.success
-                    : AppColors.warning,
-                title: 'Hồ sơ cá nhân',
-                value: profileStatus,
-                isHighlighted: false,
-                onTap: onProfileTap,
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
 }
 
-class _Small3DCard extends StatelessWidget {
-  const _Small3DCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.value,
-    required this.isHighlighted,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String value;
-  final bool isHighlighted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 0.8),
-          boxShadow: [
-            BoxShadow(
-              color: iconColor.withValues(alpha: 0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: isHighlighted ? iconColor : AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // -------------------------------------------------------------
 // 4. LƯỚI CHỨC NĂNG 3D
@@ -1486,41 +1374,11 @@ class _DashboardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const COneCard(
-          child: SizedBox(
-            height: 90,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: const [
-            Expanded(
-              child: COneCard(
-                child: SizedBox(
-                  height: 45,
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.0),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: COneCard(
-                child: SizedBox(
-                  height: 45,
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.0),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+    return const COneCard(
+      child: SizedBox(
+        height: 90,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/config/app_colors.dart';
 import 'core/config/cone_theme.dart';
 import 'features/admin/data/admin_models.dart';
 import 'features/admin/data/admin_service.dart';
@@ -21,6 +22,29 @@ class _QldrlAppState extends State<QldrlApp> {
   final AdminService _adminService = AdminService();
   AuthSession? _session;
   AdminSession? _adminSession;
+  bool _isCheckingSession = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    try {
+      final savedSession = await _authService.getSavedSession();
+      if (savedSession != null && mounted) {
+        setState(() {
+          _session = savedSession;
+          _isCheckingSession = false;
+        });
+        return;
+      }
+    } catch (_) {}
+    if (mounted) {
+      setState(() => _isCheckingSession = false);
+    }
+  }
 
   void _handleLogin(AuthSession session) {
     setState(() {
@@ -56,24 +80,34 @@ class _QldrlAppState extends State<QldrlApp> {
       debugShowCheckedModeBanner: false,
       title: 'COne',
       theme: COneTheme.light(),
-      home: _session != null
-          ? HomeScreen(session: _session!, onLogout: _handleLogout)
-          : _adminSession != null
-          ? _adminSession!.admin.isGvcn
-                ? GvcnHomeScreen(
-                    session: _adminSession!,
-                    onLogout: _handleAdminLogout,
-                  )
-                : AdminHomeScreen(
-                    session: _adminSession!,
-                    onLogout: _handleAdminLogout,
-                  )
-          : LoginScreen(
-              authService: _authService,
-              adminService: _adminService,
-              onLoggedIn: _handleLogin,
-              onAdminLoggedIn: _handleAdminLogin,
-            ),
+      home: _isCheckingSession
+          ? const Scaffold(
+              backgroundColor: AppColors.background,
+              body: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            )
+          : _session != null
+              ? HomeScreen(session: _session!, onLogout: _handleLogout)
+              : _adminSession != null
+                  ? _adminSession!.admin.isGvcn
+                      ? GvcnHomeScreen(
+                          session: _adminSession!,
+                          onLogout: _handleAdminLogout,
+                        )
+                      : AdminHomeScreen(
+                          session: _adminSession!,
+                          onLogout: _handleAdminLogout,
+                        )
+                  : LoginScreen(
+                      authService: _authService,
+                      adminService: _adminService,
+                      onLoggedIn: _handleLogin,
+                      onAdminLoggedIn: _handleAdminLogin,
+                    ),
     );
   }
 }

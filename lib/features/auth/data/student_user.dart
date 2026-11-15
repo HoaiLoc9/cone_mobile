@@ -28,4 +28,16 @@ class StudentUser {
       department: json['department']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'class': studentClass,
+      'department': department,
+    };
+  }
 }
