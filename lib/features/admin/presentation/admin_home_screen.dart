@@ -81,7 +81,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       AdminServiceModulesScreen(
         title: 'Nghiệp vụ CTSV/QTC1',
         subtitle:
-            'Các module đã nối API mobile Laravel thật. Một số nghiệp vụ web lớn vẫn cần bổ sung API mobile CRUD/import/export riêng.',
+            'Hệ thống quản lý hoạt động và điểm rèn luyện đồng bộ dữ liệu thời gian thực.',
         modules: [
           AdminServiceModule(
             name: 'Quản lý khiếu nại',

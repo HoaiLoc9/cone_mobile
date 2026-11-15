@@ -65,7 +65,7 @@ class _AdminForgotPasswordScreenState extends State<AdminForgotPasswordScreen> {
       setState(() {
         _step = 1;
         _message =
-            'OTP đã được gửi. Kiểm tra email hoặc log Laravel khi test local.';
+            'Mã OTP đã được gửi. Vui lòng kiểm tra email của bạn.';
       });
     });
   }

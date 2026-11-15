@@ -58,7 +58,7 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
       AdminServiceModulesScreen(
         title: 'Nghiệp vụ GVCN',
         subtitle:
-            'Dữ liệu được lọc theo lớp chủ nhiệm từ API mobile Laravel.',
+            'Dữ liệu điểm rèn luyện được đồng bộ theo lớp chủ nhiệm.',
         modules: [
           AdminServiceModule(
             name: 'Duyệt giấy xin phép',

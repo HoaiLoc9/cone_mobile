@@ -187,7 +187,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Dữ liệu lấy trực tiếp từ hệ thống Laravel.',
+              'Cập nhật liên tục các hoạt động rèn luyện mới nhất.',
               style: TextStyle(color: Colors.white.withValues(alpha: 0.82)),
             ),
             const SizedBox(height: 16),

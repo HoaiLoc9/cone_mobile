@@ -39,7 +39,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
   late AuthSession _session;
   late final DrlService _drlService;
   late final NotificationService _notificationService;
@@ -233,16 +232,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleNavigation(int index) {
-    if (index == 0) {
-      setState(() => _selectedIndex = 0);
-      return;
-    }
-    if (index == 1) _openDrl();
-    if (index == 2) _openEvidence();
-    if (index == 3) _openProfile();
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = _session.user;
@@ -267,37 +256,11 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.refresh_rounded),
         ),
         IconButton(
-          tooltip: 'Đăng xuất',
-          onPressed: widget.onLogout,
-          icon: const Icon(Icons.logout_rounded),
+          tooltip: 'Tài khoản',
+          onPressed: _openProfile,
+          icon: const Icon(Icons.account_circle_outlined, size: 26),
         ),
       ],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _handleNavigation,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Trang chủ',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.rule_folder_outlined),
-            selectedIcon: Icon(Icons.rule_folder_rounded),
-            label: 'Hoạt động',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.upload_file_outlined),
-            selectedIcon: Icon(Icons.upload_file_rounded),
-            label: 'Minh chứng',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Tài khoản',
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           // Quả cầu ánh sáng 3D nền (Ambient Glow Orbs)
@@ -340,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _Student3DCard(session: _session, onQrTap: _openQrScan),
                       const SizedBox(height: 20),
                       _QuickAction3DBar(
-                        onQr: _openQrScan,
+                        onDrl: _openDrl,
                         onActivities: _openActivities,
                         onEvidence: _openEvidence,
                       ),
@@ -740,12 +703,12 @@ class _Student3DCard extends StatelessWidget {
 // -------------------------------------------------------------
 class _QuickAction3DBar extends StatelessWidget {
   const _QuickAction3DBar({
-    required this.onQr,
+    required this.onDrl,
     required this.onActivities,
     required this.onEvidence,
   });
 
-  final VoidCallback onQr;
+  final VoidCallback onDrl;
   final VoidCallback onActivities;
   final VoidCallback onEvidence;
 
@@ -755,13 +718,13 @@ class _QuickAction3DBar extends StatelessWidget {
       children: [
         Expanded(
           child: _Tactile3DButton(
-            icon: Icons.qr_code_scanner_rounded,
-            label: 'Quét QR',
+            icon: Icons.workspace_premium_rounded,
+            label: 'Điểm ĐRL',
             gradient: const LinearGradient(
               colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
             ),
             glowColor: const Color(0xFF3B82F6),
-            onTap: onQr,
+            onTap: onDrl,
           ),
         ),
         const SizedBox(width: 12),
@@ -1296,11 +1259,11 @@ class _QuickAction3DGrid extends StatelessWidget {
           onTap: onDrl,
         ),
         _FeatureCard3D(
-          title: 'Quét QR 3D',
-          icon: Icons.qr_code_scanner_rounded,
-          color: const Color(0xFF3B82F6),
-          badge: 'HOT',
-          onTap: onQr,
+          title: 'Thống kê',
+          icon: Icons.insights_rounded,
+          color: const Color(0xFF6366F1),
+          badge: 'MỚI',
+          onTap: onStats,
         ),
         _FeatureCard3D(
           title: 'Minh chứng',
