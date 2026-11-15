@@ -33,8 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   String? errorMessage;
 
-  final identifierController = TextEditingController(text: 'SV001');
-  final passwordController = TextEditingController(text: 'Sv@123456');
+  final identifierController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -49,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isStudent = student;
       errorMessage = null;
-      identifierController.text = student ? 'SV001' : '';
-      passwordController.text = student ? 'Sv@123456' : '';
+      identifierController.clear();
+      passwordController.clear();
     });
   }
 
@@ -191,18 +191,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 }
 
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      _buildBrandingHero(isWide: false),
-                      const SizedBox(height: 24),
-                      _buildFormCard3D(isWide: false),
-                      const SizedBox(height: 24),
-                      _buildFooter(),
-                    ],
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 6),
+                          _buildBrandingHero(isWide: false),
+                          const SizedBox(height: 20),
+                          _buildFormCard3D(isWide: false),
+                          const SizedBox(height: 20),
+                          _buildFooter(),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
@@ -520,33 +527,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          if (isStudent) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      size: 15, color: AppColors.primary),
-                  SizedBox(width: 6),
-                  Text(
-                    'Tài khoản mẫu: SV001 / Sv@123456',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

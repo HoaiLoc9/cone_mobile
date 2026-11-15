@@ -328,7 +328,9 @@ class _HomeScreenState extends State<HomeScreen> {
           RefreshIndicator(
             onRefresh: () async => _reloadDashboard(),
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth >= 720;
