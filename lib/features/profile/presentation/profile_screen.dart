@@ -112,7 +112,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final data = await widget.service.fetchProfile();
       _applyUser(data.user);
-      await _loadPendingRequest(data.user.id);
+
+      // Fetch pending request from backend API
+      final pendingApi = await widget.service.fetchPendingRequest();
+      if (pendingApi != null && pendingApi['status'] == 'pending') {
+        final reqData = (pendingApi['requested_data'] as Map<String, dynamic>?) ?? {};
+        final mapped = {
+          'requested_at': pendingApi['submitted_at'] ?? 'Vừa xong',
+          'status': pendingApi['status_label'] ?? 'Chờ phê duyệt',
+          'email': reqData['email'] ?? '',
+          'phone': reqData['phone'] ?? '',
+          'address': reqData['address'] ?? '',
+        };
+        await _savePendingRequest(data.user.id, mapped);
+      } else if (pendingApi != null && pendingApi['status'] != 'pending') {
+        await _savePendingRequest(data.user.id, null);
+      } else {
+        await _loadPendingRequest(data.user.id);
+      }
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
@@ -262,6 +279,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _cancelProfileRequest() async {
     final user = _user;
     if (user == null) return;
+    try {
+      await widget.service.cancelProfileRequest();
+    } catch (_) {}
     await _savePendingRequest(user.id, null);
     setState(() {
       _successMessage = 'Đã hủy yêu cầu thay đổi thông tin.';
@@ -392,7 +412,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             tooltip: 'Đăng xuất',
-            onPressed: widget.onLogout,
+            onPressed: _confirmAndLogout,
             icon: const Icon(Icons.logout_rounded, color: AppColors.danger),
           ),
         ],
@@ -740,10 +760,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
+
+                          const SizedBox(height: 24),
+
+                          // Nút Đăng xuất to bản ở cuối trang
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.danger,
+                                side: const BorderSide(color: Color(0xFFFECACA), width: 1.5),
+                                backgroundColor: const Color(0xFFFEF2F2),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              onPressed: _confirmAndLogout,
+                              icon: const Icon(Icons.logout_rounded, size: 20),
+                              label: const Text(
+                                'ĐĂNG XUẤT TÀI KHOẢN',
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 0.5),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
       ),
     );
+  }
+
+  Future<void> _confirmAndLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.danger),
+            SizedBox(width: 8),
+            Text('Đăng xuất tài khoản', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+          ],
+        ),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+      await widget.onLogout();
+    }
   }
 }
 

@@ -39,30 +39,47 @@ class ProfileService {
     return ProfileData.fromJson(data);
   }
 
+  Future<Map<String, dynamic>?> fetchPendingRequest() async {
+    try {
+      final res = await _apiClient.get('/mobile/profile/request-update');
+      final data = res['data'];
+      if (data != null && data is Map<String, dynamic>) {
+        final request = data['request'];
+        if (request != null && request is Map<String, dynamic>) {
+          return request;
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> submitProfileChangeRequest({
     required String email,
     required String phone,
     required String address,
     ProfileUpload? avatar,
   }) async {
+    await _apiClient.post(
+      '/mobile/profile/request-update',
+      body: {
+        'email': email,
+        'phone': phone,
+        'address': address,
+        if (avatar != null)
+          'avatar_base64': {
+            'name': avatar.name,
+            'content': base64Encode(avatar.bytes),
+          },
+      },
+    );
+  }
+
+  Future<void> cancelProfileRequest() async {
     try {
-      await _apiClient.post(
-        '/mobile/profile/request-update',
-        body: {
-          'email': email,
-          'phone': phone,
-          'address': address,
-          if (avatar != null)
-            'avatar_base64': {
-              'name': avatar.name,
-              'content': base64Encode(avatar.bytes),
-            },
-        },
-      );
-    } catch (_) {
-      // Backend fallback: if request-update endpoint is not yet mounted,
-      // the request is persisted locally for student review & approval workflow.
-    }
+      await _apiClient.delete('/mobile/profile/request-update');
+    } catch (_) {}
   }
 
   Future<void> sendPasswordOtp(String email) async {

@@ -63,17 +63,20 @@ class _QldrlAppState extends State<QldrlApp> {
   }
 
   Future<void> _handleLogout() async {
-    await _authService.logout();
+    try {
+      await _authService.clearSavedSession();
+    } catch (_) {}
     if (mounted) {
       setState(() => _session = null);
     }
+    _authService.logout().catchError((_) {});
   }
 
   Future<void> _handleAdminLogout() async {
-    await _adminService.logout();
     if (mounted) {
       setState(() => _adminSession = null);
     }
+    _adminService.logout().catchError((_) {});
   }
 
   @override
