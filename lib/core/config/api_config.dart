@@ -1,4 +1,4 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import '../storage/app_storage.dart';
 
 class ApiConfig {
   static const String defaultWebUrl = 'https://cofer.io.vn';
@@ -35,8 +35,7 @@ class ApiConfig {
 
   static Future<void> loadSavedConfig() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString('custom_api_host');
+      final saved = await AppStorage.instance.getString('custom_api_host');
       if (saved != null && saved.trim().isNotEmpty) {
         setBaseUrl(saved.trim());
       }
@@ -44,16 +43,18 @@ class ApiConfig {
   }
 
   static Future<void> saveConfig(String host) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('custom_api_host', host.trim());
-    setBaseUrl(host.trim());
+    try {
+      await AppStorage.instance.setString('custom_api_host', host.trim());
+      setBaseUrl(host.trim());
+    } catch (_) {}
   }
 
   static Future<void> resetToDefault() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('custom_api_host');
-    _webUrl = defaultWebUrl;
-    _baseUrl = defaultBaseUrl;
+    try {
+      await AppStorage.instance.remove('custom_api_host');
+      _webUrl = defaultWebUrl;
+      _baseUrl = defaultBaseUrl;
+    } catch (_) {}
   }
 
   static String storageUrl(String path) {

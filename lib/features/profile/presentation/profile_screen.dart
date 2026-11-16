@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/storage/app_storage.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../auth/data/auth_service.dart';
 import '../data/profile_models.dart';
@@ -78,8 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadPendingRequest(String userId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_requestKey(userId));
+      final raw = await AppStorage.instance.getString(_requestKey(userId));
       if (raw != null && raw.isNotEmpty) {
         setState(() {
           _pendingRequest = jsonDecode(raw) as Map<String, dynamic>;
@@ -92,12 +91,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String userId,
     Map<String, dynamic>? data,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (data == null) {
-      await prefs.remove(_requestKey(userId));
-    } else {
-      await prefs.setString(_requestKey(userId), jsonEncode(data));
-    }
+    try {
+      if (data == null) {
+        await AppStorage.instance.remove(_requestKey(userId));
+      } else {
+        await AppStorage.instance.setString(_requestKey(userId), jsonEncode(data));
+      }
+    } catch (_) {}
     setState(() {
       _pendingRequest = data;
     });

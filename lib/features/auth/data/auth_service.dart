@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/storage/app_storage.dart';
 import 'student_user.dart';
 
 class AuthSession {
@@ -21,19 +21,19 @@ class AuthService {
   static const _userKey = 'cone_auth_user';
 
   Future<void> saveSession(AuthSession session) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, session.token);
-    await prefs.setString(_userKey, jsonEncode(session.user.toJson()));
+    try {
+      await AppStorage.instance.setString(_tokenKey, session.token);
+      await AppStorage.instance.setString(_userKey, jsonEncode(session.user.toJson()));
+    } catch (_) {}
   }
 
   Future<AuthSession?> getSavedSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
-    final userRaw = prefs.getString(_userKey);
-    if (token == null || token.isEmpty || userRaw == null || userRaw.isEmpty) {
-      return null;
-    }
     try {
+      final token = await AppStorage.instance.getString(_tokenKey);
+      final userRaw = await AppStorage.instance.getString(_userKey);
+      if (token == null || token.isEmpty || userRaw == null || userRaw.isEmpty) {
+        return null;
+      }
       final userJson = jsonDecode(userRaw) as Map<String, dynamic>;
       final user = StudentUser.fromJson(userJson);
       _apiClient.setToken(token);
@@ -44,9 +44,10 @@ class AuthService {
   }
 
   Future<void> clearSavedSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    try {
+      await AppStorage.instance.remove(_tokenKey);
+      await AppStorage.instance.remove(_userKey);
+    } catch (_) {}
   }
 
   Future<AuthSession> login({
