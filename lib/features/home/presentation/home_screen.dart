@@ -302,12 +302,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _Student3DCard(session: _session, onQrTap: _openQrScan),
                       const SizedBox(height: 20),
-                      _QuickAction3DBar(
-                        onDrl: _openDrl,
-                        onActivities: _openActivities,
-                        onEvidence: _openEvidence,
-                      ),
-                      const SizedBox(height: 22),
                       FutureBuilder<_StudentDashboardData>(
                         future: _dashboardFuture,
                         builder: (context, snapshot) {
@@ -333,10 +327,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       const SizedBox(height: 24),
-                      SectionHeader(
+                      const SectionHeader(
                         title: 'Tiện ích hệ thống',
-                        actionLabel: 'Hồ sơ',
-                        onAction: _openProfile,
                       ),
                       const SizedBox(height: 14),
                       _QuickAction3DGrid(
@@ -362,6 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _AcademicReminderCard(
                         onDrlTap: _openDrl,
                         onActivityTap: _openActivities,
+                        onSuggestionTap: _openActivitySuggestions,
                       ),
                     ],
                   );
@@ -698,140 +691,6 @@ class _Student3DCard extends StatelessWidget {
   }
 }
 
-// -------------------------------------------------------------
-// 2. THANH LỐI TẮT 3D TACTILE BUBBLE TILES
-// -------------------------------------------------------------
-class _QuickAction3DBar extends StatelessWidget {
-  const _QuickAction3DBar({
-    required this.onDrl,
-    required this.onActivities,
-    required this.onEvidence,
-  });
-
-  final VoidCallback onDrl;
-  final VoidCallback onActivities;
-  final VoidCallback onEvidence;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _Tactile3DButton(
-            icon: Icons.workspace_premium_rounded,
-            label: 'Điểm ĐRL',
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-            ),
-            glowColor: const Color(0xFF3B82F6),
-            onTap: onDrl,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _Tactile3DButton(
-            icon: Icons.event_available_rounded,
-            label: 'Hoạt động',
-            gradient: const LinearGradient(
-              colors: [Color(0xFF06B6D4), Color(0xFF0891B2)],
-            ),
-            glowColor: const Color(0xFF06B6D4),
-            onTap: onActivities,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _Tactile3DButton(
-            icon: Icons.upload_file_rounded,
-            label: 'Minh chứng',
-            gradient: const LinearGradient(
-              colors: [Color(0xFF10B981), Color(0xFF059669)],
-            ),
-            glowColor: const Color(0xFF10B981),
-            onTap: onEvidence,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Tactile3DButton extends StatelessWidget {
-  const _Tactile3DButton({
-    required this.icon,
-    required this.label,
-    required this.gradient,
-    required this.glowColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Gradient gradient;
-  final Color glowColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border, width: 0.8),
-            boxShadow: [
-              BoxShadow(
-                color: glowColor.withValues(alpha: 0.18),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-              const BoxShadow(
-                color: Color(0x0A000000),
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: glowColor.withValues(alpha: 0.40),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 24),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // -------------------------------------------------------------
 // 3. KHỐI ĐIỂM RÈN LUYỆN 3D BENTO GAUGE
@@ -1165,11 +1024,8 @@ class _QuickAction3DGrid extends StatelessWidget {
           color: const Color(0xFFE11D48),
           onTap: onRegisteredActivities,
         ),
-        _FeatureCard3D(
-          title: 'Hồ sơ',
-          icon: Icons.assignment_ind_rounded,
-          color: AppColors.success,
-          onTap: onProfileStatus,
+        _AnimatedSuggestionCard3D(
+          onTap: onActivitySuggestions,
         ),
         _FeatureCard3D(
           title: 'Danh hiệu',
@@ -1416,84 +1272,331 @@ class _MoreServiceTile extends StatelessWidget {
   }
 }
 
-class _AcademicReminderCard extends StatelessWidget {
+class _AnimatedSuggestionCard3D extends StatefulWidget {
+  const _AnimatedSuggestionCard3D({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_AnimatedSuggestionCard3D> createState() => _AnimatedSuggestionCard3DState();
+}
+
+class _AnimatedSuggestionCard3DState extends State<_AnimatedSuggestionCard3D>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _translateAnimation;
+  late final Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    // Hiệu ứng nhấp nháy / nảy nhẹ theo phương thẳng đứng
+    _translateAnimation = Tween<double>(begin: 0.0, end: -6.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    // Hiệu ứng ánh sáng tỏa ra nhấp nháy
+    _glowAnimation = Tween<double>(begin: 0.25, end: 0.65).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _translateAnimation.value),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Color.lerp(
+                      const Color(0xFFF59E0B),
+                      const Color(0xFFEA580C),
+                      _glowAnimation.value,
+                    )!,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withValues(alpha: _glowAnimation.value),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                      spreadRadius: 1,
+                    ),
+                    const BoxShadow(
+                      color: Color(0x08000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFEA580C).withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEA580C), Color(0xFFDC2626)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFDC2626).withValues(alpha: 0.4),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.bolt_rounded, color: Colors.white, size: 11),
+                              SizedBox(width: 2),
+                              Text(
+                                'AI GỢI Ý',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Gợi ý rèn luyện',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Color(0xFF78350F),
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Color(0xFFD97706),
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AcademicReminderCard extends StatefulWidget {
   const _AcademicReminderCard({
     required this.onDrlTap,
     required this.onActivityTap,
+    required this.onSuggestionTap,
   });
 
   final VoidCallback onDrlTap;
   final VoidCallback onActivityTap;
+  final VoidCallback onSuggestionTap;
+
+  @override
+  State<_AcademicReminderCard> createState() => _AcademicReminderCardState();
+}
+
+class _AcademicReminderCardState extends State<_AcademicReminderCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _anim;
+  late final Animation<double> _glow;
+  late final Animation<double> _bounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+
+    _glow = Tween<double>(begin: 0.15, end: 0.45).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
+    );
+
+    _bounce = Tween<double>(begin: 0.0, end: -3.0).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border, width: 0.8),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
-              ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.lightbulb_rounded,
-              color: Color(0xFFD97706),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Gợi ý rèn luyện',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  'Kiểm tra hoạt động đã đăng ký và nộp minh chứng kịp thời.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        return Transform.translate(
+          offset: Offset(0, _bounce.value),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onSuggestionTap,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Color.lerp(
+                      const Color(0xFFFCD34D),
+                      const Color(0xFFF59E0B),
+                      _glow.value,
+                    )!,
+                    width: 1.4,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withValues(alpha: _glow.value),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFEA580C).withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Gợi ý rèn luyện thông minh',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 14.5,
+                                  color: Color(0xFF78350F),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Khám phá hoạt động phù hợp giúp tăng điểm ĐRL!',
+                            style: TextStyle(
+                              color: Color(0xFF92400E),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Color(0xFFD97706),
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            onSelected: (value) {
-              if (value == 'drl') onDrlTap();
-              if (value == 'activity') onActivityTap();
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'activity', child: Text('Xem hoạt động')),
-              PopupMenuItem(value: 'drl', child: Text('Xem tiêu chí')),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
