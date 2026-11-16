@@ -860,16 +860,43 @@ class _ProfileHeader extends StatelessWidget {
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 36,
-                backgroundColor: Colors.white.withValues(alpha: 0.18),
-                backgroundImage: avatarUpload != null
-                    ? MemoryImage(avatarUpload!.bytes)
-                    : (user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null),
-                onBackgroundImageError: (e, s) {},
-                child: (avatarUpload == null && user.avatarUrl.isEmpty)
-                    ? const Icon(Icons.person_rounded, color: Colors.white, size: 38)
-                    : null,
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.18),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.40),
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: avatarUpload != null
+                      ? Image.memory(
+                          avatarUpload!.bytes,
+                          fit: BoxFit.cover,
+                          width: 72,
+                          height: 72,
+                        )
+                      : (user.avatarUrl.isNotEmpty
+                          ? Image.network(
+                              user.avatarUrl,
+                              fit: BoxFit.cover,
+                              width: 72,
+                              height: 72,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.person_rounded,
+                                color: Colors.white,
+                                size: 38,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person_rounded,
+                              color: Colors.white,
+                              size: 38,
+                            )),
+                ),
               ),
               Positioned(
                 right: -4,
