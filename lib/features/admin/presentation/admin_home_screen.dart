@@ -33,18 +33,27 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   late Future<AdminDashboard> _future = _service.dashboard();
   int _selectedIndex = 0;
 
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
+
   void _reload() => setState(() => _future = _service.dashboard());
 
   void _push(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    _navigatorKeys[_selectedIndex].currentState?.push(
+      MaterialPageRoute(builder: (_) => screen),
+    );
   }
 
   void _openAppellations() {
-    _push(AdminAppellationRegistrationsScreen(service: _service));
+    setState(() => _selectedIndex = 1);
   }
 
   void _openDrl() {
-    _push(AdminDrlAssessmentsScreen(service: _service));
+    setState(() => _selectedIndex = 2);
   }
 
   void _openStudents() {
@@ -53,10 +62,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   void _openActivities() {
     _push(AdminActivitiesScreen(service: _service));
-  }
-
-  void _openAccount() {
-    _push(AdminAccountScreen(session: widget.session, onLogout: widget.onLogout));
   }
 
   void _openBusinessList({
@@ -206,8 +211,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildTabNavigator(int index, Widget child) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (settings) => MaterialPageRoute(builder: (_) => child),
+    );
+  }
+
+  Widget _buildOverviewTab() {
     final admin = widget.session.admin;
     return Scaffold(
       appBar: AppBar(
@@ -330,22 +341,56 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          final currentNav = _navigatorKeys[_selectedIndex].currentState;
+          if (currentNav != null && currentNav.canPop()) {
+            currentNav.pop();
+            return;
+          }
+          if (_selectedIndex != 0) {
+            setState(() => _selectedIndex = 0);
+            return;
+          }
+        },
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            _buildTabNavigator(0, _buildOverviewTab()),
+            _buildTabNavigator(
+              1,
+              AdminAppellationRegistrationsScreen(service: _service),
+            ),
+            _buildTabNavigator(
+              2,
+              AdminDrlAssessmentsScreen(service: _service),
+            ),
+            _buildTabNavigator(
+              3,
+              AdminAccountScreen(
+                session: widget.session,
+                onLogout: widget.onLogout,
+              ),
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
-          if (index == 1) {
-            _openAppellations();
-            return;
+          if (_selectedIndex == index) {
+            _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+          } else {
+            setState(() => _selectedIndex = index);
           }
-          if (index == 2) {
-            _openDrl();
-            return;
-          }
-          if (index == 3) {
-            _openAccount();
-            return;
-          }
-          setState(() => _selectedIndex = index);
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Tổng quan'),

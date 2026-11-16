@@ -38,6 +38,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late AuthSession _session;
+  late final ValueNotifier<AuthSession> _sessionNotifier;
   late final DrlService _drlService;
   late final NotificationService _notificationService;
   late final StudentServicesService _studentServicesService;
@@ -45,10 +46,19 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
   int _unreadCount = 0;
 
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
+
   @override
   void initState() {
     super.initState();
     _session = widget.session;
+    _sessionNotifier = ValueNotifier<AuthSession>(_session);
     _drlService = DrlService(token: _session.token);
     _notificationService = NotificationService(token: _session.token);
     _studentServicesService = StudentServicesService(token: _session.token);
@@ -56,6 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _notificationService.fetchUnreadCount().then((count) {
       if (mounted) setState(() => _unreadCount = count);
     }).catchError((_) {});
+  }
+
+  @override
+  void dispose() {
+    _sessionNotifier.dispose();
+    super.dispose();
   }
 
   Future<_StudentDashboardData> _loadDashboard() async {
@@ -75,166 +91,104 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _dashboardFuture = _loadDashboard());
   }
 
-  void _openActivities() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ActivityListScreen(service: ActivityService(token: _session.token)),
-      ),
+  void _pushScreen(Widget screen) {
+    _navigatorKeys[_currentNavIndex].currentState?.push(
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
 
+  void _openActivities() {
+    setState(() => _currentNavIndex = 1);
+  }
+
   void _openRegisteredActivities() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RegisteredActivitiesScreen(
-          service: ActivityService(token: _session.token),
-        ),
+    _pushScreen(
+      RegisteredActivitiesScreen(
+        service: ActivityService(token: _session.token),
       ),
     );
   }
 
   void _openStudentStats() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => StudentStatsScreen(
-          drlService: _drlService,
-          activityService: ActivityService(token: _session.token),
-          notificationService: _notificationService,
-        ),
-      ),
-    );
+    setState(() => _currentNavIndex = 2);
   }
 
   void _openQrScan() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            QrScanScreen(service: QrScanService(token: _session.token)),
-      ),
+    _pushScreen(
+      QrScanScreen(service: QrScanService(token: _session.token)),
     );
   }
 
   void _openDrl() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => DrlSummaryScreen(service: _drlService)),
-    );
+    _pushScreen(DrlSummaryScreen(service: _drlService));
   }
 
   void _openEvidence() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MissingAttendanceScreen(
-          service: ActivitySupportService(token: _session.token),
-        ),
+    _pushScreen(
+      MissingAttendanceScreen(
+        service: ActivitySupportService(token: _session.token),
       ),
     );
   }
 
   void _openAppellations() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AppellationListScreen(
-          service: AppellationService(token: _session.token),
-        ),
+    _pushScreen(
+      AppellationListScreen(
+        service: AppellationService(token: _session.token),
       ),
     );
   }
 
   void _openNotifications() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => NotificationListScreen(service: _notificationService),
-      ),
-    );
+    setState(() => _currentNavIndex = 3);
   }
 
   void _openChatbot() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ChatbotScreen(service: ChatbotService(token: _session.token)),
-      ),
+    _pushScreen(
+      ChatbotScreen(service: ChatbotService(token: _session.token)),
     );
   }
 
   void _openComplaints() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ComplaintsScreen(service: _studentServicesService),
-      ),
+    _pushScreen(
+      ComplaintsScreen(service: _studentServicesService),
     );
   }
 
   void _openPermissionRequests() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            PermissionRequestsScreen(service: _studentServicesService),
-      ),
+    _pushScreen(
+      PermissionRequestsScreen(service: _studentServicesService),
     );
   }
 
   void _openDocuments() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DocumentsScreen(service: _studentServicesService),
-      ),
+    _pushScreen(
+      DocumentsScreen(service: _studentServicesService),
     );
   }
 
   void _openProfileStatus() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProfileStatusScreen(service: _studentServicesService),
-      ),
-    );
+    _pushScreen(ProfileStatusScreen(service: _studentServicesService));
   }
 
   void _openCv() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CvScreen(service: _studentServicesService),
-      ),
-    );
+    _pushScreen(CvScreen(service: _studentServicesService));
   }
 
   void _openActivitySuggestions() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ActivitySuggestionsScreen(service: _studentServicesService),
-      ),
+    _pushScreen(
+      ActivitySuggestionsScreen(service: _studentServicesService),
     );
   }
 
   void _openSignatureRequests() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            SignatureRequestsScreen(service: _studentServicesService),
-      ),
+    _pushScreen(
+      SignatureRequestsScreen(service: _studentServicesService),
     );
   }
 
   void _openProfile() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          service: ProfileService(token: _session.token),
-          session: _session,
-          onLogout: widget.onLogout,
-          onProfileUpdated: (profileUser) {
-            setState(() {
-              _session = AuthSession(
-                token: _session.token,
-                user: profileUser.toStudentUser(),
-              );
-            });
-          },
-        ),
-      ),
-    );
+    setState(() => _currentNavIndex = 4);
   }
 
   void _showAllServicesBottomSheet() {
@@ -361,278 +315,365 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = _session.user;
-    final displayName = user.name.isEmpty ? user.code : user.name;
+  Widget _buildTabNavigator(int index, Widget rootWidget) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (routeSettings) {
+        return MaterialPageRoute(
+          builder: (context) => rootWidget,
+        );
+      },
+    );
+  }
 
-    return AppShell(
-      title: 'Xin chào, $displayName',
-      customTitle: Row(
-        children: [
-          GestureDetector(
-            onTap: _openProfile,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+  Widget _buildActivitiesScreen() {
+    return ActivityListScreen(
+      service: ActivityService(token: _session.token),
+    );
+  }
+
+  Widget _buildStatsScreen() {
+    return StudentStatsScreen(
+      drlService: _drlService,
+      activityService: ActivityService(token: _session.token),
+      notificationService: _notificationService,
+    );
+  }
+
+  Widget _buildNotificationsScreen() {
+    return NotificationListScreen(
+      service: _notificationService,
+    );
+  }
+
+  Widget _buildProfileScreen() {
+    return ValueListenableBuilder<AuthSession>(
+      valueListenable: _sessionNotifier,
+      builder: (context, currentSession, _) {
+        return ProfileScreen(
+          service: ProfileService(token: currentSession.token),
+          session: currentSession,
+          onLogout: widget.onLogout,
+          onProfileUpdated: (profileUser) {
+            final updatedSession = AuthSession(
+              token: _session.token,
+              user: profileUser.toStudentUser(),
+            );
+            setState(() {
+              _session = updatedSession;
+            });
+            _sessionNotifier.value = updatedSession;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDashboardScreen() {
+    return ValueListenableBuilder<AuthSession>(
+      valueListenable: _sessionNotifier,
+      builder: (context, currentSession, _) {
+        final user = currentSession.user;
+        final displayName = user.name.isEmpty ? user.code : user.name;
+
+        return AppShell(
+          title: 'Xin chào, $displayName',
+          customTitle: Row(
+            children: [
+              GestureDetector(
+                onTap: _openProfile,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipOval(
-                child: user.avatarUrl.isNotEmpty
-                    ? Image.network(
-                        user.avatarUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFFDBEAFE),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            color: AppColors.primary,
-                            size: 24,
+                  child: ClipOval(
+                    child: user.avatarUrl.isNotEmpty
+                        ? Image.network(
+                            user.avatarUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: const Color(0xFFDBEAFE),
+                              child: const Icon(
+                                Icons.person_rounded,
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: const Color(0xFFDBEAFE),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
                           ),
-                        ),
-                      )
-                    : Container(
-                        color: const Color(0xFFDBEAFE),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Xin chào, $displayName',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text('👋', style: TextStyle(fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 1),
-                const Text(
-                  'COne • Hệ thống rèn luyện sinh viên',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        _buildCircularHeaderButton(
-          icon: Icons.notifications_none_rounded,
-          tooltip: 'Thông báo',
-          hasBadge: _unreadCount > 0,
-          onTap: _openNotifications,
-        ),
-        const SizedBox(width: 8),
-        _buildCircularHeaderButton(
-          icon: Icons.refresh_rounded,
-          tooltip: 'Làm mới',
-          onTap: _reloadDashboard,
-        ),
-        const SizedBox(width: 8),
-        _buildCircularHeaderButton(
-          icon: Icons.person_outline_rounded,
-          tooltip: 'Tài khoản',
-          onTap: _openProfile,
-        ),
-        const SizedBox(width: 14),
-      ],
-      bottomNavigationBar: _AppBottomNavBar(
-        currentIndex: _currentNavIndex,
-        unreadCount: _unreadCount,
-        onTap: (index) {
-          if (index == 0) {
-            setState(() => _currentNavIndex = 0);
-          } else if (index == 1) {
-            _openActivities();
-          } else if (index == 2) {
-            _openStudentStats();
-          } else if (index == 3) {
-            _openNotifications();
-          } else if (index == 4) {
-            _openProfile();
-          }
-        },
-      ),
-      floatingActionButton: CuteAiRobotWidget(
-        onTap: _openChatbot,
-        greetingText: 'Hỏi AI nhé! ✨',
-      ),
-      body: Stack(
-        children: [
-          // Quả cầu ánh sáng 3D nền (Ambient Glow Orbs)
-          Positioned(
-            top: -40,
-            right: -60,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.cyan.withValues(alpha: 0.14),
               ),
-            ),
-          ),
-          Positioned(
-            top: 240,
-            left: -80,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.purple.withValues(alpha: 0.10),
-              ),
-            ),
-          ),
-          RefreshIndicator(
-            onRefresh: () async => _reloadDashboard(),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 720;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Student3DCard(session: _session, onQrTap: _openQrScan),
-                      const SizedBox(height: 18),
-                      FutureBuilder<_StudentDashboardData>(
-                        future: _dashboardFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return _DashboardSkeleton(isWide: isWide);
-                          }
-                          if (snapshot.hasError) {
-                            return _DashboardFallback(
-                              message: snapshot.error.toString(),
-                              profileStatus: _profileStatusLabel(user),
-                              onRetry: _reloadDashboard,
-                            );
-                          }
-                          return _Dashboard3DGrid(
-                            data: snapshot.data!,
-                            profileStatus: _profileStatusLabel(user),
-                            isWide: isWide,
-                            onDrlTap: _openDrl,
-                            onNotificationsTap: _openNotifications,
-                            onProfileTap: _openProfile,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _AnimatedAiSuggestionBanner(
-                        onTap: _openActivitySuggestions,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Tiện ích hệ thống',
-                            style: TextStyle(
-                              fontSize: 18,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Xin chào, $displayName',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFF0F172A),
                             ),
                           ),
-                          InkWell(
-                            onTap: _showAllServicesBottomSheet,
-                            borderRadius: BorderRadius.circular(8),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 2,
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'Tất cả tiện ích',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF2563EB),
-                                    ),
-                                  ),
-                                  SizedBox(width: 2),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 16,
-                                    color: Color(0xFF2563EB),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
+                        const SizedBox(width: 4),
+                        const Text('👋', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    const Text(
+                      'COne • Hệ thống rèn luyện sinh viên',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
                       ),
-                      const SizedBox(height: 12),
-                      _QuickAction3DGrid(
-                        isWide: isWide,
-                        onActivities: _openActivities,
-                        onRegisteredActivities: _openRegisteredActivities,
-                        onStats: _openStudentStats,
-                        onDrl: _openDrl,
-                        onEvidence: _openEvidence,
-                        onAppellations: _openAppellations,
-                        onQr: _openQrScan,
-                        onNotifications: _openNotifications,
-                        onChatbot: _openChatbot,
-                        onComplaints: _openComplaints,
-                        onPermissionRequests: _openPermissionRequests,
-                        onDocuments: _openDocuments,
-                        onProfileStatus: _openProfileStatus,
-                        onCv: _openCv,
-                        onActivitySuggestions: _openActivitySuggestions,
-                        onSignatureRequests: _openSignatureRequests,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  );
-                },
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+          actions: [
+            _buildCircularHeaderButton(
+              icon: Icons.notifications_none_rounded,
+              tooltip: 'Thông báo',
+              hasBadge: _unreadCount > 0,
+              onTap: _openNotifications,
+            ),
+            const SizedBox(width: 8),
+            _buildCircularHeaderButton(
+              icon: Icons.refresh_rounded,
+              tooltip: 'Làm mới',
+              onTap: _reloadDashboard,
+            ),
+            const SizedBox(width: 8),
+            _buildCircularHeaderButton(
+              icon: Icons.person_outline_rounded,
+              tooltip: 'Tài khoản',
+              onTap: _openProfile,
+            ),
+            const SizedBox(width: 14),
+          ],
+          body: Stack(
+            children: [
+              // Quả cầu ánh sáng 3D nền (Ambient Glow Orbs)
+              Positioned(
+                top: -40,
+                right: -60,
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.cyan.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 240,
+                left: -80,
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.purple.withValues(alpha: 0.10),
+                  ),
+                ),
+              ),
+              RefreshIndicator(
+                onRefresh: () async => _reloadDashboard(),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 720;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _Student3DCard(session: currentSession, onQrTap: _openQrScan),
+                          const SizedBox(height: 18),
+                          FutureBuilder<_StudentDashboardData>(
+                            future: _dashboardFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return _DashboardSkeleton(isWide: isWide);
+                              }
+                              if (snapshot.hasError) {
+                                return _DashboardFallback(
+                                  message: snapshot.error.toString(),
+                                  profileStatus: _profileStatusLabel(user),
+                                  onRetry: _reloadDashboard,
+                                );
+                              }
+                              return _Dashboard3DGrid(
+                                data: snapshot.data!,
+                                profileStatus: _profileStatusLabel(user),
+                                isWide: isWide,
+                                onDrlTap: _openDrl,
+                                onNotificationsTap: _openNotifications,
+                                onProfileTap: _openProfile,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          _AnimatedAiSuggestionBanner(
+                            onTap: _openActivitySuggestions,
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Tiện ích hệ thống',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: _showAllServicesBottomSheet,
+                                borderRadius: BorderRadius.circular(8),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Tất cả tiện ích',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF2563EB),
+                                        ),
+                                      ),
+                                      SizedBox(width: 2),
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 16,
+                                        color: Color(0xFF2563EB),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _QuickAction3DGrid(
+                            isWide: isWide,
+                            onActivities: _openActivities,
+                            onRegisteredActivities: _openRegisteredActivities,
+                            onStats: _openStudentStats,
+                            onDrl: _openDrl,
+                            onEvidence: _openEvidence,
+                            onAppellations: _openAppellations,
+                            onQr: _openQrScan,
+                            onNotifications: _openNotifications,
+                            onChatbot: _openChatbot,
+                            onComplaints: _openComplaints,
+                            onPermissionRequests: _openPermissionRequests,
+                            onDocuments: _openDocuments,
+                            onProfileStatus: _openProfileStatus,
+                            onCv: _openCv,
+                            onActivitySuggestions: _openActivitySuggestions,
+                            onSignatureRequests: _openSignatureRequests,
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          final currentNav = _navigatorKeys[_currentNavIndex].currentState;
+          if (currentNav != null && currentNav.canPop()) {
+            currentNav.pop();
+            return;
+          }
+          if (_currentNavIndex != 0) {
+            setState(() => _currentNavIndex = 0);
+            return;
+          }
+        },
+        child: IndexedStack(
+          index: _currentNavIndex,
+          children: [
+            _buildTabNavigator(0, _buildDashboardScreen()),
+            _buildTabNavigator(1, _buildActivitiesScreen()),
+            _buildTabNavigator(2, _buildStatsScreen()),
+            _buildTabNavigator(3, _buildNotificationsScreen()),
+            _buildTabNavigator(4, _buildProfileScreen()),
+          ],
+        ),
       ),
+      bottomNavigationBar: _AppBottomNavBar(
+        currentIndex: _currentNavIndex,
+        unreadCount: _unreadCount,
+        onTap: (index) {
+          if (_currentNavIndex == index) {
+            // Tapping the active tab pops back to root of this tab
+            _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+          } else {
+            setState(() => _currentNavIndex = index);
+          }
+        },
+      ),
+      floatingActionButton: _currentNavIndex == 0
+          ? CuteAiRobotWidget(
+              onTap: _openChatbot,
+              greetingText: 'Hỏi AI nhé! ✨',
+            )
+          : null,
     );
   }
 
