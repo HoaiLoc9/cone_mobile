@@ -773,7 +773,7 @@ class _Student3DCard extends StatelessWidget {
               right: 0,
               top: 0,
               bottom: 0,
-              width: 215,
+              width: 235,
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(24),
@@ -789,16 +789,17 @@ class _Student3DCard extends StatelessWidget {
                         Color(0x33000000),
                         Colors.black,
                       ],
-                      stops: [0.0, 0.28, 1.0],
+                      stops: [0.0, 0.24, 0.82],
                     ).createShader(rect);
                   },
                   blendMode: BlendMode.dstIn,
                   child: Opacity(
-                    opacity: 0.88,
+                    opacity: 0.92,
                     child: Image.asset(
                       'assets/images/campus_real.png',
                       fit: BoxFit.cover,
-                      alignment: Alignment.centerRight,
+                      alignment: const Alignment(0.60, 0.0),
+                      filterQuality: FilterQuality.high,
                     ),
                   ),
                 ),
