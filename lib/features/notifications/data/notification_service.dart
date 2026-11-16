@@ -2,11 +2,12 @@ import '../../../core/network/api_client.dart';
 import 'notification_models.dart';
 
 class NotificationService {
-  NotificationService({required String token, ApiClient? apiClient})
+  NotificationService({required this.token, ApiClient? apiClient})
       : _apiClient = apiClient ?? ApiClient() {
     _apiClient.setToken(token);
   }
 
+  final String token;
   final ApiClient _apiClient;
 
   Future<NotificationList> fetchNotifications({

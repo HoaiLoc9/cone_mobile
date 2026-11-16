@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../activities/data/activity_service.dart';
+import '../../activities/presentation/activity_detail_screen.dart';
 import '../../activities/presentation/activity_helpers.dart';
+import '../../activities/presentation/activity_list_screen.dart';
+import '../../appellations/data/appellation_service.dart';
+import '../../appellations/presentation/appellation_detail_screen.dart';
+import '../../appellations/presentation/appellation_list_screen.dart';
+import '../../drl/data/drl_service.dart';
+import '../../drl/presentation/drl_summary_screen.dart';
 import '../data/notification_models.dart';
 import '../data/notification_service.dart';
 
@@ -64,6 +72,157 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     _load();
   }
 
+  bool _isActivityNotification(AppNotification item) {
+    final t = item.type.toLowerCase();
+    final title = item.title.toLowerCase();
+    final msg = item.message.toLowerCase();
+    return t.contains('activity') ||
+        t.contains('hoat_dong') ||
+        item.meta.containsKey('activity_id') ||
+        item.meta.containsKey('activityId') ||
+        item.meta.containsKey('activity') ||
+        title.contains('hoạt động') ||
+        msg.contains('hoạt động');
+  }
+
+  String? _extractActivityId(AppNotification item) {
+    if (item.meta['activity_id'] != null &&
+        item.meta['activity_id'].toString().isNotEmpty) {
+      return item.meta['activity_id'].toString();
+    }
+    if (item.meta['activityId'] != null &&
+        item.meta['activityId'].toString().isNotEmpty) {
+      return item.meta['activityId'].toString();
+    }
+    if (item.meta['activity'] is Map &&
+        (item.meta['activity']['id'] != null)) {
+      return item.meta['activity']['id'].toString();
+    }
+    if (item.type.toLowerCase().contains('activity') &&
+        item.meta['id'] != null) {
+      return item.meta['id'].toString();
+    }
+    return null;
+  }
+
+  bool _isAppellationNotification(AppNotification item) {
+    final t = item.type.toLowerCase();
+    final title = item.title.toLowerCase();
+    final msg = item.message.toLowerCase();
+    return t.contains('appellation') ||
+        t.contains('danh_hieu') ||
+        item.meta.containsKey('appellation_id') ||
+        item.meta.containsKey('appellationId') ||
+        item.meta.containsKey('appellation') ||
+        title.contains('danh hiệu') ||
+        msg.contains('danh hiệu');
+  }
+
+  String? _extractAppellationId(AppNotification item) {
+    if (item.meta['appellation_id'] != null &&
+        item.meta['appellation_id'].toString().isNotEmpty) {
+      return item.meta['appellation_id'].toString();
+    }
+    if (item.meta['appellationId'] != null &&
+        item.meta['appellationId'].toString().isNotEmpty) {
+      return item.meta['appellationId'].toString();
+    }
+    if (item.meta['appellation'] is Map &&
+        (item.meta['appellation']['id'] != null)) {
+      return item.meta['appellation']['id'].toString();
+    }
+    if (item.type.toLowerCase().contains('appellation') &&
+        item.meta['id'] != null) {
+      return item.meta['id'].toString();
+    }
+    return null;
+  }
+
+  bool _isDrlNotification(AppNotification item) {
+    final t = item.type.toLowerCase();
+    final title = item.title.toLowerCase();
+    final msg = item.message.toLowerCase();
+    return t.contains('drl') ||
+        t.contains('ren_luyen') ||
+        title.contains('điểm rèn luyện') ||
+        title.contains('drl') ||
+        msg.contains('điểm rèn luyện') ||
+        msg.contains('drl');
+  }
+
+  void _handleNotificationTap(AppNotification item) {
+    if (!item.isRead) {
+      _markRead(item);
+    }
+
+    final token = widget.service.token;
+
+    // 1. Nếu là thông báo Hoạt động -> Trỏ thẳng tới màn hình Hoạt động
+    if (_isActivityNotification(item)) {
+      final activityId = _extractActivityId(item);
+      if (activityId != null && activityId.isNotEmpty) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ActivityDetailScreen(
+              service: ActivityService(token: token),
+              activityId: activityId,
+            ),
+          ),
+        );
+        return;
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ActivityListScreen(
+              service: ActivityService(token: token),
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // 2. Nếu là thông báo Danh hiệu -> Trỏ thẳng tới màn hình Danh hiệu
+    if (_isAppellationNotification(item)) {
+      final appellationId = _extractAppellationId(item);
+      if (appellationId != null && appellationId.isNotEmpty) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AppellationDetailScreen(
+              service: AppellationService(token: token),
+              appellationId: appellationId,
+            ),
+          ),
+        );
+        return;
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AppellationListScreen(
+              service: AppellationService(token: token),
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // 3. Nếu là thông báo Điểm rèn luyện -> Trỏ tới màn hình ĐRL
+    if (_isDrlNotification(item)) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => DrlSummaryScreen(
+            service: DrlService(token: token),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 4. Nếu là thông báo chung hệ thống khác -> Xem chi tiết
+    _showDetail(item);
+  }
+
   void _showDetail(AppNotification item) {
     if (!item.isRead) {
       _markRead(item);
@@ -72,6 +231,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final color = _colorForType(item.type);
     final icon = _iconForType(item.type);
     final typeName = _typeName(item.type);
+    final isActivity = _isActivityNotification(item);
+    final isAppellation = _isAppellationNotification(item);
+    final isDrl = _isDrlNotification(item);
 
     showModalBottomSheet<void>(
       context: context,
@@ -186,20 +348,59 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 ),
               ],
               const SizedBox(height: 22),
+
+              // Action button to navigate if applicable
+              if (isActivity || isAppellation || isDrl) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: color,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _handleNotificationTap(item);
+                    },
+                    icon: Icon(
+                      isActivity
+                          ? Icons.event_available_rounded
+                          : isAppellation
+                              ? Icons.emoji_events_rounded
+                              : Icons.insights_rounded,
+                      size: 20,
+                    ),
+                    label: Text(
+                      isActivity
+                          ? 'Mở hoạt động này'
+                          : isAppellation
+                              ? 'Mở danh hiệu này'
+                              : 'Xem điểm rèn luyện',
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+
               SizedBox(
                 width: double.infinity,
-                height: 48,
-                child: FilledButton(
+                height: 46,
+                child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                    side: const BorderSide(color: AppColors.border),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: const Text(
                     'Đóng',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -211,49 +412,86 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   }
 
   String _typeName(String type) {
-    return switch (type) {
-      'drl_deduction' => 'TRỪ ĐIỂM DRL',
-      'drl_award' => 'CỘNG ĐIỂM DRL',
-      'appellation_approved' => 'DANH HIỆU ĐẠT',
-      'appellation_rejected' => 'DANH HIỆU KHÔNG ĐẠT',
-      'appellation_needs_revision' => 'CẦN BỔ SUNG HỒ SƠ',
-      _ => 'THÔNG BÁO HỆ THỐNG',
-    };
+    final lower = type.toLowerCase();
+    if (lower.contains('activity') || lower.contains('hoat_dong')) {
+      return 'HOẠT ĐỘNG';
+    }
+    if (lower.contains('appellation') || lower.contains('danh_hieu')) {
+      if (lower.contains('approved')) return 'DANH HIỆU ĐẠT';
+      if (lower.contains('rejected')) return 'DANH HIỆU KHÔNG ĐẠT';
+      if (lower.contains('needs_revision') || lower.contains('revision')) return 'CẦN BỔ SUNG HỒ SƠ';
+      return 'DANH HIỆU';
+    }
+    if (lower.contains('drl')) {
+      if (lower.contains('deduction')) return 'TRỪ ĐIỂM DRL';
+      if (lower.contains('award')) return 'CỘNG ĐIỂM DRL';
+      return 'ĐIỂM RÈN LUYỆN';
+    }
+    return 'THÔNG BÁO HỆ THỐNG';
   }
 
   Color _colorForType(String type) {
-    return switch (type) {
-      'drl_deduction' || 'appellation_rejected' => AppColors.danger,
-      'drl_award' || 'appellation_approved' => const Color(0xFF059669),
-      'appellation_needs_revision' => const Color(0xFFF59E0B),
-      _ => AppColors.primary,
-    };
+    final lower = type.toLowerCase();
+    if (lower.contains('deduction') || lower.contains('rejected')) {
+      return AppColors.danger;
+    }
+    if (lower.contains('award') || lower.contains('approved')) {
+      return const Color(0xFF059669);
+    }
+    if (lower.contains('revision') || lower.contains('needs_revision')) {
+      return const Color(0xFFF59E0B);
+    }
+    if (lower.contains('appellation') || lower.contains('danh_hieu')) {
+      return const Color(0xFF8B5CF6);
+    }
+    return AppColors.primary;
   }
 
   IconData _iconForType(String type) {
-    return switch (type) {
-      'drl_deduction' => Icons.remove_circle_outline_rounded,
-      'drl_award' => Icons.add_circle_outline_rounded,
-      'appellation_approved' => Icons.emoji_events_rounded,
-      'appellation_rejected' => Icons.cancel_outlined,
-      'appellation_needs_revision' => Icons.edit_note_rounded,
-      _ => Icons.notifications_none_rounded,
-    };
+    final lower = type.toLowerCase();
+    if (lower.contains('activity') || lower.contains('hoat_dong')) {
+      return Icons.event_available_rounded;
+    }
+    if (lower.contains('appellation') || lower.contains('danh_hieu')) {
+      return Icons.emoji_events_rounded;
+    }
+    if (lower.contains('deduction')) {
+      return Icons.remove_circle_outline_rounded;
+    }
+    if (lower.contains('award')) {
+      return Icons.add_circle_outline_rounded;
+    }
+    return Icons.notifications_none_rounded;
+  }
+
+  String _actionTextForNotification(AppNotification item) {
+    if (_isActivityNotification(item)) {
+      return 'Mở hoạt động >';
+    }
+    if (_isAppellationNotification(item)) {
+      return 'Xem danh hiệu >';
+    }
+    if (_isDrlNotification(item)) {
+      return 'Xem điểm ĐRL >';
+    }
+    return 'Xem chi tiết >';
   }
 
   @override
   Widget build(BuildContext context) {
     final list = _list;
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         surfaceTintColor: AppColors.background,
+        elevation: 0,
         title: const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.w900)),
         actions: [
           if ((list?.unreadCount ?? 0) > 0)
             TextButton(
               onPressed: _markAllRead,
-              child: const Text('Đọc tất cả'),
+              child: const Text('Đọc tất cả', style: TextStyle(fontWeight: FontWeight.w800)),
             ),
         ],
       ),
@@ -286,11 +524,10 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                     },
                     dropdownMenuEntries: const [
                       DropdownMenuEntry(value: '', label: 'Tất cả loại'),
+                      DropdownMenuEntry(value: 'activity', label: 'Hoạt động'),
+                      DropdownMenuEntry(value: 'appellation', label: 'Danh hiệu'),
                       DropdownMenuEntry(value: 'drl_deduction', label: 'Trừ điểm DRL'),
                       DropdownMenuEntry(value: 'drl_award', label: 'Cộng điểm DRL'),
-                      DropdownMenuEntry(value: 'appellation_approved', label: 'Danh hiệu đạt'),
-                      DropdownMenuEntry(value: 'appellation_rejected', label: 'Danh hiệu không đạt'),
-                      DropdownMenuEntry(value: 'appellation_needs_revision', label: 'Cần bổ sung hồ sơ'),
                       DropdownMenuEntry(value: 'system', label: 'Hệ thống'),
                     ],
                   ),
@@ -312,7 +549,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _NotificationCard(
                       item: item,
-                      onTap: () => _showDetail(item),
+                      actionText: _actionTextForNotification(item),
+                      onTap: () => _handleNotificationTap(item),
                       onMarkRead: () => _markRead(item),
                     ),
                   ),
@@ -378,32 +616,48 @@ class _HeaderCard extends StatelessWidget {
 class _NotificationCard extends StatelessWidget {
   const _NotificationCard({
     required this.item,
+    required this.actionText,
     required this.onTap,
     required this.onMarkRead,
   });
 
   final AppNotification item;
+  final String actionText;
   final VoidCallback onTap;
   final VoidCallback onMarkRead;
 
   Color _colorForType(String type) {
-    return switch (type) {
-      'drl_deduction' || 'appellation_rejected' => AppColors.danger,
-      'drl_award' || 'appellation_approved' => const Color(0xFF059669),
-      'appellation_needs_revision' => const Color(0xFFF59E0B),
-      _ => AppColors.primary,
-    };
+    final lower = type.toLowerCase();
+    if (lower.contains('deduction') || lower.contains('rejected')) {
+      return AppColors.danger;
+    }
+    if (lower.contains('award') || lower.contains('approved')) {
+      return const Color(0xFF059669);
+    }
+    if (lower.contains('revision') || lower.contains('needs_revision')) {
+      return const Color(0xFFF59E0B);
+    }
+    if (lower.contains('appellation') || lower.contains('danh_hieu')) {
+      return const Color(0xFF8B5CF6);
+    }
+    return AppColors.primary;
   }
 
   IconData _iconForType(String type) {
-    return switch (type) {
-      'drl_deduction' => Icons.remove_circle_outline_rounded,
-      'drl_award' => Icons.add_circle_outline_rounded,
-      'appellation_approved' => Icons.emoji_events_rounded,
-      'appellation_rejected' => Icons.cancel_outlined,
-      'appellation_needs_revision' => Icons.edit_note_rounded,
-      _ => Icons.notifications_none_rounded,
-    };
+    final lower = type.toLowerCase();
+    if (lower.contains('activity') || lower.contains('hoat_dong')) {
+      return Icons.event_available_rounded;
+    }
+    if (lower.contains('appellation') || lower.contains('danh_hieu')) {
+      return Icons.emoji_events_rounded;
+    }
+    if (lower.contains('deduction')) {
+      return Icons.remove_circle_outline_rounded;
+    }
+    if (lower.contains('award')) {
+      return Icons.add_circle_outline_rounded;
+    }
+    return Icons.notifications_none_rounded;
   }
 
   @override
@@ -494,12 +748,12 @@ class _NotificationCard extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        const Text(
-                          'Xem chi tiết >',
+                        Text(
+                          actionText,
                           style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            color: color,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                       ],
