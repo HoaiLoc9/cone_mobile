@@ -28,7 +28,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool isStudent = true;
   bool rememberMe = true;
   bool obscurePassword = true;
   bool isLoading = false;
@@ -177,26 +176,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _switchRole(bool student) {
-    if (isLoading || isStudent == student) return;
-
-    setState(() {
-      isStudent = student;
-      errorMessage = null;
-      identifierController.clear();
-      passwordController.clear();
-    });
-  }
-
   Future<void> _submit() async {
     final identifier = identifierController.text.trim();
     final password = passwordController.text;
 
     if (identifier.isEmpty || password.isEmpty) {
       setState(() {
-        errorMessage = isStudent
-            ? 'Vui lòng nhập mã sinh viên/email và mật khẩu.'
-            : 'Vui lòng nhập email quản trị và mật khẩu.';
+        errorMessage = 'Vui lòng nhập tài khoản/MSSV và mật khẩu.';
       });
       return;
     }
@@ -207,18 +193,76 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      if (isStudent) {
-        final session = await widget.authService.login(
-          identifier: identifier,
-          password: password,
-        );
-        widget.onLoggedIn(session);
+      final isLikelyAdmin = identifier.toLowerCase().contains('admin') ||
+          identifier.toLowerCase().startsWith('gv') ||
+          identifier.toLowerCase().startsWith('cb');
+
+      if (isLikelyAdmin) {
+        // Thử đăng nhập Quản trị / Giảng viên trước
+        try {
+          final adminSession = await widget.adminService.login(
+            email: identifier,
+            password: password,
+          );
+          widget.onAdminLoggedIn(adminSession);
+          return;
+        } on ApiException catch (adminErr) {
+          final code = adminErr.statusCode ?? 0;
+          if (code != 401 && code != 404 && code != 422 && code != 400) {
+            rethrow;
+          }
+          // Thử tiếp tài khoản Sinh viên nếu Quản trị không khớp
+          try {
+            final studentSession = await widget.authService.login(
+              identifier: identifier,
+              password: password,
+            );
+            if (!rememberMe) {
+              await widget.authService.clearSavedSession();
+            }
+            widget.onLoggedIn(studentSession);
+            return;
+          } on ApiException {
+            setState(() {
+              errorMessage = adminErr.message.isNotEmpty
+                  ? adminErr.message
+                  : 'Tài khoản hoặc mật khẩu không chính xác.';
+            });
+          }
+        }
       } else {
-        final session = await widget.adminService.login(
-          email: identifier,
-          password: password,
-        );
-        widget.onAdminLoggedIn(session);
+        // Mặc định thử đăng nhập Sinh viên trước
+        try {
+          final studentSession = await widget.authService.login(
+            identifier: identifier,
+            password: password,
+          );
+          if (!rememberMe) {
+            await widget.authService.clearSavedSession();
+          }
+          widget.onLoggedIn(studentSession);
+          return;
+        } on ApiException catch (studentErr) {
+          final code = studentErr.statusCode ?? 0;
+          if (code != 401 && code != 404 && code != 422 && code != 400) {
+            rethrow;
+          }
+          // Thử tiếp tài khoản Quản trị / Cán bộ nếu Sinh viên không khớp
+          try {
+            final adminSession = await widget.adminService.login(
+              email: identifier,
+              password: password,
+            );
+            widget.onAdminLoggedIn(adminSession);
+            return;
+          } on ApiException {
+            setState(() {
+              errorMessage = studentErr.message.isNotEmpty
+                  ? studentErr.message
+                  : 'Tài khoản hoặc mật khẩu không chính xác.';
+            });
+          }
+        }
       }
     } on ApiException catch (error) {
       setState(() => errorMessage = error.message);
@@ -395,40 +439,14 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment:
               isWide ? MainAxisAlignment.start : MainAxisAlignment.center,
-          children: [
-            const Text(
+          children: const [
+            Text(
               'COne',
               style: TextStyle(
                 color: Color(0xFF0F172A),
                 fontSize: 34,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Text(
-                '3D PRO',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.8,
-                ),
               ),
             ),
           ],
@@ -444,12 +462,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          isStudent
-              ? 'Đồng hành rèn luyện & phát triển toàn diện'
-              : 'Cổng thông tin quản trị viên & giảng viên',
+        const Text(
+          'Đồng hành rèn luyện & phát triển toàn diện',
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             color: Color(0xFF64748B),
             fontSize: 13.5,
             fontWeight: FontWeight.w500,
@@ -485,31 +501,27 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildRoleSegment3D(),
-          const SizedBox(height: 24),
-          Text(
-            isStudent ? 'Đăng nhập Sinh viên' : 'Đăng nhập Quản trị',
-            style: const TextStyle(
+          const Text(
+            'Đăng nhập hệ thống',
+            style: TextStyle(
               color: Color(0xFF0F172A),
               fontSize: 20,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            isStudent
-                ? 'Nhập MSSV hoặc email để vào hệ thống'
-                : 'Dành cho GVCN và ban cán sự',
-            style: const TextStyle(
+          const Text(
+            'Nhập MSSV, email hoặc tài khoản để vào hệ thống',
+            style: TextStyle(
               color: Color(0xFF64748B),
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 22),
           _buildInputField3D(
-            label: isStudent ? 'MÃ SINH VIÊN / EMAIL' : 'EMAIL QUẢN TRỊ',
-            hint: isStudent ? 'VD: SV001' : 'admin@domain.com',
-            icon: isStudent ? Icons.badge_rounded : Icons.admin_panel_settings_rounded,
+            label: 'TÀI KHOẢN / MSSV / EMAIL',
+            hint: 'VD: SV001 hoặc admin@domain.com',
+            icon: Icons.person_outline_rounded,
             controller: identifierController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
@@ -518,7 +530,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _buildInputField3D(
             label: 'MẬT KHẨU',
             hint: '••••••••',
-            icon: Icons.lock_rounded,
+            icon: Icons.lock_outline_rounded,
             controller: passwordController,
             obscureText: obscurePassword,
             textInputAction: TextInputAction.done,
@@ -563,18 +575,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const Spacer(),
-              if (!isStudent)
-                TextButton(
-                  onPressed: isLoading ? null : _openAdminForgotPassword,
-                  child: const Text(
-                    'Quên mật khẩu?',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
+              TextButton(
+                onPressed: isLoading ? null : _openAdminForgotPassword,
+                child: const Text(
+                  'Quên mật khẩu?',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
             ],
           ),
           if (errorMessage != null) ...[
@@ -639,15 +650,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : Row(
+                      : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.login_rounded,
+                            Icon(Icons.login_rounded,
                                 color: Colors.white, size: 20),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(
-                              isStudent ? 'ĐĂNG NHẬP NGAY' : 'ĐĂNG NHẬP QUẢN TRỊ',
-                              style: const TextStyle(
+                              'ĐĂNG NHẬP NGAY',
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.6,
@@ -661,83 +672,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRoleSegment3D() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildRoleButton3D(
-              title: 'Sinh viên',
-              icon: Icons.school_rounded,
-              isActive: isStudent,
-              onTap: () => _switchRole(true),
-            ),
-          ),
-          Expanded(
-            child: _buildRoleButton3D(
-              title: 'Cán bộ / GVCN',
-              icon: Icons.admin_panel_settings_rounded,
-              isActive: !isStudent,
-              onTap: () => _switchRole(false),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoleButton3D({
-    required String title,
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.10),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isActive ? AppColors.primary : const Color(0xFF64748B),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
-                color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
