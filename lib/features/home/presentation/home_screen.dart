@@ -715,15 +715,25 @@ class _Dashboard3DGrid extends StatelessWidget {
     if (score >= 80) return 'TỐT';
     if (score >= 65) return 'KHÁ';
     if (score >= 50) return 'TRUNG BÌNH';
-    return 'YẾU';
+    if (score > 0) return 'CẦN CỐ GẮNG';
+    return 'ĐANG TÍCH LŨY';
   }
 
   Color _getGradeColor(double score) {
-    if (score >= 90) return AppColors.purple;
-    if (score >= 80) return AppColors.success;
-    if (score >= 65) return AppColors.primary;
-    if (score >= 50) return AppColors.warning;
-    return AppColors.danger;
+    if (score >= 90) return const Color(0xFF8B5CF6);
+    if (score >= 80) return const Color(0xFF10B981);
+    if (score >= 65) return const Color(0xFF2563EB);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    if (score > 0) return const Color(0xFFEF4444);
+    return const Color(0xFF3B82F6);
+  }
+
+  IconData _getGradeIcon(double score) {
+    if (score >= 90) return Icons.military_tech_rounded;
+    if (score >= 80) return Icons.stars_rounded;
+    if (score >= 65) return Icons.verified_rounded;
+    if (score >= 50) return Icons.trending_up_rounded;
+    return Icons.hourglass_top_rounded;
   }
 
   @override
@@ -732,104 +742,276 @@ class _Dashboard3DGrid extends StatelessWidget {
         ? null
         : data.summary.semesterSummaries.first;
     final score = currentSemester?.totalPoints ?? data.summary.totalPoints;
+    final activityCount = currentSemester?.activityCount ?? 0;
+    final semesterName = currentSemester?.semesterName.isNotEmpty == true
+        ? currentSemester!.semesterName
+        : 'Học kỳ hiện tại';
     final gradeLabel = _getGradeLabel(score);
     final gradeColor = _getGradeColor(score);
 
     return Column(
       children: [
-        // Thẻ Lớn: Điểm Rèn Luyện 3D Bento Gauge
+        // Thẻ Lớn: Điểm Rèn Luyện 3D Bento Gauge Redesigned
         GestureDetector(
           onTap: onDrlTap,
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: AppColors.border, width: 0.8),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border, width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: gradeColor.withValues(alpha: 0.12),
-                  blurRadius: 20,
+                  color: gradeColor.withValues(alpha: 0.14),
+                  blurRadius: 24,
                   offset: const Offset(0, 8),
+                  spreadRadius: -2,
                 ),
                 const BoxShadow(
-                  color: Color(0x0D0F172A),
-                  blurRadius: 6,
+                  color: Color(0x0A0F172A),
+                  blurRadius: 8,
                   offset: Offset(0, 2),
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 3D Circular Progress Gauge
-                Stack(
-                  alignment: Alignment.center,
+                // Hàng tiêu đề: Tên kỳ + Badge Xếp loại
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                      width: 86,
-                      height: 86,
-                      child: CircularProgressIndicator(
-                        value: (score / 100).clamp(0.0, 1.0),
-                        strokeWidth: 9,
-                        backgroundColor: AppColors.background,
-                        valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
+                    Row(
                       children: [
-                        Text(
-                          score.toStringAsFixed(score % 1 == 0 ? 0 : 1),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: gradeColor,
-                            height: 1,
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.school_rounded,
+                            color: AppColors.primary,
+                            size: 18,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          '/100',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
+                        const SizedBox(width: 8),
+                        Text(
+                          semesterName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: gradeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: gradeColor.withValues(alpha: 0.30),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(_getGradeIcon(score), size: 14, color: gradeColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            gradeLabel,
+                            style: TextStyle(
+                              color: gradeColor,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(width: 18),
-                // Thông tin chi tiết bên cạnh
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                const SizedBox(height: 18),
+                // Thân thẻ: Vòng tròn điểm 3D bên trái + Các chỉ số bên phải
+                Row(
+                  children: [
+                    // 3D Circular Progress Gauge
+                    Container(
+                      width: 94,
+                      height: 94,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: gradeColor.withValues(alpha: 0.18),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
+                          SizedBox(
+                            width: 84,
+                            height: 84,
+                            child: CircularProgressIndicator(
+                              value: (score / 100).clamp(0.0, 1.0),
+                              strokeWidth: 9,
+                              backgroundColor: const Color(0xFFF1F5F9),
+                              valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
+                              strokeCap: StrokeCap.round,
+                            ),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                score.toStringAsFixed(score % 1 == 0 ? 0 : 1),
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: gradeColor,
+                                  height: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                '/100',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Cột chỉ số chi tiết lấp đầy phía bên phải
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Hộp 1: Số hoạt động đã tham gia
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 3,
+                              horizontal: 12,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: gradeColor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(20),
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
                             ),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.stars_rounded,
-                                    size: 14, color: gradeColor),
-                                const SizedBox(width: 4),
-                                Text(
-                                  gradeLabel,
-                                  style: TextStyle(
-                                    color: gradeColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
+                                Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.event_available_rounded,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Hoạt động kỳ này',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$activityCount hoạt động đã tham gia',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Hộp 2: Mục tiêu rèn luyện
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.flag_rounded,
+                                    size: 16,
+                                    color: Color(0xFF10B981),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Mục tiêu xếp loại',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        score >= 80
+                                            ? 'Đã đạt chuẩn Tốt 🏅'
+                                            : 'Cần thêm ${(80 - score).clamp(0, 100).toInt()}đ để đạt Tốt',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -837,26 +1019,53 @@ class _Dashboard3DGrid extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        currentSemester?.semesterName ?? 'Điểm rèn luyện kỳ này',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Chạm để xem bảng phân tích tiêu chí >',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                const SizedBox(height: 12),
+                // Footer thanh bấm vào xem chi tiết
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.insights_rounded,
+                          size: 16,
                           color: AppColors.primary,
                         ),
-                      ),
-                    ],
-                  ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Bảng phân tích 5 tiêu chí rèn luyện',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Chi tiết',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
