@@ -326,7 +326,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 18),
+                      _AnimatedAiSuggestionBanner(
+                        onTap: _openActivitySuggestions,
+                      ),
+                      const SizedBox(height: 22),
                       const SectionHeader(
                         title: 'Tiện ích hệ thống',
                       ),
@@ -349,12 +353,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         onCv: _openCv,
                         onActivitySuggestions: _openActivitySuggestions,
                         onSignatureRequests: _openSignatureRequests,
-                      ),
-                      const SizedBox(height: 20),
-                      _AcademicReminderCard(
-                        onDrlTap: _openDrl,
-                        onActivityTap: _openActivities,
-                        onSuggestionTap: _openActivitySuggestions,
                       ),
                     ],
                   );
@@ -1024,8 +1022,11 @@ class _QuickAction3DGrid extends StatelessWidget {
           color: const Color(0xFFE11D48),
           onTap: onRegisteredActivities,
         ),
-        _AnimatedSuggestionCard3D(
-          onTap: onActivitySuggestions,
+        _FeatureCard3D(
+          title: 'Khiếu nại',
+          icon: Icons.report_problem_rounded,
+          color: const Color(0xFFEA580C),
+          onTap: onComplaints,
         ),
         _FeatureCard3D(
           title: 'Danh hiệu',
@@ -1272,19 +1273,21 @@ class _MoreServiceTile extends StatelessWidget {
   }
 }
 
-class _AnimatedSuggestionCard3D extends StatefulWidget {
-  const _AnimatedSuggestionCard3D({required this.onTap});
+class _AnimatedAiSuggestionBanner extends StatefulWidget {
+  const _AnimatedAiSuggestionBanner({required this.onTap});
 
   final VoidCallback onTap;
 
   @override
-  State<_AnimatedSuggestionCard3D> createState() => _AnimatedSuggestionCard3DState();
+  State<_AnimatedAiSuggestionBanner> createState() =>
+      _AnimatedAiSuggestionBannerState();
 }
 
-class _AnimatedSuggestionCard3DState extends State<_AnimatedSuggestionCard3D>
+class _AnimatedAiSuggestionBannerState
+    extends State<_AnimatedAiSuggestionBanner>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _translateAnimation;
+  late final Animation<double> _bounceAnimation;
   late final Animation<double> _glowAnimation;
 
   @override
@@ -1292,16 +1295,16 @@ class _AnimatedSuggestionCard3DState extends State<_AnimatedSuggestionCard3D>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
-    // Hiệu ứng nhấp nháy / nảy nhẹ theo phương thẳng đứng
-    _translateAnimation = Tween<double>(begin: 0.0, end: -6.0).animate(
+    // Hiệu ứng nhún nhảy nhẹ nhàng thu hút chú ý
+    _bounceAnimation = Tween<double>(begin: 0.0, end: -4.5).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
     // Hiệu ứng ánh sáng tỏa ra nhấp nháy
-    _glowAnimation = Tween<double>(begin: 0.25, end: 0.65).animate(
+    _glowAnimation = Tween<double>(begin: 0.22, end: 0.65).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -1318,277 +1321,185 @@ class _AnimatedSuggestionCard3DState extends State<_AnimatedSuggestionCard3D>
       animation: _controller,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, _translateAnimation.value),
+          offset: Offset(0, _bounceAnimation.value),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                    colors: [
+                      Color(0xFFFFFBEB),
+                      Color(0xFFFEF3C7),
+                      Color(0xFFFDE68A),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(
                     color: Color.lerp(
                       const Color(0xFFF59E0B),
                       const Color(0xFFEA580C),
                       _glowAnimation.value,
                     )!,
-                    width: 1.5,
+                    width: 1.6,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF59E0B).withValues(alpha: _glowAnimation.value),
+                      color: const Color(0xFFF59E0B)
+                          .withValues(alpha: _glowAnimation.value),
                       blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      offset: const Offset(0, 5),
                       spreadRadius: 1,
                     ),
                     const BoxShadow(
-                      color: Color(0x08000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFEA580C).withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFEA580C), Color(0xFFDC2626)],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFDC2626).withValues(alpha: 0.4),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.bolt_rounded, color: Colors.white, size: 11),
-                              SizedBox(width: 2),
-                              Text(
-                                'AI GỢI Ý',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Gợi ý rèn luyện',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Color(0xFF78350F),
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Color(0xFFD97706),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _AcademicReminderCard extends StatefulWidget {
-  const _AcademicReminderCard({
-    required this.onDrlTap,
-    required this.onActivityTap,
-    required this.onSuggestionTap,
-  });
-
-  final VoidCallback onDrlTap;
-  final VoidCallback onActivityTap;
-  final VoidCallback onSuggestionTap;
-
-  @override
-  State<_AcademicReminderCard> createState() => _AcademicReminderCardState();
-}
-
-class _AcademicReminderCardState extends State<_AcademicReminderCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _anim;
-  late final Animation<double> _glow;
-  late final Animation<double> _bounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _anim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-
-    _glow = Tween<double>(begin: 0.15, end: 0.45).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
-    );
-
-    _bounce = Tween<double>(begin: 0.0, end: -3.0).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, _) {
-        return Transform.translate(
-          offset: Offset(0, _bounce.value),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: widget.onSuggestionTap,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Color.lerp(
-                      const Color(0xFFFCD34D),
-                      const Color(0xFFF59E0B),
-                      _glow.value,
-                    )!,
-                    width: 1.4,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withValues(alpha: _glow.value),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                      color: Color(0x0A000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
+                    // Icon 3D AI lấp lánh có hiệu ứng hào quang
                     Container(
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEA580C).withValues(alpha: 0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: const Color(0xFFEA580C).withValues(alpha: 0.40),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Colors.white,
-                        size: 24,
+                      child: const Center(
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: Colors.white,
+                          size: 26,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    const Expanded(
+                    const SizedBox(width: 12),
+                    // Nội dung gợi ý
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Text(
-                                'Gợi ý rèn luyện thông minh',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14.5,
-                                  color: Color(0xFF78350F),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFEA580C),
+                                      Color(0xFFDC2626),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.bolt_rounded,
+                                        color: Colors.white, size: 11),
+                                    SizedBox(width: 2),
+                                    Text(
+                                      'AI GỢI Ý',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Expanded(
+                                child: Text(
+                                  'Gợi ý rèn luyện',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF78350F),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Khám phá hoạt động phù hợp giúp tăng điểm ĐRL!',
+                          const SizedBox(height: 3),
+                          const Text(
+                            'Khám phá hoạt động phù hợp giúp tăng nhanh điểm ĐRL!',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Color(0xFF92400E),
-                              fontSize: 12,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Color(0xFFD97706),
-                      size: 16,
+                    const SizedBox(width: 8),
+                    // Nút bấm "Xem ngay" nổi bật
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Xem ngay',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          SizedBox(width: 3),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: Colors.white,
+                            size: 10,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
