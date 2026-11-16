@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/cone_card.dart';
-import '../../../shared/widgets/section_header.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/missing_attendance_screen.dart';
 import '../../activities/data/activity_service.dart';
@@ -44,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late final NotificationService _notificationService;
   late final StudentServicesService _studentServicesService;
   late Future<_StudentDashboardData> _dashboardFuture;
+  int _currentNavIndex = 0;
+  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -53,6 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _notificationService = NotificationService(token: _session.token);
     _studentServicesService = StudentServicesService(token: _session.token);
     _dashboardFuture = _loadDashboard();
+    _notificationService.fetchUnreadCount().then((count) {
+      if (mounted) setState(() => _unreadCount = count);
+    }).catchError((_) {});
   }
 
   Future<_StudentDashboardData> _loadDashboard() async {
@@ -60,9 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _drlService.fetchSummary(),
       _notificationService.fetchUnreadCount(),
     ]);
+    final unread = results[1] as int;
+    if (mounted) setState(() => _unreadCount = unread);
     return _StudentDashboardData(
       summary: results[0] as DrlSummary,
-      unreadNotifications: results[1] as int,
+      unreadNotifications: unread,
     );
   }
 
@@ -232,6 +237,130 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showAllServicesBottomSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Text(
+                'Dịch vụ & Tiện ích khác',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(height: 6),
+            _MoreServiceTile(
+              icon: Icons.query_stats_outlined,
+              title: 'Thống kê cá nhân',
+              onTap: _openStudentStats,
+            ),
+            _MoreServiceTile(
+              icon: Icons.event_note_outlined,
+              title: 'Hoạt động đã đăng ký',
+              onTap: _openRegisteredActivities,
+            ),
+            _MoreServiceTile(
+              icon: Icons.workspace_premium_outlined,
+              title: 'Danh hiệu',
+              onTap: _openAppellations,
+            ),
+            _MoreServiceTile(
+              icon: Icons.report_problem_outlined,
+              title: 'Khiếu nại',
+              onTap: _openComplaints,
+            ),
+            _MoreServiceTile(
+              icon: Icons.assignment_turned_in_outlined,
+              title: 'Giấy xin phép',
+              onTap: _openPermissionRequests,
+            ),
+            _MoreServiceTile(
+              icon: Icons.folder_copy_outlined,
+              title: 'Tài liệu hồ sơ',
+              onTap: _openDocuments,
+            ),
+            _MoreServiceTile(
+              icon: Icons.badge_outlined,
+              title: 'CV sinh viên',
+              onTap: _openCv,
+            ),
+            _MoreServiceTile(
+              icon: Icons.lightbulb_outline,
+              title: 'Gợi ý hoạt động',
+              onTap: _openActivitySuggestions,
+            ),
+            _MoreServiceTile(
+              icon: Icons.draw_outlined,
+              title: 'Chữ ký số',
+              onTap: _openSignatureRequests,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircularHeaderButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    bool hasBadge = false,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 20, color: const Color(0xFF1E293B)),
+                if (hasBadge)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _session.user;
@@ -239,28 +368,115 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return AppShell(
       title: 'Xin chào, $displayName',
-      subtitle: 'COne • Hệ thống rèn luyện sinh viên',
+      customTitle: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Container(
+                color: const Color(0xFFDBEAFE),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Xin chào, $displayName',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text('👋', style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+                const SizedBox(height: 1),
+                const Text(
+                  'COne • Hệ thống rèn luyện sinh viên',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        _buildCircularHeaderButton(
+          icon: Icons.notifications_none_rounded,
+          tooltip: 'Thông báo',
+          hasBadge: _unreadCount > 0,
+          onTap: _openNotifications,
+        ),
+        const SizedBox(width: 8),
+        _buildCircularHeaderButton(
+          icon: Icons.refresh_rounded,
+          tooltip: 'Làm mới',
+          onTap: _reloadDashboard,
+        ),
+        const SizedBox(width: 8),
+        _buildCircularHeaderButton(
+          icon: Icons.person_outline_rounded,
+          tooltip: 'Tài khoản',
+          onTap: _openProfile,
+        ),
+        const SizedBox(width: 14),
+      ],
+      bottomNavigationBar: _AppBottomNavBar(
+        currentIndex: _currentNavIndex,
+        unreadCount: _unreadCount,
+        onTap: (index) {
+          if (index == 0) {
+            setState(() => _currentNavIndex = 0);
+          } else if (index == 1) {
+            _openActivities();
+          } else if (index == 2) {
+            _openStudentStats();
+          } else if (index == 3) {
+            _openNotifications();
+          } else if (index == 4) {
+            _openProfile();
+          }
+        },
+      ),
       floatingActionButton: CuteAiRobotWidget(
         onTap: _openChatbot,
         greetingText: 'Hỏi AI nhé! ✨',
       ),
-      actions: [
-        IconButton(
-          tooltip: 'Thông báo',
-          onPressed: _openNotifications,
-          icon: const Icon(Icons.notifications_none_rounded),
-        ),
-        IconButton(
-          tooltip: 'Làm mới',
-          onPressed: _reloadDashboard,
-          icon: const Icon(Icons.refresh_rounded),
-        ),
-        IconButton(
-          tooltip: 'Tài khoản',
-          onPressed: _openProfile,
-          icon: const Icon(Icons.account_circle_outlined, size: 26),
-        ),
-      ],
       body: Stack(
         children: [
           // Quả cầu ánh sáng 3D nền (Ambient Glow Orbs)
@@ -301,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Student3DCard(session: _session, onQrTap: _openQrScan),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
                       FutureBuilder<_StudentDashboardData>(
                         future: _dashboardFuture,
                         builder: (context, snapshot) {
@@ -326,15 +542,53 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 16),
                       _AnimatedAiSuggestionBanner(
                         onTap: _openActivitySuggestions,
                       ),
-                      const SizedBox(height: 22),
-                      const SectionHeader(
-                        title: 'Tiện ích hệ thống',
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Tiện ích hệ thống',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: _showAllServicesBottomSheet,
+                            borderRadius: BorderRadius.circular(8),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Tất cả tiện ích',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       _QuickAction3DGrid(
                         isWide: isWide,
                         onActivities: _openActivities,
@@ -354,6 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onActivitySuggestions: _openActivitySuggestions,
                         onSignatureRequests: _openSignatureRequests,
                       ),
+                      const SizedBox(height: 24),
                     ],
                   );
                 },
@@ -392,6 +647,121 @@ class _StudentDashboardData {
 // -------------------------------------------------------------
 // 1. THẺ SINH VIÊN 3D HOLOGRAPHIC VIP CARD
 // -------------------------------------------------------------
+class _CampusBuildingPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // 1. Toà nhà hiện đại phối cảnh 3D
+    final bldgPath = Path()
+      ..moveTo(w * 0.12, h * 0.22)
+      ..lineTo(w * 0.98, h * 0.08)
+      ..lineTo(w * 0.98, h * 0.82)
+      ..lineTo(w * 0.12, h * 0.88)
+      ..close();
+
+    final bldgPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.92),
+          const Color(0xFFF8FAFC).withValues(alpha: 0.88),
+          const Color(0xFFE2E8F0).withValues(alpha: 0.82),
+        ],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+
+    canvas.drawPath(bldgPath, bldgPaint);
+
+    // Mép mái toà nhà
+    final roofPaint = Paint()
+      ..color = const Color(0xFF94A3B8).withValues(alpha: 0.8)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(w * 0.12, h * 0.22),
+      Offset(w * 0.98, h * 0.08),
+      roofPaint,
+    );
+
+    // Dãy cửa kính xanh phản quang phong cách hiện đại
+    final winPaint = Paint()
+      ..color = const Color(0xFF0284C7).withValues(alpha: 0.72)
+      ..style = PaintingStyle.fill;
+
+    const floors = 4;
+    const cols = 6;
+    for (int f = 0; f < floors; f++) {
+      final tY = 0.28 + f * 0.13;
+      for (int c = 0; c < cols; c++) {
+        final tX = 0.20 + c * 0.12;
+        final left = w * tX;
+        final top = h * (tY - (c * 0.015));
+        final winRect = RRect.fromRectAndRadius(
+          Rect.fromLTWH(left, top, w * 0.08, h * 0.075),
+          const Radius.circular(2),
+        );
+        canvas.drawRRect(winRect, winPaint);
+      }
+    }
+
+    // Các cột sảnh kính tầng trệt
+    final pillarPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.95)
+      ..strokeWidth = 2.2;
+    for (int p = 0; p < 4; p++) {
+      final pX = w * (0.60 + p * 0.08);
+      canvas.drawLine(
+        Offset(pX, h * 0.68),
+        Offset(pX, h * 0.83),
+        pillarPaint,
+      );
+    }
+
+    // 2. Hàng cây xanh khuôn viên trường học
+    void drawTree(double cx, double cy, double radius, Color color, Color highlight) {
+      final treePaint = Paint()..color = color;
+      canvas.drawCircle(Offset(w * cx, h * cy), radius, treePaint);
+
+      final hlPaint = Paint()..color = highlight.withValues(alpha: 0.55);
+      canvas.drawCircle(
+        Offset(w * cx - radius * 0.25, h * cy - radius * 0.25),
+        radius * 0.45,
+        hlPaint,
+      );
+    }
+
+    drawTree(0.06, 0.74, 15, const Color(0xFF15803D), const Color(0xFF4ADE80));
+    drawTree(0.18, 0.70, 19, const Color(0xFF16A34A), const Color(0xFF86EFAC));
+    drawTree(0.32, 0.73, 16, const Color(0xFF15803D), const Color(0xFF4ADE80));
+    drawTree(0.48, 0.76, 13, const Color(0xFF16A34A), const Color(0xFF86EFAC));
+    drawTree(0.84, 0.72, 17, const Color(0xFF15803D), const Color(0xFF4ADE80));
+    drawTree(0.96, 0.74, 15, const Color(0xFF16A34A), const Color(0xFF86EFAC));
+
+    // 3. Dải sóng uốn lượn công nghệ phía chân toà nhà
+    final wavePaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.35)
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke;
+
+    final wavePath1 = Path()
+      ..moveTo(0, h * 0.86)
+      ..quadraticBezierTo(w * 0.35, h * 0.73, w * 0.75, h * 0.86)
+      ..quadraticBezierTo(w * 0.92, h * 0.92, w, h * 0.88);
+    canvas.drawPath(wavePath1, wavePaint);
+
+    final wavePath2 = Path()
+      ..moveTo(w * 0.1, h * 0.92)
+      ..quadraticBezierTo(w * 0.45, h * 0.78, w, h * 0.93);
+    wavePaint.color = Colors.white.withValues(alpha: 0.22);
+    canvas.drawPath(wavePath2, wavePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _Student3DCard extends StatelessWidget {
   const _Student3DCard({required this.session, required this.onQrTap});
 
@@ -401,29 +771,33 @@ class _Student3DCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = session.user;
-    final studentName = user.name.isEmpty ? 'SINH VIÊN CONE' : user.name.toUpperCase();
+    final studentName = user.name.isEmpty ? 'NGUYỄN VĂN AN' : user.name.toUpperCase();
+    final studentCode = user.code.isEmpty ? '22714651' : user.code.toUpperCase();
+    final studentClass = user.studentClass.isEmpty ? 'DHTH18A' : user.studentClass;
+    final department = user.department.isEmpty ? 'Khoa Công nghệ Thông tin' : user.department;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: AppColors.card3DGradient,
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1E3A8A),
+            Color(0xFF1D4ED8),
+            Color(0xFF2563EB),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.25),
           width: 1.2,
         ),
         boxShadow: [
-          // 3D Multi-layer Shadows
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.40),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
-            spreadRadius: -4,
-          ),
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 36,
-            offset: const Offset(0, 10),
-            spreadRadius: -8,
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.40),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
+            spreadRadius: -2,
           ),
         ],
       ),
@@ -431,35 +805,18 @@ class _Student3DCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // Hiệu ứng dải sáng phản quang chéo (Holographic Sheen)
+            // Quầng sáng phản quang
             Positioned(
-              top: -60,
-              right: -60,
+              top: -50,
+              left: -40,
               child: Container(
-                width: 200,
-                height: 200,
+                width: 180,
+                height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      Colors.cyanAccent.withValues(alpha: 0.22),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -30,
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      Colors.purpleAccent.withValues(alpha: 0.20),
+                      Colors.cyanAccent.withValues(alpha: 0.20),
                       Colors.transparent,
                     ],
                   ),
@@ -467,24 +824,39 @@ class _Student3DCard extends StatelessWidget {
               ),
             ),
 
+            // Toà nhà khuôn viên trường học 3D có cây xanh & dải sóng
+            Positioned(
+              right: 0,
+              top: 15,
+              bottom: 0,
+              width: 195,
+              child: Opacity(
+                opacity: 0.90,
+                child: CustomPaint(
+                  painter: _CampusBuildingPainter(),
+                ),
+              ),
+            ),
+
+            // Nội dung thông tin thẻ
             Padding(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hàng đỉnh thẻ: Logo COne + Chip EMV 3D + Sóng NFC
+                  // Hàng đỉnh thẻ: Chip EMV + Sóng NFC + STUDENT VIP Crown
                   Row(
                     children: [
                       // Chip EMV Vàng Kim 3D
                       Container(
                         width: 44,
-                        height: 34,
+                        height: 32,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           gradient: AppColors.chipGoldGradient,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
+                              color: Colors.black.withValues(alpha: 0.35),
                               blurRadius: 6,
                               offset: const Offset(1, 2),
                             ),
@@ -515,43 +887,49 @@ class _Student3DCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      // Icon sóng NFC không dây
+                      const SizedBox(width: 10),
+                      // Sóng NFC
                       Icon(
                         Icons.contactless_rounded,
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Colors.white.withValues(alpha: 0.8),
                         size: 26,
                       ),
                       const Spacer(),
-                      // Nhãn dập nổi sinh viên COne
+                      // Nhãn STUDENT VIP với vương miện
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                          horizontal: 12,
+                          vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E3A8A), Color(0xFF0F172A)],
+                          ),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: const Color(0xFF60A5FA).withValues(alpha: 0.4),
+                            width: 1,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.verified_rounded,
-                              size: 14,
-                              color: Colors.cyanAccent,
-                            ),
+                            Text('👑', style: TextStyle(fontSize: 11)),
                             SizedBox(width: 5),
                             Text(
                               'STUDENT VIP',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
+                                letterSpacing: 1.1,
                               ),
                             ),
                           ],
@@ -560,20 +938,20 @@ class _Student3DCard extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
 
-                  // Mã số sinh viên dập nổi to bản phong cách thẻ ngân hàng
+                  // Mã số sinh viên dập nổi lớn
                   Text(
-                    user.code.isEmpty ? 'COne 2026 8888' : user.code.toUpperCase(),
+                    studentCode,
                     style: TextStyle(
                       fontFamily: 'Courier',
                       color: Colors.white,
-                      fontSize: 21,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2.5,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withValues(alpha: 0.6),
+                          color: Colors.black.withValues(alpha: 0.5),
                           offset: const Offset(1.5, 2),
                           blurRadius: 4,
                         ),
@@ -581,9 +959,9 @@ class _Student3DCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
-                  // Họ và tên + Nút Quét QR nổi 3D
+                  // Họ tên + Nút Quét điểm danh trắng
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -595,9 +973,9 @@ class _Student3DCard extends StatelessWidget {
                             Text(
                               'CHỦ THẺ / CARD HOLDER',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.65),
+                                color: Colors.white.withValues(alpha: 0.70),
                                 fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                                 letterSpacing: 1,
                               ),
                             ),
@@ -609,26 +987,26 @@ class _Student3DCard extends StatelessWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16.5,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 3),
                             Text(
-                              '${user.studentClass} • ${user.department}',
+                              '$studentClass • $department',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.cyanAccent.withValues(alpha: 0.9),
-                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      // Nút 3D Tactile Quét QR
+                      const SizedBox(width: 8),
+                      // Nút Quét điểm danh màu trắng
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -637,20 +1015,16 @@ class _Student3DCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
-                              vertical: 10,
+                              vertical: 9,
                             ),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF00F2FE), Color(0xFF4FACFE)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF00F2FE).withValues(alpha: 0.45),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
+                                  color: Colors.black.withValues(alpha: 0.18),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
@@ -660,14 +1034,14 @@ class _Student3DCard extends StatelessWidget {
                                 Icon(
                                   Icons.qr_code_scanner_rounded,
                                   color: Color(0xFF0F172A),
-                                  size: 20,
+                                  size: 18,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   'QUÉT ĐIỂM DANH',
                                   style: TextStyle(
                                     color: Color(0xFF0F172A),
-                                    fontSize: 11.5,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.4,
                                   ),
@@ -1196,24 +1570,27 @@ class _QuickAction3DGrid extends StatelessWidget {
       crossAxisCount: isWide ? 4 : 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: isWide ? 1.6 : 1.35,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: isWide ? 2.5 : 2.05,
       children: [
         _FeatureCard3D(
           title: 'Hoạt động',
+          subtitle: 'Tham gia & quản lý',
           icon: Icons.event_available_rounded,
-          color: AppColors.primary,
+          color: const Color(0xFF2563EB),
           onTap: onActivities,
         ),
         _FeatureCard3D(
           title: 'Bảng điểm ĐRL',
+          subtitle: 'Xem kết quả rèn luyện',
           icon: Icons.bar_chart_rounded,
-          color: AppColors.cyan,
+          color: const Color(0xFF06B6D4),
           onTap: onDrl,
         ),
         _FeatureCard3D(
           title: 'Thống kê',
+          subtitle: 'Số liệu & báo cáo',
           icon: Icons.insights_rounded,
           color: const Color(0xFF6366F1),
           badge: 'MỚI',
@@ -1221,33 +1598,38 @@ class _QuickAction3DGrid extends StatelessWidget {
         ),
         _FeatureCard3D(
           title: 'Minh chứng',
+          subtitle: 'Tải lên & quản lý',
           icon: Icons.upload_file_rounded,
-          color: AppColors.teal,
+          color: const Color(0xFF10B981),
           onTap: onEvidence,
         ),
         _FeatureCard3D(
           title: 'Đã đăng ký',
+          subtitle: 'Danh sách hoạt động',
           icon: Icons.event_note_rounded,
-          color: const Color(0xFFE11D48),
+          color: const Color(0xFFF43F5E),
           onTap: onRegisteredActivities,
         ),
         _FeatureCard3D(
           title: 'Khiếu nại',
-          icon: Icons.report_problem_rounded,
-          color: const Color(0xFFEA580C),
+          subtitle: 'Gửi & theo dõi xử lý',
+          icon: Icons.warning_amber_rounded,
+          color: const Color(0xFFF97316),
           onTap: onComplaints,
         ),
         _FeatureCard3D(
           title: 'Danh hiệu',
+          subtitle: 'Thành tích của bạn',
           icon: Icons.workspace_premium_rounded,
-          color: AppColors.purple,
+          color: const Color(0xFFA855F7),
           badge: 'TOP',
           onTap: onAppellations,
         ),
         _FeatureCard3D(
           title: 'Dịch vụ khác',
+          subtitle: 'Tiện ích mở rộng',
           icon: Icons.grid_view_rounded,
-          color: AppColors.warning,
+          color: const Color(0xFFF59E0B),
           onTap: () => _showMoreServices(context),
         ),
       ],
@@ -1258,6 +1640,7 @@ class _QuickAction3DGrid extends StatelessWidget {
 class _FeatureCard3D extends StatelessWidget {
   const _FeatureCard3D({
     required this.title,
+    required this.subtitle,
     required this.icon,
     required this.color,
     this.badge,
@@ -1265,6 +1648,7 @@ class _FeatureCard3D extends StatelessWidget {
   });
 
   final String title;
+  final String subtitle;
   final IconData icon;
   final Color color;
   final String? badge;
@@ -1276,97 +1660,104 @@ class _FeatureCard3D extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 0.8),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.12),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
-              const BoxShadow(
-                color: Color(0x08000000),
-                blurRadius: 4,
-                offset: Offset(0, 1),
+              BoxShadow(
+                color: color.withValues(alpha: 0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          color.withValues(alpha: 0.20),
-                          color.withValues(alpha: 0.08),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: color.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(icon, color: color, size: 23),
-                  ),
-                  const Spacer(),
-                  if (badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        badge!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                ],
+              // Hộp icon bo tròn màu phấn
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(icon, color: color, size: 20),
+                ),
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
+              const SizedBox(width: 9),
+              // Nội dung Tiêu đề + Phụ đề
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        if (badge != null) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              badge!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF64748B),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: color.withValues(alpha: 0.7),
-                    size: 16,
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 2),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFF94A3B8),
+                size: 16,
               ),
             ],
           ),
@@ -1392,17 +1783,34 @@ class _DashboardFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return COneCard(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: .12),
+              color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.wifi_off_rounded, color: AppColors.warning),
+            child: const Icon(
+              Icons.wifi_off_rounded,
+              color: Color(0xFFF59E0B),
+              size: 22,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1411,7 +1819,11 @@ class _DashboardFallback extends StatelessWidget {
               children: [
                 const Text(
                   'Dashboard chưa tải được',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -1419,14 +1831,22 @@ class _DashboardFallback extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded)),
+          IconButton(
+            onPressed: onRetry,
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: Color(0xFF64748B),
+              size: 22,
+            ),
+          ),
         ],
       ),
     );
@@ -1440,10 +1860,15 @@ class _DashboardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const COneCard(
-      child: SizedBox(
-        height: 90,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
+    return Container(
+      height: 90,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(strokeWidth: 2.4),
       ),
     );
   }
@@ -1472,7 +1897,10 @@ class _MoreServiceTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.primary, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+      ),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: () {
         Navigator.of(context).pop();
@@ -1507,13 +1935,11 @@ class _AnimatedAiSuggestionBannerState
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
-    // Hiệu ứng nhún nhảy nhẹ nhàng thu hút chú ý
-    _bounceAnimation = Tween<double>(begin: 0.0, end: -4.5).animate(
+    _bounceAnimation = Tween<double>(begin: 0.0, end: -4.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    // Hiệu ứng ánh sáng tỏa ra nhấp nháy
-    _glowAnimation = Tween<double>(begin: 0.22, end: 0.65).animate(
+    _glowAnimation = Tween<double>(begin: 0.15, end: 0.45).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -1535,60 +1961,50 @@ class _AnimatedAiSuggestionBannerState
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFFFFFBEB),
-                      Color(0xFFFEF3C7),
-                      Color(0xFFFDE68A),
+                      Color(0xFFFFF7ED),
+                      Color(0xFFFFEDD5),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Color.lerp(
-                      const Color(0xFFF59E0B),
-                      const Color(0xFFEA580C),
-                      _glowAnimation.value,
-                    )!,
-                    width: 1.6,
+                    color: const Color(0xFFFED7AA),
+                    width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF59E0B)
+                      color: const Color(0xFFF97316)
                           .withValues(alpha: _glowAnimation.value),
-                      blurRadius: 16,
-                      offset: const Offset(0, 5),
-                      spreadRadius: 1,
-                    ),
-                    const BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    // Icon 3D AI lấp lánh có hiệu ứng hào quang
+                    // Hộp vuông cam ánh sao lấp lánh
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                          colors: [Color(0xFFFB923C), Color(0xFFEA580C)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(13),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEA580C).withValues(alpha: 0.40),
-                            blurRadius: 10,
+                            color: const Color(0xFFEA580C)
+                                .withValues(alpha: 0.35),
+                            blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
                         ],
@@ -1597,12 +2013,12 @@ class _AnimatedAiSuggestionBannerState
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           color: Colors.white,
-                          size: 26,
+                          size: 22,
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Nội dung gợi ý
+                    // Nội dung
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1611,8 +2027,8 @@ class _AnimatedAiSuggestionBannerState
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 2.5,
+                                  horizontal: 6,
+                                  vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
@@ -1621,28 +2037,31 @@ class _AnimatedAiSuggestionBannerState
                                       Color(0xFFDC2626),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(7),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.bolt_rounded,
-                                        color: Colors.white, size: 11),
+                                    Icon(
+                                      Icons.bolt_rounded,
+                                      color: Colors.white,
+                                      size: 10,
+                                    ),
                                     SizedBox(width: 2),
                                     Text(
                                       'AI GỢI Ý',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 9.5,
+                                        fontSize: 9,
                                         fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.5,
+                                        letterSpacing: 0.4,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              const Expanded(
+                              const SizedBox(width: 7),
+                              const Flexible(
                                 child: Text(
                                   'Gợi ý rèn luyện',
                                   maxLines: 1,
@@ -1650,7 +2069,7 @@ class _AnimatedAiSuggestionBannerState
                                   style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w900,
-                                    color: Color(0xFF78350F),
+                                    color: Color(0xFF431407),
                                   ),
                                 ),
                               ),
@@ -1658,33 +2077,32 @@ class _AnimatedAiSuggestionBannerState
                           ),
                           const SizedBox(height: 3),
                           const Text(
-                            'Khám phá hoạt động phù hợp giúp tăng nhanh điểm ĐRL!',
+                            'Khám phá hoạt động phù hợp với bạn.',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: Color(0xFF92400E),
+                              color: Color(0xFF9A3412),
                               fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Nút bấm "Xem ngay" nổi bật
+                    // Nút cam: Xem ngay >
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 12,
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFFF97316),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                            color: const Color(0xFFEA580C)
+                                .withValues(alpha: 0.35),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -1717,6 +2135,122 @@ class _AnimatedAiSuggestionBannerState
           ),
         );
       },
+    );
+  }
+}
+
+// -------------------------------------------------------------
+// 5. THANH ĐIỀU HƯỚNG DƯỚI (BOTTOM NAVIGATION BAR)
+// -------------------------------------------------------------
+class _AppBottomNavBar extends StatelessWidget {
+  const _AppBottomNavBar({
+    required this.currentIndex,
+    required this.unreadCount,
+    required this.onTap,
+  });
+
+  final int currentIndex;
+  final int unreadCount;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          top: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.home_rounded, 'Trang chủ'),
+              _buildNavItem(1, Icons.calendar_month_outlined, 'Hoạt động'),
+              _buildNavItem(2, Icons.bar_chart_rounded, 'Thống kê'),
+              _buildNavItem(
+                3,
+                Icons.notifications_none_rounded,
+                'Thông báo',
+                hasBadge: unreadCount > 0,
+              ),
+              _buildNavItem(4, Icons.person_outline_rounded, 'Tài khoản'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label, {
+    bool hasBadge = false,
+  }) {
+    final isActive = currentIndex == index;
+    final color = isActive ? AppColors.primary : const Color(0xFF64748B);
+
+    return InkWell(
+      onTap: () => onTap(index),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: color, size: 23),
+                if (hasBadge)
+                  Positioned(
+                    top: -1,
+                    right: -2,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Container(
+              width: 16,
+              height: 2.5,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

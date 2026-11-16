@@ -8,6 +8,9 @@ class AppShell extends StatelessWidget {
     required this.title,
     required this.body,
     this.subtitle,
+    this.leading,
+    this.customTitle,
+    this.customAppBar,
     this.actions = const [],
     this.bottomNavigationBar,
     this.floatingActionButton,
@@ -17,6 +20,9 @@ class AppShell extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+  final Widget? leading;
+  final Widget? customTitle;
+  final PreferredSizeWidget? customAppBar;
   final Widget body;
   final List<Widget> actions;
   final Widget? bottomNavigationBar;
@@ -27,24 +33,27 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+      appBar: customAppBar ??
+          AppBar(
+            leading: leading,
+            title: customTitle ??
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-          ],
-        ),
-        actions: actions,
-      ),
+            actions: actions,
+          ),
       body: SafeArea(
         top: safeTop,
         child: LayoutBuilder(
