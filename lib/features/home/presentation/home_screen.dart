@@ -363,6 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _session = updatedSession;
             });
             _sessionNotifier.value = updatedSession;
+            AuthService().saveSession(updatedSession).catchError((_) {});
           },
         );
       },
@@ -473,12 +474,6 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.refresh_rounded,
               tooltip: 'Làm mới',
               onTap: _reloadDashboard,
-            ),
-            const SizedBox(width: 8),
-            _buildCircularHeaderButton(
-              icon: Icons.person_outline_rounded,
-              tooltip: 'Tài khoản',
-              onTap: _openProfile,
             ),
             const SizedBox(width: 14),
           ],

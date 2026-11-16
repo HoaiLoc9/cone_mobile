@@ -42,6 +42,14 @@ class _QldrlAppState extends State<QldrlApp> {
         });
         return;
       }
+      final savedAdmin = await _adminService.getSavedSession();
+      if (savedAdmin != null && mounted) {
+        setState(() {
+          _adminSession = savedAdmin;
+          _isCheckingSession = false;
+        });
+        return;
+      }
     } catch (_) {}
     if (mounted) {
       setState(() => _isCheckingSession = false);
@@ -73,6 +81,9 @@ class _QldrlAppState extends State<QldrlApp> {
   }
 
   Future<void> _handleAdminLogout() async {
+    try {
+      await _adminService.clearSavedSession();
+    } catch (_) {}
     if (mounted) {
       setState(() => _adminSession = null);
     }

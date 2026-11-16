@@ -50,6 +50,21 @@ class AdminUser {
       departmentId: json['department_id']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'level': level,
+      'role_code': roleCode,
+      'role_name': roleName,
+      'rules': rules,
+      'class_id': classId,
+      'department_id': departmentId,
+    };
+  }
 }
 
 class AdminDashboard {

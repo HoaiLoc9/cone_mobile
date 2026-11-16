@@ -217,9 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
               identifier: identifier,
               password: password,
             );
-            if (!rememberMe) {
-              await widget.authService.clearSavedSession();
-            }
+            await widget.authService.saveSession(studentSession);
             widget.onLoggedIn(studentSession);
             return;
           } on ApiException {
@@ -237,9 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
             identifier: identifier,
             password: password,
           );
-          if (!rememberMe) {
-            await widget.authService.clearSavedSession();
-          }
+          await widget.authService.saveSession(studentSession);
           widget.onLoggedIn(studentSession);
           return;
         } on ApiException catch (studentErr) {

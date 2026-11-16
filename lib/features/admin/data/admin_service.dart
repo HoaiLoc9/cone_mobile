@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/storage/app_storage.dart';
 import 'admin_models.dart';
 
 class AdminService {
@@ -11,6 +14,38 @@ class AdminService {
   }
 
   final ApiClient _apiClient;
+  static const _tokenKey = 'cone_admin_token';
+  static const _adminKey = 'cone_admin_user';
+
+  Future<void> saveSession(AdminSession session) async {
+    try {
+      await AppStorage.instance.setString(_tokenKey, session.token);
+      await AppStorage.instance.setString(_adminKey, jsonEncode(session.admin.toJson()));
+    } catch (_) {}
+  }
+
+  Future<AdminSession?> getSavedSession() async {
+    try {
+      final token = await AppStorage.instance.getString(_tokenKey);
+      final adminRaw = await AppStorage.instance.getString(_adminKey);
+      if (token == null || token.isEmpty || adminRaw == null || adminRaw.isEmpty) {
+        return null;
+      }
+      final adminJson = jsonDecode(adminRaw) as Map<String, dynamic>;
+      final admin = AdminUser.fromJson(adminJson);
+      _apiClient.setToken(token);
+      return AdminSession(token: token, admin: admin);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearSavedSession() async {
+    try {
+      await AppStorage.instance.remove(_tokenKey);
+      await AppStorage.instance.remove(_adminKey);
+    } catch (_) {}
+  }
 
   Future<AdminSession> login({
     required String email,
@@ -52,16 +87,21 @@ class AdminService {
       throw const ApiException('Dữ liệu quản trị viên không hợp lệ.');
     }
 
-    return AdminSession(
+    final session = AdminSession(
       token: token,
       admin: AdminUser.fromJson(rawAdmin),
     );
+
+    await saveSession(session);
+
+    return session;
   }
 
   Future<void> logout() async {
     try {
       await _apiClient.post('/mobile/admin/logout');
     } finally {
+      await clearSavedSession();
       _apiClient.clearToken();
     }
   }
