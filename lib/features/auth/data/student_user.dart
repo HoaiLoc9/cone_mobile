@@ -1,3 +1,5 @@
+import '../../../core/config/api_config.dart';
+
 class StudentUser {
   const StudentUser({
     required this.id,
@@ -7,6 +9,7 @@ class StudentUser {
     required this.phone,
     required this.studentClass,
     required this.department,
+    this.avatarUrl = '',
   });
 
   final String id;
@@ -16,6 +19,7 @@ class StudentUser {
   final String phone;
   final String studentClass;
   final String department;
+  final String avatarUrl;
 
   factory StudentUser.fromJson(Map<String, dynamic> json) {
     return StudentUser(
@@ -26,6 +30,7 @@ class StudentUser {
       phone: json['phone']?.toString() ?? '',
       studentClass: json['class']?.toString() ?? '',
       department: json['department']?.toString() ?? '',
+      avatarUrl: ApiConfig.storageUrl(json['avatar_url']?.toString() ?? ''),
     );
   }
 
@@ -38,6 +43,7 @@ class StudentUser {
       'phone': phone,
       'class': studentClass,
       'department': department,
+      'avatar_url': avatarUrl,
     };
   }
 }

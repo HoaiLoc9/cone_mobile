@@ -429,6 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           _ProfileHeader(
                             user: user,
+                            avatarUpload: _avatarUpload,
                             avatarName: _avatarUpload?.name,
                             onPickAvatar: _pickAvatar,
                           ),
@@ -826,11 +827,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.user,
+    required this.avatarUpload,
     required this.avatarName,
     required this.onPickAvatar,
   });
 
   final ProfileUser user;
+  final ProfileUpload? avatarUpload;
   final String? avatarName;
   final VoidCallback onPickAvatar;
 
@@ -860,8 +863,13 @@ class _ProfileHeader extends StatelessWidget {
               CircleAvatar(
                 radius: 36,
                 backgroundColor: Colors.white.withValues(alpha: 0.18),
-                backgroundImage: user.avatarUrl.isEmpty ? null : NetworkImage(user.avatarUrl),
-                child: user.avatarUrl.isEmpty ? const Icon(Icons.person_rounded, color: Colors.white, size: 38) : null,
+                backgroundImage: avatarUpload != null
+                    ? MemoryImage(avatarUpload!.bytes)
+                    : (user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null),
+                onBackgroundImageError: (e, s) {},
+                child: (avatarUpload == null && user.avatarUrl.isEmpty)
+                    ? const Icon(Icons.person_rounded, color: Colors.white, size: 38)
+                    : null,
               ),
               Positioned(
                 right: -4,

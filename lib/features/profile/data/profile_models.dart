@@ -63,6 +63,7 @@ class ProfileUser {
       phone: phone,
       studentClass: studentClass,
       department: department,
+      avatarUrl: avatarUrl,
     );
   }
 }

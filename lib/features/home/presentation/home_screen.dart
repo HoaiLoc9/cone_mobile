@@ -370,28 +370,44 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Xin chào, $displayName',
       customTitle: Row(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: Container(
-                color: const Color(0xFFDBEAFE),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+          GestureDetector(
+            onTap: _openProfile,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: user.avatarUrl.isNotEmpty
+                    ? Image.network(
+                        user.avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: const Color(0xFFDBEAFE),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: const Color(0xFFDBEAFE),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -647,120 +663,7 @@ class _StudentDashboardData {
 // -------------------------------------------------------------
 // 1. THẺ SINH VIÊN 3D HOLOGRAPHIC VIP CARD
 // -------------------------------------------------------------
-class _CampusBuildingPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
 
-    // 1. Toà nhà hiện đại phối cảnh 3D
-    final bldgPath = Path()
-      ..moveTo(w * 0.12, h * 0.22)
-      ..lineTo(w * 0.98, h * 0.08)
-      ..lineTo(w * 0.98, h * 0.82)
-      ..lineTo(w * 0.12, h * 0.88)
-      ..close();
-
-    final bldgPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.92),
-          const Color(0xFFF8FAFC).withValues(alpha: 0.88),
-          const Color(0xFFE2E8F0).withValues(alpha: 0.82),
-        ],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
-
-    canvas.drawPath(bldgPath, bldgPaint);
-
-    // Mép mái toà nhà
-    final roofPaint = Paint()
-      ..color = const Color(0xFF94A3B8).withValues(alpha: 0.8)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(
-      Offset(w * 0.12, h * 0.22),
-      Offset(w * 0.98, h * 0.08),
-      roofPaint,
-    );
-
-    // Dãy cửa kính xanh phản quang phong cách hiện đại
-    final winPaint = Paint()
-      ..color = const Color(0xFF0284C7).withValues(alpha: 0.72)
-      ..style = PaintingStyle.fill;
-
-    const floors = 4;
-    const cols = 6;
-    for (int f = 0; f < floors; f++) {
-      final tY = 0.28 + f * 0.13;
-      for (int c = 0; c < cols; c++) {
-        final tX = 0.20 + c * 0.12;
-        final left = w * tX;
-        final top = h * (tY - (c * 0.015));
-        final winRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(left, top, w * 0.08, h * 0.075),
-          const Radius.circular(2),
-        );
-        canvas.drawRRect(winRect, winPaint);
-      }
-    }
-
-    // Các cột sảnh kính tầng trệt
-    final pillarPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.95)
-      ..strokeWidth = 2.2;
-    for (int p = 0; p < 4; p++) {
-      final pX = w * (0.60 + p * 0.08);
-      canvas.drawLine(
-        Offset(pX, h * 0.68),
-        Offset(pX, h * 0.83),
-        pillarPaint,
-      );
-    }
-
-    // 2. Hàng cây xanh khuôn viên trường học
-    void drawTree(double cx, double cy, double radius, Color color, Color highlight) {
-      final treePaint = Paint()..color = color;
-      canvas.drawCircle(Offset(w * cx, h * cy), radius, treePaint);
-
-      final hlPaint = Paint()..color = highlight.withValues(alpha: 0.55);
-      canvas.drawCircle(
-        Offset(w * cx - radius * 0.25, h * cy - radius * 0.25),
-        radius * 0.45,
-        hlPaint,
-      );
-    }
-
-    drawTree(0.06, 0.74, 15, const Color(0xFF15803D), const Color(0xFF4ADE80));
-    drawTree(0.18, 0.70, 19, const Color(0xFF16A34A), const Color(0xFF86EFAC));
-    drawTree(0.32, 0.73, 16, const Color(0xFF15803D), const Color(0xFF4ADE80));
-    drawTree(0.48, 0.76, 13, const Color(0xFF16A34A), const Color(0xFF86EFAC));
-    drawTree(0.84, 0.72, 17, const Color(0xFF15803D), const Color(0xFF4ADE80));
-    drawTree(0.96, 0.74, 15, const Color(0xFF16A34A), const Color(0xFF86EFAC));
-
-    // 3. Dải sóng uốn lượn công nghệ phía chân toà nhà
-    final wavePaint = Paint()
-      ..color = Colors.cyanAccent.withValues(alpha: 0.35)
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke;
-
-    final wavePath1 = Path()
-      ..moveTo(0, h * 0.86)
-      ..quadraticBezierTo(w * 0.35, h * 0.73, w * 0.75, h * 0.86)
-      ..quadraticBezierTo(w * 0.92, h * 0.92, w, h * 0.88);
-    canvas.drawPath(wavePath1, wavePaint);
-
-    final wavePath2 = Path()
-      ..moveTo(w * 0.1, h * 0.92)
-      ..quadraticBezierTo(w * 0.45, h * 0.78, w, h * 0.93);
-    wavePaint.color = Colors.white.withValues(alpha: 0.22);
-    canvas.drawPath(wavePath2, wavePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _Student3DCard extends StatelessWidget {
   const _Student3DCard({required this.session, required this.onQrTap});
@@ -824,16 +727,39 @@ class _Student3DCard extends StatelessWidget {
               ),
             ),
 
-            // Toà nhà khuôn viên trường học 3D có cây xanh & dải sóng
+            // Ảnh thật khuôn viên trường Cao đẳng Kinh tế Đối ngoại (COFER)
             Positioned(
               right: 0,
-              top: 15,
+              top: 0,
               bottom: 0,
-              width: 195,
-              child: Opacity(
-                opacity: 0.90,
-                child: CustomPaint(
-                  painter: _CampusBuildingPainter(),
+              width: 215,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.transparent,
+                        Color(0x33000000),
+                        Colors.black,
+                      ],
+                      stops: [0.0, 0.28, 1.0],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: Opacity(
+                    opacity: 0.88,
+                    child: Image.asset(
+                      'assets/images/campus_real.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -58,9 +58,21 @@ class ApiConfig {
   }
 
   static String storageUrl(String path) {
-    final value = path.trim();
+    var value = path.trim();
     if (value.isEmpty) {
       return '';
+    }
+
+    // Ignore placeholder svg images to avoid NetworkImage decoding crashes
+    if (value.contains('default-avatar.svg') || value.contains('no-image.svg')) {
+      return '';
+    }
+
+    // Rewrite localhost/127.0.0.1 from backend to the actual mobile webUrl
+    if (value.startsWith('http://localhost/') || value.startsWith('http://localhost:80/')) {
+      value = value.replaceFirst(RegExp(r'^http:\/\/localhost(:80)?'), webUrl);
+    } else if (value.startsWith('http://127.0.0.1/') || value.startsWith('http://127.0.0.1:80/')) {
+      value = value.replaceFirst(RegExp(r'^http:\/\/127\.0\.0\.1(:80)?'), webUrl);
     }
 
     if (value.startsWith('http://') || value.startsWith('https://')) {
