@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../config/api_config.dart';
 import 'api_exception.dart';
+import 'api_response.dart';
 import 'api_transport.dart';
 
 class ApiClient {
@@ -48,24 +49,67 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    if (_token != null) {
+    if (_token != null && _token!.isNotEmpty) {
       headers['Authorization'] = 'Bearer $_token';
     }
 
-    final response = await _transport.request(
-      method,
-      uri,
-      headers: headers,
-      body: body == null ? null : jsonEncode(body),
-    );
+    ApiResponse response;
+    try {
+      response = await _transport.request(
+        method,
+        uri,
+        headers: headers,
+        body: body == null ? null : jsonEncode(body),
+      );
+    } on ApiException {
+      rethrow;
+    } catch (error) {
+      throw ApiException(
+        'Không thể gửi yêu cầu đến máy chủ: $error',
+      );
+    }
 
-    final decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body) as Map<String, dynamic>;
+    Map<String, dynamic> decoded = {};
+    if (response.body.isNotEmpty) {
+      try {
+        final parsed = jsonDecode(response.body);
+        if (parsed is Map<String, dynamic>) {
+          decoded = parsed;
+        }
+      } catch (_) {
+        // Not a JSON object (e.g. HTML response or empty)
+      }
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      String? message = decoded['message']?.toString();
+      if (message == null || message.isEmpty) {
+        if (decoded['error'] != null) {
+          message = decoded['error'].toString();
+        } else if (response.statusCode == 401) {
+          message = 'Thông tin đăng nhập không chính xác hoặc phiên đã hết hạn.';
+        } else if (response.statusCode == 403) {
+          message = 'Bạn không có quyền truy cập chức năng này.';
+        } else if (response.statusCode == 404) {
+          message = 'Không tìm thấy chức năng này trên máy chủ (404).';
+        } else if (response.statusCode == 422) {
+          final errors = decoded['errors'];
+          if (errors is Map && errors.isNotEmpty) {
+            final firstErrList = errors.values.first;
+            if (firstErrList is List && firstErrList.isNotEmpty) {
+              message = firstErrList.first.toString();
+            }
+          }
+          message ??= 'Dữ liệu gửi lên không hợp lệ.';
+        } else if (response.statusCode >= 500) {
+          message = 'Máy chủ đang gặp sự cố nội bộ (${response.statusCode}).';
+        } else {
+          message = 'Yêu cầu không thành công (${response.statusCode}).';
+        }
+      }
+
       throw ApiException(
-        decoded['message']?.toString() ?? 'Không thể kết nối hệ thống.',
+        message,
         statusCode: response.statusCode,
       );
     }

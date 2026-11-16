@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/api_config.dart';
 import '../../../core/config/app_colors.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../features/admin/data/admin_models.dart';
 import '../../../features/admin/data/admin_service.dart';
@@ -33,8 +34,141 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   String? errorMessage;
 
+  bool? _isServerConnected;
+  bool _isCheckingServer = false;
+
   final identifierController = TextEditingController();
   final passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServerConnection();
+  }
+
+  Future<void> _checkServerConnection() async {
+    if (!mounted) return;
+    setState(() => _isCheckingServer = true);
+    try {
+      final client = ApiClient();
+      await client.get('/mobile/login');
+      if (mounted) setState(() => _isServerConnected = true);
+    } on ApiException catch (e) {
+      // 401, 404, 405, 422 indicate the server is online and responding!
+      final status = e.statusCode;
+      if (status != null && status > 0) {
+        if (mounted) setState(() => _isServerConnected = true);
+      } else {
+        if (mounted) setState(() => _isServerConnected = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isServerConnected = false);
+    } finally {
+      if (mounted) setState(() => _isCheckingServer = false);
+    }
+  }
+
+  Future<void> _showServerConfigDialog() async {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    bool testing = false;
+    String? testResult;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            title: const Row(
+              children: [
+                Icon(Icons.dns_rounded, color: AppColors.primary),
+                SizedBox(width: 10),
+                Text('Cấu hình máy chủ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Địa chỉ API máy chủ:',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: 'https://cofer.io.vn/api/mobile',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                if (testResult != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    testResult!,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: testResult!.contains('thành công')
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await ApiConfig.resetToDefault();
+                  controller.text = ApiConfig.baseUrl;
+                  _checkServerConnection();
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: const Text('Mặc định'),
+              ),
+              OutlinedButton(
+                onPressed: testing
+                    ? null
+                    : () async {
+                        setDialogState(() => testing = true);
+                        try {
+                          ApiConfig.setBaseUrl(controller.text);
+                          final client = ApiClient();
+                          await client.get('/mobile/login');
+                          setDialogState(() => testResult = 'Kết nối máy chủ thành công!');
+                        } on ApiException catch (e) {
+                          if ((e.statusCode ?? 0) > 0) {
+                            setDialogState(() => testResult = 'Kết nối máy chủ thành công (HTTP ${e.statusCode})!');
+                          } else {
+                            setDialogState(() => testResult = 'Lỗi kết nối: ${e.message}');
+                          }
+                        } catch (e) {
+                          setDialogState(() => testResult = 'Lỗi: $e');
+                        } finally {
+                          setDialogState(() => testing = false);
+                        }
+                      },
+                child: testing
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Kiểm tra'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () async {
+                  await ApiConfig.saveConfig(controller.text);
+                  _checkServerConnection();
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: const Text('Lưu'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -88,10 +222,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on ApiException catch (error) {
       setState(() => errorMessage = error.message);
-    } catch (_) {
+    } catch (error) {
       setState(() {
-        errorMessage =
-            'Không kết nối được máy chủ. Vui lòng kiểm tra mạng hoặc host ${ApiConfig.webUrl}.';
+        errorMessage = 'Không thể kết nối máy chủ: $error';
       });
     } finally {
       if (mounted) {
@@ -688,15 +821,78 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildFooter() {
-    return const Center(
-      child: Text(
-        'COne Mobile • Điểm rèn luyện trực tuyến',
-        style: TextStyle(
-          color: Color(0xFF94A3B8),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+    final hostDisplay = Uri.tryParse(ApiConfig.webUrl)?.host ?? ApiConfig.webUrl;
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: _showServerConfigDialog,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _isCheckingServer
+                    ? const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _isServerConnected == true
+                              ? const Color(0xFF10B981)
+                              : _isServerConnected == false
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFFF59E0B),
+                        ),
+                      ),
+                const SizedBox(width: 8),
+                Text(
+                  _isServerConnected == true
+                      ? 'Máy chủ: $hostDisplay (Sẵn sàng)'
+                      : _isServerConnected == false
+                          ? 'Máy chủ: $hostDisplay (Chưa kết nối)'
+                          : 'Đang kiểm tra kết nối...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _isServerConnected == false
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF475569),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.settings_outlined, size: 14, color: Color(0xFF94A3B8)),
+              ],
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+        const Text(
+          'COne Mobile • Điểm rèn luyện trực tuyến',
+          style: TextStyle(
+            color: Color(0xFF94A3B8),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

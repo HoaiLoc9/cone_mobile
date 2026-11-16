@@ -53,25 +53,41 @@ class AuthService {
     required String identifier,
     required String password,
   }) async {
+    final cleanId = identifier.trim();
     final data = await _apiClient.post(
       '/mobile/login',
-      body: {'identifier': identifier, 'password': password},
+      body: {
+        'identifier': cleanId,
+        'code': cleanId,
+        'email': cleanId,
+        'password': password,
+      },
     );
 
-    if (data['success'] != true) {
+    if (data['success'] != true && data['token'] == null) {
       throw ApiException(data['message']?.toString() ?? 'Đăng nhập thất bại.');
     }
 
-    final token = data['token']?.toString() ?? '';
+    final token = data['token']?.toString() ??
+        (data['data'] is Map<String, dynamic>
+            ? data['data']['token']?.toString()
+            : null) ??
+        '';
     if (token.isEmpty) {
       throw const ApiException('API không trả về token đăng nhập.');
     }
 
     _apiClient.setToken(token);
 
+    final rawUser = data['user'] ??
+        (data['data'] is Map<String, dynamic> ? data['data']['user'] : null);
+    if (rawUser is! Map<String, dynamic>) {
+      throw const ApiException('Dữ liệu tài khoản trả về không hợp lệ.');
+    }
+
     final session = AuthSession(
       token: token,
-      user: StudentUser.fromJson(data['user'] as Map<String, dynamic>),
+      user: StudentUser.fromJson(rawUser),
     );
 
     await saveSession(session);

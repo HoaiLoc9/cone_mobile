@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/config/api_config.dart';
 import 'core/config/app_colors.dart';
 import 'core/config/cone_theme.dart';
 import 'features/admin/data/admin_models.dart';
@@ -32,6 +33,7 @@ class _QldrlAppState extends State<QldrlApp> {
 
   Future<void> _restoreSession() async {
     try {
+      await ApiConfig.loadSavedConfig();
       final savedSession = await _authService.getSavedSession();
       if (savedSession != null && mounted) {
         setState(() {

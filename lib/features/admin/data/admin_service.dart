@@ -16,26 +16,45 @@ class AdminService {
     required String email,
     required String password,
   }) async {
+    final cleanEmail = email.trim();
     final data = await _apiClient.post(
       '/mobile/admin/login',
-      body: {'email': email, 'password': password},
+      body: {
+        'email': cleanEmail,
+        'username': cleanEmail,
+        'identifier': cleanEmail,
+        'password': password,
+      },
     );
 
-    if (data['success'] != true) {
+    if (data['success'] != true && data['token'] == null) {
       throw ApiException(
         data['message']?.toString() ?? 'Đăng nhập quản trị thất bại.',
       );
     }
 
-    final token = data['token']?.toString() ?? '';
+    final token = data['token']?.toString() ??
+        (data['data'] is Map<String, dynamic>
+            ? data['data']['token']?.toString()
+            : null) ??
+        '';
     if (token.isEmpty) {
       throw const ApiException('API không trả về token quản trị.');
     }
 
     _apiClient.setToken(token);
+
+    final rawAdmin = data['admin'] ??
+        (data['data'] is Map<String, dynamic> ? data['data']['admin'] : null) ??
+        data['user'] ??
+        (data['data'] is Map<String, dynamic> ? data['data']['user'] : null);
+    if (rawAdmin is! Map<String, dynamic>) {
+      throw const ApiException('Dữ liệu quản trị viên không hợp lệ.');
+    }
+
     return AdminSession(
       token: token,
-      admin: AdminUser.fromJson(data['admin'] as Map<String, dynamic>),
+      admin: AdminUser.fromJson(rawAdmin),
     );
   }
 
