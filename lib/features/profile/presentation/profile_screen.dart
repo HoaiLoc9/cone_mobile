@@ -898,51 +898,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     if (mounted) setState(() {});
                                   },
                                 ),
-                                const Divider(height: 16, thickness: 0.6),
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(Icons.notifications_active_rounded, color: AppColors.primary, size: 20),
-                                  ),
-                                  title: const Text(
-                                    'Thông báo trên máy',
-                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
-                                  ),
-                                  subtitle: const Text(
-                                    'Quản lý chuông & tin báo đẩy tức thì',
-                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                  ),
-                                  trailing: FilledButton(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      minimumSize: Size.zero,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    ),
-                                    onPressed: () async {
-                                      final res = await LocalNotificationService.instance.requestUniversalPermission();
-                                      if (!context.mounted) return;
-                                      if (res == 'granted') {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Đã bật thông báo thành công cho thiết bị! 🎉'),
-                                            backgroundColor: Color(0xFF16A34A),
-                                          ),
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Trạng thái thông báo: $res')),
-                                        );
-                                      }
-                                    },
-                                    child: const Text('Bật ngay', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-                                  ),
-                                ),
                               ],
                             ),
 
@@ -1260,13 +1215,17 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: AppColors.textSecondary),
+          ),
           const SizedBox(width: 8),
-          Expanded(
+          SizedBox(
+            width: 110,
             child: Text(
               label,
               style: const TextStyle(
@@ -1276,12 +1235,16 @@ class _InfoTile extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            value.isEmpty ? '-' : value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 13.5,
-              color: AppColors.textPrimary,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '-' : value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 13.5,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],

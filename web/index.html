@@ -111,31 +111,35 @@
       document.body.style.background = "transparent";
     }
 
+    // Đăng ký Service Worker ngay khi trang tải để sẵn sàng nhận Push Notifications
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js', { scope: './' })
+          .then(function(reg) {
+            console.log('COne Service Worker registered:', reg.scope);
+          })
+          .catch(function(err) {
+            console.warn('COne Service Worker registration error:', err);
+          });
+      });
+    }
+
     // Hỗ trợ Web Push Notification trên iOS Safari PWA & Desktop
     window.requestWebNotificationPermission = async function() {
       if (!('Notification' in window)) {
         return 'unsupported';
       }
       try {
+        if ('serviceWorker' in navigator) {
+          try {
+            await navigator.serviceWorker.register('sw.js', { scope: './' });
+          } catch (_) {}
+        }
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          try {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-              const reg = await navigator.serviceWorker.ready;
-              reg.showNotification('COne Thông Báo', {
-                body: 'Đã kích hoạt thông báo thành công trên iPhone của bạn! 🎉',
-                icon: 'icons/Icon-192.png',
-                badge: 'icons/Icon-192.png'
-              });
-            } else {
-              new Notification('COne Thông Báo', {
-                body: 'Đã kích hoạt thông báo thành công trên iPhone của bạn! 🎉',
-                icon: 'icons/Icon-192.png'
-              });
-            }
-          } catch (e) {
-            console.log('Notification trigger note:', e);
-          }
+          setTimeout(function() {
+            window.sendWebNotification('COne Thông Báo 🎉', 'Đã kích hoạt thông báo thành công cho thiết bị của bạn!');
+          }, 300);
         }
         return permission;
       } catch (e) {
@@ -149,32 +153,41 @@
       return Notification.permission;
     };
 
-    window.sendWebNotification = function(title, body) {
+    window.sendWebNotification = async function(title, body) {
       if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+
       try {
-        if (Notification.permission === 'granted') {
-          if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-            navigator.serviceWorker.ready.then(function(reg) {
-              reg.showNotification(title || 'COne', {
-                body: body || 'Bạn có thông báo mới!',
-                icon: 'icons/Icon-192.png',
-                badge: 'icons/Icon-192.png'
-              });
-            }).catch(function() {
-              new Notification(title || 'COne', {
-                body: body || 'Bạn có thông báo mới!',
-                icon: 'icons/Icon-192.png'
-              });
-            });
-          } else {
-            new Notification(title || 'COne', {
+        if ('serviceWorker' in navigator) {
+          let reg = await navigator.serviceWorker.getRegistration();
+          if (!reg) {
+            reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
+          }
+
+          if (reg) {
+            await reg.showNotification(title || 'COne Thông Báo', {
               body: body || 'Bạn có thông báo mới!',
-              icon: 'icons/Icon-192.png'
+              icon: 'icons/Icon-192.png',
+              badge: 'icons/Icon-192.png',
+              vibrate: [200, 100, 200],
+              tag: 'cone-tag-' + Date.now(),
+              renotify: true
             });
+            return;
           }
         }
+      } catch (err) {
+        console.warn('ServiceWorker showNotification error, attempting fallback:', err);
+      }
+
+      // Fallback cho trình duyệt Desktop
+      try {
+        new Notification(title || 'COne Thông Báo', {
+          body: body || 'Bạn có thông báo mới!',
+          icon: 'icons/Icon-192.png'
+        });
       } catch (e) {
-        console.error('Error sending web notification:', e);
+        console.warn('Standard Notification fallback error:', e);
       }
     };
   </script>
