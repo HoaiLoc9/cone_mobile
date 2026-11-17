@@ -6,6 +6,9 @@ external JSPromise<JSString>? _requestWebNotificationPermission();
 @JS('getWebNotificationStatus')
 external JSString? _getWebNotificationStatus();
 
+@JS('sendWebNotification')
+external void _sendWebNotification(JSString title, JSString body);
+
 Future<String> requestWebPermission() async {
   try {
     final promise = _requestWebNotificationPermission();
@@ -24,4 +27,10 @@ String getWebStatus() {
   } catch (e) {
     return 'unsupported';
   }
+}
+
+void triggerWebNotification(String title, String body) {
+  try {
+    _sendWebNotification(title.toJS, body.toJS);
+  } catch (_) {}
 }

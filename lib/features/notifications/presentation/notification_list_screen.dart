@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/local_notification_service.dart';
 import '../../activities/data/activity_service.dart';
 import '../../activities/presentation/activity_detail_screen.dart';
 import '../../activities/presentation/activity_helpers.dart';
@@ -503,6 +504,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             children: [
               _HeaderCard(unreadCount: list?.unreadCount ?? 0),
               const SizedBox(height: 14),
+              const _DeviceNotificationBanner(),
+              const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -606,6 +609,180 @@ class _HeaderCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeviceNotificationBanner extends StatefulWidget {
+  const _DeviceNotificationBanner();
+
+  @override
+  State<_DeviceNotificationBanner> createState() => _DeviceNotificationBannerState();
+}
+
+class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
+  String _permissionStatus = 'default';
+  bool _isRequesting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  void _checkStatus() {
+    setState(() {
+      _permissionStatus = LocalNotificationService.instance.checkWebPermissionStatus();
+    });
+  }
+
+  Future<void> _requestPermission() async {
+    setState(() => _isRequesting = true);
+    final res = await LocalNotificationService.instance.requestUniversalPermission();
+    if (mounted) {
+      setState(() {
+        _permissionStatus = res;
+        _isRequesting = false;
+      });
+      if (res == 'granted') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã kích hoạt thông báo thành công cho thiết bị! 🎉'),
+            backgroundColor: Color(0xFF16A34A),
+          ),
+        );
+        await LocalNotificationService.instance.showNotification(
+          title: 'COne Thông Báo 🔔',
+          body: 'Thiết bị của bạn đã sẵn sàng nhận thông báo điểm rèn luyện & sự kiện!',
+        );
+      } else if (res == 'denied') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Quyền thông báo bị từ chối. Trên iPhone: Vào Cài đặt > Thông báo > COne để bật.'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendTestNotification() async {
+    await LocalNotificationService.instance.showNotification(
+      title: 'COne Thử Nghiệm 🔔',
+      body: 'Thông báo đẩy trên iPhone hoạt động rất tốt!',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi thông báo thử nghiệm tới màn hình điện thoại!'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isGranted = _permissionStatus == 'granted';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isGranted ? const Color(0xFFF0FDF4) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isGranted ? const Color(0xFFBBF7D0) : const Color(0xFFBFDBFE),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isGranted ? const Color(0xFFDCFCE7) : const Color(0xFFDBEAFE),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  isGranted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
+                  color: isGranted ? const Color(0xFF16A34A) : AppColors.primary,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGranted ? 'Thông báo đẩy: Đang Bật' : 'Thông báo đẩy lên iPhone / ĐT',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: isGranted ? const Color(0xFF166534) : const Color(0xFF1E3A8A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isGranted
+                          ? 'Thiết bị sẵn sàng nhận thông báo khi có điểm rèn luyện & hoạt động mới.'
+                          : 'Bật để nhận thông báo ngay cả khi không mở ứng dụng.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isGranted ? const Color(0xFF15803D) : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: isGranted
+                ? OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF166534),
+                      side: const BorderSide(color: Color(0xFF86EFAC)),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _sendTestNotification,
+                    icon: const Icon(Icons.send_rounded, size: 18),
+                    label: const Text('Bấm để gửi thử thông báo lên máy', style: TextStyle(fontWeight: FontWeight.w700)),
+                  )
+                : FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _isRequesting ? null : _requestPermission,
+                    icon: _isRequesting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Icon(Icons.touch_app_rounded, size: 18),
+                    label: Text(
+                      _isRequesting ? 'Đang yêu cầu cấp quyền...' : 'Bật nhận thông báo ngay',
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    ),
+                  ),
           ),
         ],
       ),

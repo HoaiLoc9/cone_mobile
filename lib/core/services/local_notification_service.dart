@@ -75,14 +75,17 @@ class LocalNotificationService {
     return 'native';
   }
 
-  /// Hiển thị thông báo ngay lập tức trên thanh trạng thái
+  /// Hiển thị thông báo ngay lập tức trên thanh trạng thái (hoạt động trên cả Mobile và Web/iPhone PWA)
   Future<void> showNotification({
     int id = 0,
     required String title,
     required String body,
     String? payload,
   }) async {
-    if (kIsWeb) return;
+    if (kIsWeb) {
+      WebNotificationHelper.showNotification(title, body);
+      return;
+    }
     if (!_isInitialized) await initialize();
 
     const androidDetails = AndroidNotificationDetails(

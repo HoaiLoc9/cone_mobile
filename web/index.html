@@ -148,6 +148,35 @@
       if (!('Notification' in window)) return 'unsupported';
       return Notification.permission;
     };
+
+    window.sendWebNotification = function(title, body) {
+      if (!('Notification' in window)) return;
+      try {
+        if (Notification.permission === 'granted') {
+          if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+            navigator.serviceWorker.ready.then(function(reg) {
+              reg.showNotification(title || 'COne', {
+                body: body || 'Bạn có thông báo mới!',
+                icon: 'icons/Icon-192.png',
+                badge: 'icons/Icon-192.png'
+              });
+            }).catch(function() {
+              new Notification(title || 'COne', {
+                body: body || 'Bạn có thông báo mới!',
+                icon: 'icons/Icon-192.png'
+              });
+            });
+          } else {
+            new Notification(title || 'COne', {
+              body: body || 'Bạn có thông báo mới!',
+              icon: 'icons/Icon-192.png'
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Error sending web notification:', e);
+      }
+    };
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
