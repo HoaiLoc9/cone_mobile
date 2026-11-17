@@ -398,6 +398,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         passwordConfirmation: confirmPassword,
         otp: otp,
       );
+      await BiometricAuthService.instance.updateSavedPassword(newPassword);
       _passwordController.clear();
       _passwordConfirmController.clear();
       _otpController.clear();

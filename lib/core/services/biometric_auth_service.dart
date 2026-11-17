@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -12,6 +13,9 @@ class BiometricAuthService {
   static const String _biometricEnabledKey = 'cone_biometric_enabled';
   static const String _biometricTokenKey = 'cone_bio_saved_token';
   static const String _biometricUserKey = 'cone_bio_saved_user';
+  static const String _biometricUsernameKey = 'cone_bio_saved_username';
+  static const String _biometricPasswordKey = 'cone_bio_saved_password';
+  static const String _biometricRoleKey = 'cone_bio_saved_role';
 
   /// Kiểm tra thiết bị có hỗ trợ phần cứng sinh trắc học không (Android, iOS Native & iOS Safari PWA/Web)
   Future<bool> isBiometricsAvailable() async {
@@ -48,6 +52,50 @@ class BiometricAuthService {
     await AppStorage.instance.setString(_biometricUserKey, userJsonStr);
   }
 
+  /// Lưu thông tin đăng nhập phục vụ xác thực sinh trắc học Face ID / Touch ID
+  Future<void> saveBiometricCredentials({
+    required String username,
+    required String password,
+    String role = 'student',
+  }) async {
+    try {
+      final encUser = base64Encode(utf8.encode(username.trim()));
+      final encPass = base64Encode(utf8.encode(password));
+      await AppStorage.instance.setString(_biometricUsernameKey, encUser);
+      await AppStorage.instance.setString(_biometricPasswordKey, encPass);
+      await AppStorage.instance.setString(_biometricRoleKey, role);
+    } catch (e) {
+      debugPrint('[Biometric] Lỗi lưu credentials: $e');
+    }
+  }
+
+  /// Cập nhật mật khẩu mới khi đổi mật khẩu
+  Future<void> updateSavedPassword(String newPassword) async {
+    try {
+      final encPass = base64Encode(utf8.encode(newPassword));
+      await AppStorage.instance.setString(_biometricPasswordKey, encPass);
+    } catch (_) {}
+  }
+
+  /// Lấy thông tin đăng nhập đã lưu
+  Future<Map<String, String>?> getSavedCredentials() async {
+    try {
+      final encUser = await AppStorage.instance.getString(_biometricUsernameKey);
+      final encPass = await AppStorage.instance.getString(_biometricPasswordKey);
+      final role = await AppStorage.instance.getString(_biometricRoleKey) ?? 'student';
+      if (encUser != null && encUser.isNotEmpty && encPass != null && encPass.isNotEmpty) {
+        final username = utf8.decode(base64Decode(encUser));
+        final password = utf8.decode(base64Decode(encPass));
+        return {
+          'username': username,
+          'password': password,
+          'role': role,
+        };
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Lấy phiên đăng nhập sinh trắc học đã lưu
   Future<Map<String, String>?> getBiometricSession() async {
     final token = await AppStorage.instance.getString(_biometricTokenKey);
@@ -62,6 +110,9 @@ class BiometricAuthService {
   Future<void> clearBiometricSession() async {
     await AppStorage.instance.remove(_biometricTokenKey);
     await AppStorage.instance.remove(_biometricUserKey);
+    await AppStorage.instance.remove(_biometricUsernameKey);
+    await AppStorage.instance.remove(_biometricPasswordKey);
+    await AppStorage.instance.remove(_biometricRoleKey);
   }
 
   /// Mở hộp thoại quét vân tay hoặc Face ID

@@ -208,6 +208,11 @@ class _LoginScreenState extends State<LoginScreen> {
             email: identifier,
             password: password,
           );
+          await BiometricAuthService.instance.saveBiometricCredentials(
+            username: identifier,
+            password: password,
+            role: 'admin',
+          );
           widget.onAdminLoggedIn(adminSession);
           return;
         } on ApiException catch (adminErr) {
@@ -222,6 +227,15 @@ class _LoginScreenState extends State<LoginScreen> {
               password: password,
             );
             await widget.authService.saveSession(studentSession);
+            await BiometricAuthService.instance.saveBiometricCredentials(
+              username: identifier,
+              password: password,
+              role: 'student',
+            );
+            await BiometricAuthService.instance.saveBiometricSession(
+              studentSession.token,
+              jsonEncode(studentSession.user.toJson()),
+            );
             widget.onLoggedIn(studentSession);
             return;
           } on ApiException {
@@ -240,12 +254,15 @@ class _LoginScreenState extends State<LoginScreen> {
             password: password,
           );
           await widget.authService.saveSession(studentSession);
-          if (await BiometricAuthService.instance.isBiometricEnabled()) {
-            await BiometricAuthService.instance.saveBiometricSession(
-              studentSession.token,
-              jsonEncode(studentSession.user.toJson()),
-            );
-          }
+          await BiometricAuthService.instance.saveBiometricCredentials(
+            username: identifier,
+            password: password,
+            role: 'student',
+          );
+          await BiometricAuthService.instance.saveBiometricSession(
+            studentSession.token,
+            jsonEncode(studentSession.user.toJson()),
+          );
           widget.onLoggedIn(studentSession);
           return;
         } on ApiException catch (studentErr) {
@@ -258,6 +275,11 @@ class _LoginScreenState extends State<LoginScreen> {
             final adminSession = await widget.adminService.login(
               email: identifier,
               password: password,
+            );
+            await BiometricAuthService.instance.saveBiometricCredentials(
+              username: identifier,
+              password: password,
+              role: 'admin',
             );
             widget.onAdminLoggedIn(adminSession);
             return;
@@ -297,15 +319,16 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final creds = await BiometricAuthService.instance.getSavedCredentials();
     final savedBio = await BiometricAuthService.instance.getBiometricSession();
     final savedStudent = await widget.authService.getSavedSession();
     final savedAdmin = await widget.adminService.getSavedSession();
 
-    if (savedStudent == null && savedAdmin == null && savedBio == null) {
+    if (creds == null && savedStudent == null && savedAdmin == null && savedBio == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng đăng nhập bằng mật khẩu trước và bật Face ID trong mục Cài đặt.'),
+            content: Text('Vui lòng đăng nhập bằng mật khẩu một lần trước để kích hoạt Face ID.'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -318,24 +341,63 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (authenticated && mounted) {
-      if (savedStudent != null) {
-        widget.onLoggedIn(savedStudent);
-      } else if (savedBio != null) {
-        try {
+      setState(() => isLoading = true);
+      try {
+        if (creds != null) {
+          final username = creds['username']!;
+          final pass = creds['password']!;
+          final role = creds['role'] ?? 'student';
+
+          if (role == 'admin') {
+            try {
+              final adminSession = await widget.adminService.login(
+                email: username,
+                password: pass,
+              );
+              widget.onAdminLoggedIn(adminSession);
+              return;
+            } catch (_) {}
+          }
+
+          // Mặc định đăng nhập sinh viên
+          final studentSession = await widget.authService.login(
+            identifier: username,
+            password: pass,
+          );
+          await widget.authService.saveSession(studentSession);
+          await BiometricAuthService.instance.saveBiometricSession(
+            studentSession.token,
+            jsonEncode(studentSession.user.toJson()),
+          );
+          widget.onLoggedIn(studentSession);
+          return;
+        }
+
+        // Fallback phiên nếu chưa có creds
+        if (savedStudent != null) {
+          widget.onLoggedIn(savedStudent);
+        } else if (savedAdmin != null) {
+          widget.onAdminLoggedIn(savedAdmin);
+        } else if (savedBio != null) {
           final userJson = jsonDecode(savedBio['user']!) as Map<String, dynamic>;
           final user = StudentUser.fromJson(userJson);
           final session = AuthSession(token: savedBio['token']!, user: user);
           await widget.authService.saveSession(session);
           widget.onLoggedIn(session);
-        } catch (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Phiên Face ID đã hết hạn, vui lòng đăng nhập bằng mật khẩu.')),
-            );
-          }
         }
-      } else if (savedAdmin != null) {
-        widget.onAdminLoggedIn(savedAdmin);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đăng nhập Face ID không thành công: ${e is ApiException ? e.message : "Vui lòng nhập mật khẩu."}'),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
       }
     }
   }
