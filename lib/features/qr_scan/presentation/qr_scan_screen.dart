@@ -3,6 +3,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/local_notification_service.dart';
+import '../../../core/services/location_service.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../data/qr_scan_result.dart';
@@ -58,16 +60,31 @@ class _QrScanScreenState extends State<QrScanScreen> {
   Future<void> _submit(String rawValue) async {
     setState(() {
       _isBusy = true;
-      _message = null;
+      _message = 'Đang kiểm tra vị trí GPS...';
     });
 
     try {
       await _controller.stop();
+
+      // 1. Kiểm tra vị trí GPS chống điểm danh hộ từ xa
+      final locationCheck = await LocationService.instance.verifyEventLocation();
+      if (!locationCheck.isAllowed) {
+        setState(() => _message = locationCheck.message);
+        await _restartScannerAfterError();
+        return;
+      }
+
       final result = await widget.service.submit(rawValue);
       setState(() {
         _result = result;
         _message = 'Điểm danh thành công!';
       });
+
+      // 2. Bắn thông báo đẩy cục bộ
+      LocalNotificationService.instance.showNotification(
+        title: 'Điểm danh thành công! 🎉',
+        body: 'Hoạt động: ${result.activityName}. Điểm rèn luyện của bạn đã được ghi nhận.',
+      );
     } on ApiException catch (error) {
       setState(() => _message = error.message);
       await _restartScannerAfterError();
@@ -252,6 +269,30 @@ class _ScanHint extends StatelessWidget {
                   ? AppColors.textSecondary
                   : AppColors.danger,
               fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.security_rounded, size: 14, color: AppColors.primary),
+                SizedBox(width: 6),
+                Text(
+                  'Định vị GPS bảo vệ: Chống điểm danh hộ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

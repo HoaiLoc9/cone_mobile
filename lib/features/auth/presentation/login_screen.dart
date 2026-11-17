@@ -4,6 +4,7 @@ import '../../../core/config/api_config.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/biometric_auth_service.dart';
 import '../../../features/admin/data/admin_models.dart';
 import '../../../features/admin/data/admin_service.dart';
 import '../../../features/admin/presentation/admin_forgot_password_screen.dart';
@@ -269,6 +270,48 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final available = await BiometricAuthService.instance.isBiometricsAvailable();
+    if (!available) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thiết bị của bạn chưa cài đặt hoặc không hỗ trợ vân tay/Face ID.'),
+            backgroundColor: AppColors.textSecondary,
+          ),
+        );
+      }
+      return;
+    }
+
+    final savedStudent = await widget.authService.getSavedSession();
+    final savedAdmin = await widget.adminService.getSavedSession();
+
+    if (savedStudent == null && savedAdmin == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng đăng nhập bằng mật khẩu lần đầu để thiết bị ghi nhớ tài khoản.'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+      return;
+    }
+
+    final authenticated = await BiometricAuthService.instance.authenticate(
+      reason: 'Xác thực sinh trắc học để đăng nhập vào COne',
+    );
+
+    if (authenticated && mounted) {
+      if (savedStudent != null) {
+        widget.onLoggedIn(savedStudent);
+      } else if (savedAdmin != null) {
+        widget.onAdminLoggedIn(savedAdmin);
       }
     }
   }
@@ -665,6 +708,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
               ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Nút Đăng nhập bằng Sinh trắc học (Vân tay / Face ID)
+          OutlinedButton.icon(
+            onPressed: isLoading ? null : _handleBiometricLogin,
+            icon: const Icon(Icons.fingerprint_rounded, size: 22, color: AppColors.primary),
+            label: const Text(
+              'Đăng nhập bằng Vân tay / Face ID',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: const Color(0xFFF8FAFC),
             ),
           ),
         ],

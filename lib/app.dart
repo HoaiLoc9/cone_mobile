@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/config/api_config.dart';
 import 'core/config/app_colors.dart';
 import 'core/config/cone_theme.dart';
+import 'core/services/local_notification_service.dart';
 import 'features/admin/data/admin_models.dart';
 import 'features/admin/data/admin_service.dart';
 import 'features/admin/presentation/admin_home_screen.dart';
@@ -28,6 +29,9 @@ class _QldrlAppState extends State<QldrlApp> {
   @override
   void initState() {
     super.initState();
+    LocalNotificationService.instance.initialize().then((_) {
+      LocalNotificationService.instance.requestPermissions();
+    });
     _restoreSession();
   }
 

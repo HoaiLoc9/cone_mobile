@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/biometric_auth_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
@@ -56,6 +57,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String? _errorMessage;
   String? _successMessage;
+
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
@@ -130,6 +134,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await _savePendingRequest(data.user.id, null);
       } else {
         await _loadPendingRequest(data.user.id);
+      }
+
+      final bioAvailable = await BiometricAuthService.instance.isBiometricsAvailable();
+      final bioEnabled = await BiometricAuthService.instance.isBiometricEnabled();
+      if (mounted) {
+        setState(() {
+          _biometricAvailable = bioAvailable;
+          _biometricEnabled = bioEnabled;
+        });
       }
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
@@ -399,6 +412,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       if (mounted) {
         setState(() => _isSavingPassword = false);
+      }
+    }
+  }
+
+  Future<void> _toggleBiometric(bool val) async {
+    if (val) {
+      final authenticated = await BiometricAuthService.instance.authenticate(
+        reason: 'Xác thực vân tay hoặc Face ID để kích hoạt tính năng này',
+      );
+      if (authenticated) {
+        await BiometricAuthService.instance.setBiometricEnabled(true);
+        if (mounted) {
+          setState(() => _biometricEnabled = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã bật đăng nhập bằng vân tay/Face ID!'),
+              backgroundColor: Color(0xFF16A34A),
+            ),
+          );
+        }
+      }
+    } else {
+      await BiometricAuthService.instance.setBiometricEnabled(false);
+      if (mounted) {
+        setState(() => _biometricEnabled = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã tắt đăng nhập bằng vân tay/Face ID.'),
+            backgroundColor: Color(0xFF475569),
+          ),
+        );
       }
     }
   }
@@ -768,6 +812,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
+
+                          // Cài đặt Đăng nhập Sinh trắc học
+                          if (_biometricAvailable) ...[
+                            const SizedBox(height: 18),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.card,
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.03),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                secondary: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    Icons.fingerprint_rounded,
+                                    color: AppColors.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                                title: const Text(
+                                  'Đăng nhập Vân tay / Face ID',
+                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                                ),
+                                subtitle: const Text(
+                                  'Mở khóa nhanh ứng dụng không cần gõ mật khẩu',
+                                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                                ),
+                                value: _biometricEnabled,
+                                activeThumbColor: AppColors.primary,
+                                onChanged: _toggleBiometric,
+                              ),
+                            ),
+                          ],
 
                           const SizedBox(height: 24),
 
