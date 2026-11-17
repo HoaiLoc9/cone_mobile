@@ -110,6 +110,44 @@
       document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
     }
+
+    // Hỗ trợ Web Push Notification trên iOS Safari PWA & Desktop
+    window.requestWebNotificationPermission = async function() {
+      if (!('Notification' in window)) {
+        return 'unsupported';
+      }
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          try {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+              const reg = await navigator.serviceWorker.ready;
+              reg.showNotification('COne Thông Báo', {
+                body: 'Đã kích hoạt thông báo thành công trên iPhone của bạn! 🎉',
+                icon: 'icons/Icon-192.png',
+                badge: 'icons/Icon-192.png'
+              });
+            } else {
+              new Notification('COne Thông Báo', {
+                body: 'Đã kích hoạt thông báo thành công trên iPhone của bạn! 🎉',
+                icon: 'icons/Icon-192.png'
+              });
+            }
+          } catch (e) {
+            console.log('Notification trigger note:', e);
+          }
+        }
+        return permission;
+      } catch (e) {
+        console.error('Error requesting notification permission:', e);
+        return 'denied';
+      }
+    };
+
+    window.getWebNotificationStatus = function() {
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission;
+    };
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>

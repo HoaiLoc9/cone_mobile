@@ -27,7 +27,16 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>?ng d?ng c?n camera ?? qu?t m? QR ?i?m danh ho?t ??ng.</string>
+		<string>Ứng dụng cần camera để quét mã QR điểm danh hoạt động.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Ứng dụng cần quyền Face ID để mở khóa và đăng nhập an toàn.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Ứng dụng cần vị trí GPS để xác thực bạn có mặt tại sự kiện khi quét QR điểm danh.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'web_notification_helper.dart';
+
 class LocalNotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
@@ -54,6 +56,23 @@ class LocalNotificationService {
       debugPrint('[Notification] Lỗi yêu cầu cấp quyền thông báo: $e');
       return false;
     }
+  }
+
+  /// Yêu cầu cấp quyền thông báo hỗ trợ cả Mobile Native và Web/iOS Safari PWA
+  Future<String> requestUniversalPermission() async {
+    if (kIsWeb) {
+      return await WebNotificationHelper.requestPermission();
+    } else {
+      final granted = await requestPermissions();
+      return granted ? 'granted' : 'denied';
+    }
+  }
+
+  String checkWebPermissionStatus() {
+    if (kIsWeb) {
+      return WebNotificationHelper.getStatus();
+    }
+    return 'native';
   }
 
   /// Hiển thị thông báo ngay lập tức trên thanh trạng thái

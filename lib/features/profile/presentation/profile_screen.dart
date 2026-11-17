@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
+import '../../../core/services/local_notification_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/utils/image_compressor.dart';
@@ -906,6 +907,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 await ThemeService.instance.toggleTheme();
                                 if (mounted) setState(() {});
                               },
+                            ),
+                          ),
+
+                          // Kích hoạt nhận Thông báo đẩy (Push Notifications)
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_active_rounded,
+                                    color: AppColors.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Thông báo trên iPhone',
+                                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Nhận tin báo điểm rèn luyện & sự kiện',
+                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () async {
+                                    final res = await LocalNotificationService.instance.requestUniversalPermission();
+                                    if (!context.mounted) return;
+                                    if (res == 'granted') {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Đã kích hoạt thông báo thành công cho thiết bị! 🎉'),
+                                          backgroundColor: Color(0xFF16A34A),
+                                        ),
+                                      );
+                                    } else if (res == 'denied') {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Quyền thông báo bị từ chối. Vui lòng bật trong Cài đặt iPhone.'),
+                                          backgroundColor: AppColors.danger,
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Trạng thái quyền: $res'),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: const Text(
+                                    'Bật ngay',
+                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
