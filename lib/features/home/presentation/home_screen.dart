@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/local_notification_service.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/missing_attendance_screen.dart';
@@ -36,7 +39,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late AuthSession _session;
   late final ValueNotifier<AuthSession> _sessionNotifier;
   late final DrlService _drlService;
@@ -45,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<_StudentDashboardData> _dashboardFuture;
   int _currentNavIndex = 0;
   int _unreadCount = 0;
+
+  Timer? _notificationSyncTimer;
+  final Set<String> _notifiedNoticeIds = {};
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -57,21 +63,72 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _session = widget.session;
     _sessionNotifier = ValueNotifier<AuthSession>(_session);
     _drlService = DrlService(token: _session.token);
     _notificationService = NotificationService(token: _session.token);
     _studentServicesService = StudentServicesService(token: _session.token);
     _dashboardFuture = _loadDashboard();
-    _notificationService.fetchUnreadCount().then((count) {
-      if (mounted) setState(() => _unreadCount = count);
-    }).catchError((_) {});
+    _startNotificationPolling();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationSyncTimer?.cancel();
     _sessionNotifier.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkNewNotifications();
+    }
+  }
+
+  void _startNotificationPolling() {
+    _notificationSyncTimer?.cancel();
+    // 1. Quét ghi nhớ danh sách ban đầu để không spam thông báo cũ
+    _checkNewNotifications(silentInitial: true);
+    // 2. Định kỳ mỗi 15 giây kiểm tra tự động xem Admin có đẩy thông báo mới không
+    _notificationSyncTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _checkNewNotifications();
+    });
+  }
+
+  Future<void> _checkNewNotifications({bool silentInitial = false}) async {
+    if (!mounted) return;
+    try {
+      final list = await _notificationService.fetchNotifications(unreadOnly: true);
+      if (!mounted) return;
+
+      if (_unreadCount != list.unreadCount) {
+        setState(() => _unreadCount = list.unreadCount);
+      }
+
+      if (silentInitial) {
+        for (final item in list.items) {
+          _notifiedNoticeIds.add(item.id);
+        }
+        return;
+      }
+
+      // Phát hiện thông báo mới vừa được Admin đẩy
+      for (final item in list.items) {
+        if (!_notifiedNoticeIds.contains(item.id)) {
+          _notifiedNoticeIds.add(item.id);
+
+          // Rung chuông và hiển thị thông báo đẩy lên màn hình điện thoại ngay lập tức!
+          await LocalNotificationService.instance.showNotification(
+            id: item.id.hashCode,
+            title: item.title,
+            body: item.message,
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   Future<_StudentDashboardData> _loadDashboard() async {

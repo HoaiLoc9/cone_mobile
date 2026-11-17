@@ -42,3 +42,26 @@ self.addEventListener('message', (event) => {
     self.registration.showNotification(title, options);
   }
 });
+
+// Lắng nghe sự kiện Push từ máy chủ khi tắt app
+self.addEventListener('push', (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (_) {
+      data = { title: 'COne', body: event.data.text() };
+    }
+  }
+  const title = data.title || 'COne Thông Báo 🔔';
+  const options = {
+    body: data.body || data.message || 'Bạn có thông báo mới từ Nhà trường!',
+    icon: 'icons/Icon-192.png',
+    badge: 'icons/Icon-192.png',
+    vibrate: [200, 100, 200],
+    tag: 'cone-push-' + Date.now(),
+    renotify: true,
+    data: data
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});

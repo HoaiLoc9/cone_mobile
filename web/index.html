@@ -190,6 +190,86 @@
         console.warn('Standard Notification fallback error:', e);
       }
     };
+
+    // Hỗ trợ Face ID / Touch ID / Vân tay qua chuẩn WebAuthn trên iPhone Safari PWA & Desktop
+    window.isWebAuthnAvailable = async function() {
+      try {
+        if (window.PublicKeyCredential &&
+            typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+          return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        }
+      } catch (e) {
+        console.warn('isWebAuthnAvailable check error:', e);
+      }
+      return false;
+    };
+
+    window.authenticateWebBiometric = async function(reason) {
+      try {
+        if (!window.PublicKeyCredential) return false;
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const existingCredId = localStorage.getItem('cone_bio_cred_id');
+
+        if (!existingCredId) {
+          // Lần đầu đăng ký Face ID / Touch ID cho thiết bị
+          const userId = new Uint8Array(16);
+          window.crypto.getRandomValues(userId);
+
+          const credential = await navigator.credentials.create({
+            publicKey: {
+              challenge: challenge,
+              rp: { name: "COne Mobile", id: window.location.hostname },
+              user: {
+                id: userId,
+                name: "sinhvien",
+                displayName: "Sinh viên COne"
+              },
+              pubKeyCredParams: [
+                { alg: -7, type: "public-key" },
+                { alg: -257, type: "public-key" }
+              ],
+              authenticatorSelection: {
+                authenticatorAttachment: "platform",
+                userVerification: "required"
+              },
+              timeout: 60000
+            }
+          });
+
+          if (credential) {
+            const rawId = Array.from(new Uint8Array(credential.rawId)).map(b => String.fromCharCode(b)).join('');
+            localStorage.setItem('cone_bio_cred_id', btoa(rawId));
+            return true;
+          }
+          return false;
+        } else {
+          // Xác thực các lần sau bằng Face ID / Touch ID đã lưu
+          const rawIdStr = atob(existingCredId);
+          const rawId = Uint8Array.from(rawIdStr, c => c.charCodeAt(0));
+
+          const assertion = await navigator.credentials.get({
+            publicKey: {
+              challenge: challenge,
+              rpId: window.location.hostname,
+              allowCredentials: [{
+                id: rawId,
+                type: 'public-key'
+              }],
+              userVerification: "required",
+              timeout: 60000
+            }
+          });
+
+          return !!assertion;
+        }
+      } catch (err) {
+        console.warn('WebAuthn biometric error or cancelled:', err);
+        return false;
+      }
+    };
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>

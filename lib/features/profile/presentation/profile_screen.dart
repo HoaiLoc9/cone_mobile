@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
-import '../../../core/services/local_notification_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/utils/image_compressor.dart';
@@ -63,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _errorMessage;
   String? _successMessage;
 
-  bool _biometricAvailable = false;
   bool _biometricEnabled = false;
 
   @override
@@ -141,11 +139,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await _loadPendingRequest(data.user.id);
       }
 
-      final bioAvailable = await BiometricAuthService.instance.isBiometricsAvailable();
       final bioEnabled = await BiometricAuthService.instance.isBiometricEnabled();
       if (mounted) {
         setState(() {
-          _biometricAvailable = bioAvailable;
           _biometricEnabled = bioEnabled;
         });
       }
@@ -430,12 +426,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       if (authenticated) {
         await BiometricAuthService.instance.setBiometricEnabled(true);
+        await BiometricAuthService.instance.saveBiometricSession(
+          widget.session.token,
+          jsonEncode(widget.session.user.toJson()),
+        );
         if (mounted) {
           setState(() => _biometricEnabled = true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Đã bật đăng nhập bằng vân tay/Face ID!'),
+              content: Text('Đã bật đăng nhập bằng vân tay/Face ID thành công! 🎉'),
               backgroundColor: Color(0xFF16A34A),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          setState(() => _biometricEnabled = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Xác thực Face ID/Vân tay không thành công hoặc thiết bị chưa hỗ trợ.'),
+              backgroundColor: AppColors.danger,
             ),
           );
         }
@@ -832,31 +842,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
 
                                 // Đăng nhập sinh trắc học
-                                if (_biometricAvailable) ...[
-                                  const Divider(height: 24, thickness: 0.6),
-                                  SwitchListTile.adaptive(
-                                    contentPadding: EdgeInsets.zero,
-                                    secondary: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF059669), size: 22),
+                                const Divider(height: 24, thickness: 0.6),
+                                SwitchListTile.adaptive(
+                                  contentPadding: EdgeInsets.zero,
+                                  secondary: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    title: const Text(
-                                      'Vân tay & Face ID',
-                                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
-                                    ),
-                                    subtitle: const Text(
-                                      'Mở khóa và đăng nhập app nhanh chóng',
-                                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                    ),
-                                    value: _biometricEnabled,
-                                    activeThumbColor: AppColors.primary,
-                                    onChanged: _toggleBiometric,
+                                    child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF059669), size: 22),
                                   ),
-                                ],
+                                  title: const Text(
+                                    'Vân tay & Face ID',
+                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                  ),
+                                  subtitle: const Text(
+                                    'Mở khóa và đăng nhập app nhanh chóng',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  ),
+                                  value: _biometricEnabled,
+                                  activeThumbColor: AppColors.primary,
+                                  onChanged: _toggleBiometric,
+                                ),
                               ],
                             ),
 

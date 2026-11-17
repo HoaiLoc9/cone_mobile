@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/config/api_config.dart';
@@ -8,6 +10,7 @@ import '../../../core/services/biometric_auth_service.dart';
 import '../../../features/admin/data/admin_models.dart';
 import '../../../features/admin/data/admin_service.dart';
 import '../../../features/admin/presentation/admin_forgot_password_screen.dart';
+import '../data/student_user.dart';
 import '../data/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -237,6 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
             password: password,
           );
           await widget.authService.saveSession(studentSession);
+          if (await BiometricAuthService.instance.isBiometricEnabled()) {
+            await BiometricAuthService.instance.saveBiometricSession(
+              studentSession.token,
+              jsonEncode(studentSession.user.toJson()),
+            );
+          }
           widget.onLoggedIn(studentSession);
           return;
         } on ApiException catch (studentErr) {
@@ -280,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Thiết bị của bạn chưa cài đặt hoặc không hỗ trợ vân tay/Face ID.'),
+            content: Text('Thiết bị chưa cài đặt Face ID/Vân tay hoặc trình duyệt chưa cấp quyền.'),
             backgroundColor: AppColors.textSecondary,
           ),
         );
@@ -288,14 +297,15 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final savedBio = await BiometricAuthService.instance.getBiometricSession();
     final savedStudent = await widget.authService.getSavedSession();
     final savedAdmin = await widget.adminService.getSavedSession();
 
-    if (savedStudent == null && savedAdmin == null) {
+    if (savedStudent == null && savedAdmin == null && savedBio == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng đăng nhập bằng mật khẩu lần đầu để thiết bị ghi nhớ tài khoản.'),
+            content: Text('Vui lòng đăng nhập bằng mật khẩu trước và bật Face ID trong mục Cài đặt.'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -304,12 +314,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final authenticated = await BiometricAuthService.instance.authenticate(
-      reason: 'Xác thực sinh trắc học để đăng nhập vào COne',
+      reason: 'Xác thực vân tay hoặc Face ID để đăng nhập vào COne',
     );
 
     if (authenticated && mounted) {
       if (savedStudent != null) {
         widget.onLoggedIn(savedStudent);
+      } else if (savedBio != null) {
+        try {
+          final userJson = jsonDecode(savedBio['user']!) as Map<String, dynamic>;
+          final user = StudentUser.fromJson(userJson);
+          final session = AuthSession(token: savedBio['token']!, user: user);
+          await widget.authService.saveSession(session);
+          widget.onLoggedIn(session);
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Phiên Face ID đã hết hạn, vui lòng đăng nhập bằng mật khẩu.')),
+            );
+          }
+        }
       } else if (savedAdmin != null) {
         widget.onAdminLoggedIn(savedAdmin);
       }
