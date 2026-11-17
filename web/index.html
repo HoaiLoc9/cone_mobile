@@ -270,6 +270,13 @@
         return false;
       }
     };
+
+    // Tự động kiểm tra khi người dùng mở lại app / mở khóa màn hình iPhone
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        console.log('COne PWA resumed, ready for notifications.');
+      }
+    });
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>

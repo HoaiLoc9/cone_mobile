@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/services/local_notification_service.dart';
+import '../../../core/storage/app_storage.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/missing_attendance_screen.dart';
@@ -90,15 +91,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _startNotificationPolling() {
     _notificationSyncTimer?.cancel();
-    // 1. Quét ghi nhớ danh sách ban đầu để không spam thông báo cũ
-    _checkNewNotifications(silentInitial: true);
-    // 2. Định kỳ mỗi 15 giây kiểm tra tự động xem Admin có đẩy thông báo mới không
+    // 1. Kiểm tra ngay lập tức khi mở app
+    _checkNewNotifications();
+    // 2. Định kỳ mỗi 15 giây tự động đồng bộ để bắt thông báo Admin vừa đẩy
     _notificationSyncTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       _checkNewNotifications();
     });
   }
 
-  Future<void> _checkNewNotifications({bool silentInitial = false}) async {
+  Future<void> _checkNewNotifications() async {
     if (!mounted) return;
     try {
       final list = await _notificationService.fetchNotifications(unreadOnly: true);
@@ -108,16 +109,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() => _unreadCount = list.unreadCount);
       }
 
-      if (silentInitial) {
+      if (list.items.isEmpty) return;
+
+      final lastNotifiedId = await AppStorage.instance.getString('cone_last_notified_id');
+
+      // Nếu là lần đầu mở app, lưu id hiện tại để không bắn spam các thông báo cũ trước đó
+      if (lastNotifiedId == null) {
+        await AppStorage.instance.setString('cone_last_notified_id', list.items.first.id);
         for (final item in list.items) {
           _notifiedNoticeIds.add(item.id);
         }
         return;
       }
 
-      // Phát hiện thông báo mới vừa được Admin đẩy
+      // Quét các thông báo mới Admin vừa gửi (chưa từng được thông báo)
       for (final item in list.items) {
-        if (!_notifiedNoticeIds.contains(item.id)) {
+        if (!_notifiedNoticeIds.contains(item.id) && item.id != lastNotifiedId) {
           _notifiedNoticeIds.add(item.id);
 
           // Rung chuông và hiển thị thông báo đẩy lên màn hình điện thoại ngay lập tức!
@@ -128,6 +135,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           );
         }
       }
+
+      // Cập nhật id thông báo mới nhất
+      await AppStorage.instance.setString('cone_last_notified_id', list.items.first.id);
     } catch (_) {}
   }
 
