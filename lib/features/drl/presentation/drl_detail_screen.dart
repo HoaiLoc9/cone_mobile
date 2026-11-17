@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../activities/presentation/activity_helpers.dart';
+import '../../auth/data/auth_service.dart';
+import '../../auth/data/student_user.dart';
 import '../data/drl_models.dart';
+import '../data/drl_pdf_service.dart';
 import '../data/drl_service.dart';
 import 'drl_score_format.dart';
 import 'drl_self_assessment_screen.dart';
@@ -53,6 +56,33 @@ class _DrlDetailScreenState extends State<DrlDetailScreen> {
     }
   }
 
+  Future<void> _exportPdf() async {
+    final detail = _detail;
+    if (detail == null) return;
+
+    try {
+      final session = await AuthService().getSavedSession();
+      final student = session?.user ??
+          const StudentUser(
+            id: '',
+            code: 'SINH VIEN',
+            name: 'Sinh viên',
+            email: '',
+            phone: '',
+            studentClass: 'CĐ Kinh tế Đối ngoại',
+            department: 'Khoa CNTT & QTKD',
+          );
+
+      await DrlPdfService.printOrShare(detail: detail, student: student);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi xuất file PDF: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detail = _detail;
@@ -67,6 +97,14 @@ class _DrlDetailScreenState extends State<DrlDetailScreen> {
             detail?.semester.name ?? 'Chi tiết DRL',
             style: const TextStyle(fontWeight: FontWeight.w900),
           ),
+          actions: [
+            if (detail != null)
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
+                tooltip: 'Xuất phiếu ĐRL (PDF)',
+                onPressed: _exportPdf,
+              ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Hoạt động'),

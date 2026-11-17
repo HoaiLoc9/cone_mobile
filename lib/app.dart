@@ -4,6 +4,7 @@ import 'core/config/api_config.dart';
 import 'core/config/app_colors.dart';
 import 'core/config/cone_theme.dart';
 import 'core/services/local_notification_service.dart';
+import 'core/services/theme_service.dart';
 import 'features/admin/data/admin_models.dart';
 import 'features/admin/data/admin_service.dart';
 import 'features/admin/presentation/admin_home_screen.dart';
@@ -29,10 +30,22 @@ class _QldrlAppState extends State<QldrlApp> {
   @override
   void initState() {
     super.initState();
+    ThemeService.instance.loadTheme();
+    ThemeService.instance.addListener(_onThemeChanged);
     LocalNotificationService.instance.initialize().then((_) {
       LocalNotificationService.instance.requestPermissions();
     });
     _restoreSession();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    ThemeService.instance.removeListener(_onThemeChanged);
+    super.dispose();
   }
 
   Future<void> _restoreSession() async {
@@ -100,6 +113,8 @@ class _QldrlAppState extends State<QldrlApp> {
       debugShowCheckedModeBanner: false,
       title: 'COne',
       theme: COneTheme.light(),
+      darkTheme: COneTheme.dark(),
+      themeMode: ThemeService.instance.themeMode,
       home: _isCheckingSession
           ? const Scaffold(
               backgroundColor: AppColors.background,

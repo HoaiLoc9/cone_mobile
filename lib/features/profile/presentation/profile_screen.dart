@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
+import '../../../core/services/theme_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
@@ -858,6 +859,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ],
+
+                          // Cài đặt Giao diện Sáng / Tối (Dark Mode)
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              secondary: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  ThemeService.instance.isDarkMode
+                                      ? Icons.dark_mode_rounded
+                                      : Icons.light_mode_rounded,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              title: const Text(
+                                'Giao diện Tối (Dark Mode)',
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                              ),
+                              subtitle: Text(
+                                ThemeService.instance.isDarkMode ? 'Đang bật giao diện tối' : 'Đang bật giao diện sáng',
+                                style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                              ),
+                              value: ThemeService.instance.isDarkMode,
+                              activeThumbColor: AppColors.primary,
+                              onChanged: (_) async {
+                                await ThemeService.instance.toggleTheme();
+                                if (mounted) setState(() {});
+                              },
+                            ),
+                          ),
 
                           const SizedBox(height: 24),
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../config/api_config.dart';
+import '../storage/app_storage.dart';
 import 'api_exception.dart';
 import 'api_response.dart';
 import 'api_transport.dart';
@@ -53,6 +54,8 @@ class ApiClient {
       headers['Authorization'] = 'Bearer $_token';
     }
 
+    final cacheKey = 'cone_offline_cache_${_normalizePath(path)}';
+
     ApiResponse response;
     try {
       response = await _transport.request(
@@ -61,9 +64,20 @@ class ApiClient {
         headers: headers,
         body: body == null ? null : jsonEncode(body),
       );
-    } on ApiException {
-      rethrow;
     } catch (error) {
+      // Khi mất mạng hoặc host offline/nghỉ ngơi: Thử lấy dữ liệu từ Offline Cache đối với yêu cầu GET
+      if (method == 'GET') {
+        final cached = await AppStorage.instance.getString(cacheKey);
+        if (cached != null && cached.isNotEmpty) {
+          try {
+            final parsed = jsonDecode(cached);
+            if (parsed is Map<String, dynamic>) {
+              return parsed;
+            }
+          } catch (_) {}
+        }
+      }
+      if (error is ApiException) rethrow;
       throw ApiException(
         'Không thể gửi yêu cầu đến máy chủ: $error',
       );
@@ -82,6 +96,17 @@ class ApiClient {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (method == 'GET') {
+        final cached = await AppStorage.instance.getString(cacheKey);
+        if (cached != null && cached.isNotEmpty) {
+          try {
+            final parsed = jsonDecode(cached);
+            if (parsed is Map<String, dynamic>) {
+              return parsed;
+            }
+          } catch (_) {}
+        }
+      }
       String? message = decoded['message']?.toString();
       if (message == null || message.isEmpty) {
         if (decoded['error'] != null) {
@@ -112,6 +137,10 @@ class ApiClient {
         message,
         statusCode: response.statusCode,
       );
+    }
+
+    if (method == 'GET' && response.body.isNotEmpty) {
+      AppStorage.instance.setString(cacheKey, response.body).catchError((_) {});
     }
 
     return decoded;
