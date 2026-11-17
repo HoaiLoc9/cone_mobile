@@ -6,4 +6,6 @@ abstract class WebNotificationHelper {
   static String getStatus() => getWebStatus();
   static void showNotification(String title, String body) =>
       triggerWebNotification(title, body);
+  static Future<String?> subscribePush(String vapidPublicKey) =>
+      subscribePushWeb(vapidPublicKey);
 }

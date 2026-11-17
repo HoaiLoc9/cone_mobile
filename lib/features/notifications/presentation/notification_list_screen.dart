@@ -512,10 +512,10 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               // 1. Thẻ Bật Thông Báo Đẩy Nổi Bật
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: _DeviceNotificationBanner(),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: _DeviceNotificationBanner(service: widget.service),
                 ),
               ),
 
@@ -723,7 +723,9 @@ class _FilterPill extends StatelessWidget {
 
 /// Thẻ kích hoạt Thông báo đẩy thiết kế phong cách Apple / Glassmorphism
 class _DeviceNotificationBanner extends StatefulWidget {
-  const _DeviceNotificationBanner();
+  const _DeviceNotificationBanner({required this.service});
+
+  final NotificationService service;
 
   @override
   State<_DeviceNotificationBanner> createState() => _DeviceNotificationBannerState();
@@ -740,9 +742,22 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
   }
 
   void _checkStatus() {
+    final status = LocalNotificationService.instance.checkWebPermissionStatus();
     setState(() {
-      _permissionStatus = LocalNotificationService.instance.checkWebPermissionStatus();
+      _permissionStatus = status;
     });
+    if (status == 'granted') {
+      _syncPushToken();
+    }
+  }
+
+  Future<void> _syncPushToken() async {
+    try {
+      final sub = await LocalNotificationService.instance.getPushSubscription();
+      if (sub != null && mounted) {
+        await widget.service.registerPushSubscription(sub);
+      }
+    } catch (_) {}
   }
 
   Future<void> _requestPermission() async {
@@ -754,6 +769,7 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
         _isRequesting = false;
       });
       if (res == 'granted') {
+        _syncPushToken();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Đã kích hoạt nhận thông báo đẩy thành công! 🎉'),

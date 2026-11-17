@@ -9,6 +9,20 @@ external JSString? _getWebNotificationStatus();
 @JS('sendWebNotification')
 external void _sendWebNotification(JSString title, JSString body);
 
+@JS('subscribeWebPush')
+external JSPromise<JSString>? _subscribeWebPush(JSString vapidPublicKey);
+
+Future<String?> subscribePushWeb(String vapidPublicKey) async {
+  try {
+    final promise = _subscribeWebPush(vapidPublicKey.toJS);
+    if (promise == null) return null;
+    final result = await promise.toDart;
+    return result.toDart;
+  } catch (e) {
+    return null;
+  }
+}
+
 Future<String> requestWebPermission() async {
   try {
     final promise = _requestWebNotificationPermission();

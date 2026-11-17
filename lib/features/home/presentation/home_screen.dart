@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
@@ -72,6 +73,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _studentServicesService = StudentServicesService(token: _session.token);
     _dashboardFuture = _loadDashboard();
     _startNotificationPolling();
+    _syncPushToken();
+  }
+
+  Future<void> _syncPushToken() async {
+    if (!kIsWeb) return;
+    try {
+      final status = LocalNotificationService.instance.checkWebPermissionStatus();
+      if (status == 'granted') {
+        final sub = await LocalNotificationService.instance.getPushSubscription();
+        if (sub != null) {
+          await _notificationService.registerPushSubscription(sub);
+        }
+      }
+    } catch (_) {}
   }
 
   @override

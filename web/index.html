@@ -191,6 +191,48 @@
       }
     };
 
+    function urlB64ToUint8Array(base64String) {
+      var padding = '='.repeat((4 - base64String.length % 4) % 4);
+      var base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+      var rawData = window.atob(base64);
+      var outputArray = new Uint8Array(rawData.length);
+      for (var i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    // Đăng ký Push Subscription với Apple APNs / Google FCM (WebPush VAPID)
+    window.subscribeWebPush = async function(vapidPublicKey) {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return JSON.stringify({ error: 'unsupported' });
+      }
+      try {
+        var reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) {
+          reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
+        }
+        await navigator.serviceWorker.ready;
+        var sub = await reg.pushManager.getSubscription();
+        if (!sub && vapidPublicKey) {
+          var appServerKey = urlB64ToUint8Array(vapidPublicKey);
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: appServerKey
+          });
+        }
+        if (sub) {
+          return JSON.stringify(sub.toJSON());
+        }
+        return JSON.stringify({ error: 'no_subscription' });
+      } catch (err) {
+        console.error('subscribeWebPush error:', err);
+        return JSON.stringify({ error: err.message || err.toString() });
+      }
+    };
+
     // Hỗ trợ Face ID / Touch ID / Vân tay qua chuẩn WebAuthn trên iPhone Safari PWA & Desktop
     window.isWebAuthnAvailable = async function() {
       try {

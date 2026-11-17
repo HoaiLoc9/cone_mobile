@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -73,6 +74,26 @@ class LocalNotificationService {
       return WebNotificationHelper.getStatus();
     }
     return 'native';
+  }
+
+  static const String defaultVapidPublicKey =
+      'BLl7gtb4paS6XGzpELq49YiHVgYZiHpP7jYA0pWiJ3iTkHZeRGo-300x79e6jQ3mkxvyhbxTJZ7CB5TNOK8uaXY';
+
+  /// Đăng ký Push Subscription với Apple / Google (WebPush VAPID)
+  Future<Map<String, dynamic>?> getPushSubscription({String? vapidPublicKey}) async {
+    if (!kIsWeb) return null;
+    try {
+      final key = vapidPublicKey ?? defaultVapidPublicKey;
+      final raw = await WebNotificationHelper.subscribePush(key);
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('endpoint')) {
+        return decoded;
+      }
+    } catch (e) {
+      debugPrint('[Notification] Lỗi lấy WebPush Subscription: $e');
+    }
+    return null;
   }
 
   /// Hiển thị thông báo ngay lập tức trên thanh trạng thái (hoạt động trên cả Mobile và Web/iPhone PWA)

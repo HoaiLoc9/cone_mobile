@@ -37,4 +37,17 @@ class NotificationService {
   Future<void> markAllRead() async {
     await _apiClient.post('/mobile/notifications/read-all');
   }
+
+  /// Đồng bộ mã WebPush Subscription lên Server Laravel để nhận thông báo khi tắt app
+  Future<bool> registerPushSubscription(Map<String, dynamic> subscription) async {
+    try {
+      await _apiClient.post(
+        '/mobile/push-subscriptions',
+        body: subscription,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }
