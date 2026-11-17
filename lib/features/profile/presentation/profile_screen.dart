@@ -52,6 +52,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
+  bool _isEditingContact = false;
+  bool _isPasswordSectionExpanded = false;
+
   int _otpCountdown = 0;
   Timer? _countdownTimer;
 
@@ -120,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final data = await widget.service.fetchProfile();
       _applyUser(data.user);
 
-      // Fetch pending request from backend API
+      // Đồng bộ yêu cầu thay đổi thông tin từ server
       final pendingApi = await widget.service.fetchPendingRequest();
       if (pendingApi != null && pendingApi['status'] == 'pending') {
         final reqData = (pendingApi['requested_data'] as Map<String, dynamic>?) ?? {};
@@ -147,9 +150,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } on ApiException catch (error) {
-      setState(() => _errorMessage = error.message);
+      if (mounted) setState(() => _errorMessage = error.message);
     } catch (_) {
-      setState(() => _errorMessage = 'Không thể tải thông tin hồ sơ.');
+      if (mounted) setState(() => _errorMessage = 'Không thể tải thông tin hồ sơ.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -182,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final compressed = await ImageCompressor.compressImage(
       fileName: file!.name,
       bytes: file.bytes!,
-      maxDimension: 800, // Tối ưu kích thước riêng cho avatar
+      maxDimension: 800,
       quality: 85,
     );
     setState(
@@ -284,8 +287,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _savePendingRequest(user.id, requestData);
 
       setState(() {
+        _isEditingContact = false;
         _successMessage =
-            'Đã gửi yêu cầu thay đổi thông tin thành công! Yêu cầu đang được chờ phê duyệt.';
+            'Đã gửi yêu cầu thay đổi thông tin thành công! Vui lòng chờ GVCN xét duyệt.';
       });
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
@@ -405,6 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _otpSent = false;
         _otpCountdown = 0;
+        _isPasswordSectionExpanded = false;
         _successMessage = 'Đổi mật khẩu thành công bằng mã OTP email!';
       });
     } on ApiException catch (error) {
@@ -449,18 +454,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmAndLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.danger),
+            SizedBox(width: 10),
+            Text('Đăng xuất tài khoản', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại trên thiết bị này?',
+          style: TextStyle(fontSize: 14, height: 1.45, color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Ở lại', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+      await widget.onLogout();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _user;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         surfaceTintColor: AppColors.background,
         elevation: 0,
+        centerTitle: false,
         title: const Text(
-          'Hồ sơ sinh viên',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+          'Tài khoản & Cá nhân',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
         ),
         actions: [
           IconButton(
@@ -474,66 +520,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null && user == null
-                ? _Message(message: _errorMessage!, isError: true)
+                ? _EmptyMessage(message: _errorMessage!, isError: true)
                 : user == null
-                    ? const _Message(message: 'Chưa có dữ liệu hồ sơ.', isError: false)
-                    : ListView(
-                        padding: const EdgeInsets.fromLTRB(18, 12, 18, 36),
-                        children: [
-                          _ProfileHeader(
-                            user: user,
-                            avatarUpload: _avatarUpload,
-                            avatarName: _avatarUpload?.name,
-                            onPickAvatar: _pickAvatar,
-                          ),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 14),
-                            _Banner(message: _errorMessage!, color: AppColors.danger, icon: Icons.error_outline_rounded),
-                          ],
-                          if (_successMessage != null) ...[
-                            const SizedBox(height: 14),
-                            _Banner(message: _successMessage!, color: const Color(0xFF059669), icon: Icons.check_circle_outline_rounded),
-                          ],
-                          const SizedBox(height: 16),
+                    ? const _EmptyMessage(message: 'Chưa có dữ liệu hồ sơ.', isError: false)
+                    : RefreshIndicator(
+                        onRefresh: _load,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(16, 6, 16, 36),
+                          children: [
+                            // 1. THẺ ĐẠI DIỆN SINH VIÊN VIP (HERO IDENTITY CARD)
+                            _HeroStudentCard(
+                              user: user,
+                              avatarUpload: _avatarUpload,
+                              onPickAvatar: _pickAvatar,
+                            ),
 
-                          // Profile update card with approval flow
-                          _Card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.badge_rounded, color: AppColors.primary, size: 20),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Expanded(
-                                      child: Text(
-                                        'Thông tin liên hệ & Hồ sơ',
-                                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                                      ),
-                                    ),
-                                  ],
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 12),
+                              _StatusBanner(
+                                message: _errorMessage!,
+                                color: AppColors.danger,
+                                icon: Icons.error_outline_rounded,
+                              ),
+                            ],
+                            if (_successMessage != null) ...[
+                              const SizedBox(height: 12),
+                              _StatusBanner(
+                                message: _successMessage!,
+                                color: const Color(0xFF059669),
+                                icon: Icons.check_circle_outline_rounded,
+                              ),
+                            ],
+
+                            const SizedBox(height: 20),
+
+                            // 2. NHÓM 1: THÔNG TIN SINH VIÊN & LIÊN HỆ
+                            _SectionGroup(
+                              title: 'Hồ sơ học tập & Liên hệ',
+                              icon: Icons.school_rounded,
+                              action: TextButton.icon(
+                                onPressed: () {
+                                  setState(() => _isEditingContact = !_isEditingContact);
+                                },
+                                icon: Icon(
+                                  _isEditingContact ? Icons.close_rounded : Icons.edit_note_rounded,
+                                  size: 18,
                                 ),
-                                const SizedBox(height: 16),
-                                _ReadonlyInfo(label: 'Mã sinh viên', value: user.code),
-                                _ReadonlyInfo(label: 'Họ và tên', value: user.name),
-                                _ReadonlyInfo(label: 'Lớp sinh hoạt', value: user.studentClass),
-                                _ReadonlyInfo(label: 'Khoa / Viện', value: user.department),
-                                const Divider(height: 24, thickness: 0.8),
+                                label: Text(
+                                  _isEditingContact ? 'Đóng' : 'Cập nhật',
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                                ),
+                              ),
+                              children: [
+                                _InfoTile(label: 'Mã số sinh viên', value: user.code, icon: Icons.badge_outlined),
+                                _InfoTile(label: 'Họ và tên', value: user.name, icon: Icons.person_outline_rounded),
+                                _InfoTile(label: 'Lớp sinh hoạt', value: user.studentClass, icon: Icons.class_outlined),
+                                _InfoTile(label: 'Khoa / Viện', value: user.department, icon: Icons.account_balance_outlined),
 
-                                // Pending approval banner if active
+                                const Divider(height: 20, thickness: 0.6),
+
+                                // Trạng thái đang chờ duyệt
                                 if (_pendingRequest != null) ...[
                                   Container(
-                                    padding: const EdgeInsets.all(14),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFFBEB),
-                                      borderRadius: BorderRadius.circular(16),
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(14),
                                       border: Border.all(color: const Color(0xFFFDE68A)),
                                     ),
                                     child: Column(
@@ -541,220 +593,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       children: [
                                         const Row(
                                           children: [
-                                            Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 18),
+                                            Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 17),
                                             SizedBox(width: 8),
                                             Text(
-                                              'Yêu cầu thay đổi đang chờ duyệt',
+                                              'Yêu cầu cập nhật đang chờ duyệt',
                                               style: TextStyle(
                                                 color: Color(0xFF92400E),
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Thời gian gửi: ${_pendingRequest!['requested_at'] ?? 'Vừa xong'}',
-                                          style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), fontWeight: FontWeight.w600),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Email mới: ${_pendingRequest!['email']}',
-                                          style: const TextStyle(fontSize: 12, color: Color(0xFF451A03), fontWeight: FontWeight.w700),
-                                        ),
-                                        Text(
-                                          'SĐT mới: ${_pendingRequest!['phone']}',
-                                          style: const TextStyle(fontSize: 12, color: Color(0xFF451A03), fontWeight: FontWeight.w700),
-                                        ),
-                                        if ((_pendingRequest!['address'] ?? '').isNotEmpty)
-                                          Text(
-                                            'Địa chỉ: ${_pendingRequest!['address']}',
-                                            style: const TextStyle(fontSize: 12, color: Color(0xFF451A03), fontWeight: FontWeight.w700),
-                                          ),
-                                        const SizedBox(height: 10),
-                                        OutlinedButton.icon(
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: const Color(0xFFB45309),
-                                            side: const BorderSide(color: Color(0xFFFBBF24)),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            minimumSize: Size.zero,
-                                          ),
-                                          onPressed: _cancelProfileRequest,
-                                          icon: const Icon(Icons.close_rounded, size: 16),
-                                          label: const Text('Hủy yêu cầu này', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                ],
-
-                                TextField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    labelText: 'Địa chỉ Email',
-                                    hintText: 'Nhập email liên hệ',
-                                    prefixIcon: const Icon(Icons.email_outlined),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    labelText: 'Số điện thoại',
-                                    hintText: 'Nhập số điện thoại',
-                                    prefixIcon: const Icon(Icons.phone_outlined),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: _addressController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Địa chỉ hiện tại',
-                                    hintText: 'Nhập nơi ở / liên lạc',
-                                    prefixIcon: const Icon(Icons.location_on_outlined),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                PrimaryButton(
-                                  label: _pendingRequest != null
-                                      ? 'Gửi yêu cầu thay đổi mới'
-                                      : 'Gửi yêu cầu thay đổi thông tin',
-                                  isLoading: _isSubmittingRequest,
-                                  onPressed: _submitProfileChangeRequest,
-                                ),
-                                const SizedBox(height: 8),
-                                const Center(
-                                  child: Text(
-                                    'Thông tin thay đổi sẽ được gửi đến GVCN phê duyệt trước khi lưu.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // Password Change card with Email OTP
-                          _Card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.cyan.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.shield_rounded, color: AppColors.cyan, size: 20),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Expanded(
-                                      child: Text(
-                                        'Đổi mật khẩu qua OTP Email',
-                                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  'Mã xác thực bảo mật sẽ được gửi đến hộp thư: ${user.email.isNotEmpty ? user.email : "Email sinh viên"}',
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _passwordController,
-                                  obscureText: _obscurePassword,
-                                  decoration: InputDecoration(
-                                    labelText: 'Mật khẩu mới',
-                                    hintText: 'Tối thiểu 6 ký tự',
-                                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                    ),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: _passwordConfirmController,
-                                  obscureText: _obscureConfirm,
-                                  decoration: InputDecoration(
-                                    labelText: 'Xác nhận mật khẩu mới',
-                                    hintText: 'Nhập lại mật khẩu mới',
-                                    prefixIcon: const Icon(Icons.lock_reset_rounded),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                                    ),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-
-                                // OTP Request or Verify Section
-                                if (!_otpSent) ...[
-                                  OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(48),
-                                      foregroundColor: AppColors.primary,
-                                      side: const BorderSide(color: AppColors.primary, width: 1.5),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                    ),
-                                    onPressed: _isSendingOtp ? null : _sendPasswordOtp,
-                                    icon: _isSendingOtp
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
-                                          )
-                                        : const Icon(Icons.mark_email_unread_rounded),
-                                    label: Text(
-                                      _isSendingOtp ? 'Đang gửi mã OTP...' : 'Gửi mã OTP về Email',
-                                      style: const TextStyle(fontWeight: FontWeight.w900),
-                                    ),
-                                  ),
-                                ] else ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEFF6FF),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: const Color(0xFFBFDBFE)),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Row(
-                                          children: [
-                                            Icon(Icons.mark_email_read_rounded, color: AppColors.primary, size: 18),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Đã gửi mã xác thực',
-                                              style: TextStyle(
-                                                color: AppColors.primary,
                                                 fontWeight: FontWeight.w900,
                                                 fontSize: 13.5,
                                               ),
@@ -763,408 +607,575 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          'Kiểm tra hòm thư ${user.email} (bao gồm cả thư rác/spam).',
-                                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                                          'Thời gian: ${_pendingRequest!['requested_at'] ?? 'Vừa xong'}',
+                                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF78350F)),
                                         ),
-                                        const SizedBox(height: 12),
-                                        TextField(
-                                          controller: _otpController,
-                                          keyboardType: TextInputType.number,
-                                          maxLength: 6,
-                                          style: const TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: 6,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          decoration: InputDecoration(
-                                            counterText: '',
-                                            labelText: 'Mã xác thực OTP 6 số',
-                                            hintText: '______',
-                                            prefixIcon: const Icon(Icons.key_rounded),
-                                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                          ),
+                                        Text(
+                                          'Email: ${_pendingRequest!['email']} • SĐT: ${_pendingRequest!['phone']}',
+                                          style: const TextStyle(fontSize: 12, color: Color(0xFF451A03), fontWeight: FontWeight.w700),
                                         ),
                                         const SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            TextButton.icon(
-                                              onPressed: _otpCountdown > 0 || _isSendingOtp ? null : _sendPasswordOtp,
-                                              icon: const Icon(Icons.refresh_rounded, size: 16),
-                                              label: Text(
-                                                _otpCountdown > 0
-                                                    ? 'Gửi lại sau ${_otpCountdown}s'
-                                                    : 'Gửi lại mã OTP',
-                                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                                              ),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton.icon(
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: const Color(0xFFB45309),
+                                              padding: EdgeInsets.zero,
+                                              minimumSize: Size.zero,
                                             ),
-                                          ],
+                                            onPressed: _cancelProfileRequest,
+                                            icon: const Icon(Icons.cancel_outlined, size: 16),
+                                            label: const Text('Hủy yêu cầu này', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(height: 12),
+                                ],
+
+                                if (!_isEditingContact) ...[
+                                  _InfoTile(label: 'Địa chỉ Email', value: user.email, icon: Icons.email_outlined),
+                                  _InfoTile(label: 'Số điện thoại', value: user.phone, icon: Icons.phone_outlined),
+                                  _InfoTile(label: 'Địa chỉ liên hệ', value: user.address, icon: Icons.home_outlined),
+                                ] else ...[
+                                  // Form cập nhật thông tin
+                                  const SizedBox(height: 4),
+                                  TextField(
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: InputDecoration(
+                                      labelText: 'Email liên hệ mới',
+                                      prefixIcon: const Icon(Icons.email_outlined),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextField(
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      labelText: 'Số điện thoại mới',
+                                      prefixIcon: const Icon(Icons.phone_outlined),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextField(
+                                    controller: _addressController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Địa chỉ liên hệ mới',
+                                      prefixIcon: const Icon(Icons.home_outlined),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                  ),
                                   const SizedBox(height: 14),
                                   PrimaryButton(
-                                    label: 'Xác nhận đổi mật khẩu',
-                                    isLoading: _isSavingPassword,
-                                    onPressed: _changePassword,
+                                    label: 'Gửi yêu cầu xét duyệt',
+                                    isLoading: _isSubmittingRequest,
+                                    onPressed: _submitProfileChangeRequest,
                                   ),
                                 ],
                               ],
                             ),
-                          ),
 
-                          // Cài đặt Đăng nhập Sinh trắc học
-                          if (_biometricAvailable) ...[
                             const SizedBox(height: 18),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppColors.card,
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+
+                            // 3. NHÓM 2: BẢO MẬT & ĐĂNG NHẬP
+                            _SectionGroup(
+                              title: 'Bảo mật tài khoản',
+                              icon: Icons.shield_rounded,
+                              children: [
+                                // Nút bung mở Đổi mật khẩu
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: () {
+                                      setState(() {
+                                        _isPasswordSectionExpanded = !_isPasswordSectionExpanded;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Icon(Icons.key_rounded, color: AppColors.primary, size: 20),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Đổi mật khẩu qua OTP Email',
+                                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                                ),
+                                                Text(
+                                                  'Xác thực mã bảo mật gửi đến hộp thư sinh viên',
+                                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Icon(
+                                            _isPasswordSectionExpanded
+                                                ? Icons.keyboard_arrow_up_rounded
+                                                : Icons.keyboard_arrow_down_rounded,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                if (_isPasswordSectionExpanded) ...[
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    decoration: InputDecoration(
+                                      labelText: 'Mật khẩu mới',
+                                      hintText: 'Tối thiểu 6 ký tự',
+                                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                      ),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextField(
+                                    controller: _passwordConfirmController,
+                                    obscureText: _obscureConfirm,
+                                    decoration: InputDecoration(
+                                      labelText: 'Xác nhận mật khẩu mới',
+                                      prefixIcon: const Icon(Icons.lock_reset_rounded),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                      ),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  if (!_otpSent) ...[
+                                    OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize: const Size.fromHeight(46),
+                                        foregroundColor: AppColors.primary,
+                                        side: const BorderSide(color: AppColors.primary),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                      onPressed: _isSendingOtp ? null : _sendPasswordOtp,
+                                      icon: _isSendingOtp
+                                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                          : const Icon(Icons.mark_email_unread_rounded, size: 18),
+                                      label: Text(
+                                        _isSendingOtp ? 'Đang gửi mã...' : 'Gửi mã OTP về Email',
+                                        style: const TextStyle(fontWeight: FontWeight.w800),
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF6FF),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          TextField(
+                                            controller: _otpController,
+                                            keyboardType: TextInputType.number,
+                                            maxLength: 6,
+                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 6),
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              counterText: '',
+                                              labelText: 'Mã OTP 6 số từ email',
+                                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              TextButton(
+                                                onPressed: _otpCountdown > 0 || _isSendingOtp ? null : _sendPasswordOtp,
+                                                child: Text(
+                                                  _otpCountdown > 0 ? 'Gửi lại sau ${_otpCountdown}s' : 'Gửi lại mã OTP',
+                                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    PrimaryButton(
+                                      label: 'Xác nhận đổi mật khẩu',
+                                      isLoading: _isSavingPassword,
+                                      onPressed: _changePassword,
+                                    ),
+                                  ],
+                                ],
+
+                                // Đăng nhập sinh trắc học
+                                if (_biometricAvailable) ...[
+                                  const Divider(height: 24, thickness: 0.6),
+                                  SwitchListTile.adaptive(
+                                    contentPadding: EdgeInsets.zero,
+                                    secondary: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF059669), size: 22),
+                                    ),
+                                    title: const Text(
+                                      'Vân tay & Face ID',
+                                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                    ),
+                                    subtitle: const Text(
+                                      'Mở khóa và đăng nhập app nhanh chóng',
+                                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    ),
+                                    value: _biometricEnabled,
+                                    activeThumbColor: AppColors.primary,
+                                    onChanged: _toggleBiometric,
                                   ),
                                 ],
-                              ),
-                              child: SwitchListTile(
-                                contentPadding: EdgeInsets.zero,
-                                secondary: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(14),
+                              ],
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // 4. NHÓM 3: TÙY CHỌN ỨNG DỤNG
+                            _SectionGroup(
+                              title: 'Trải nghiệm ứng dụng',
+                              icon: Icons.tune_rounded,
+                              children: [
+                                SwitchListTile.adaptive(
+                                  contentPadding: EdgeInsets.zero,
+                                  secondary: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: ThemeService.instance.isDarkMode
+                                          ? const Color(0xFF818CF8).withValues(alpha: 0.15)
+                                          : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      ThemeService.instance.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                                      color: ThemeService.instance.isDarkMode ? const Color(0xFF6366F1) : const Color(0xFFD97706),
+                                      size: 20,
+                                    ),
                                   ),
-                                  child: const Icon(
-                                    Icons.fingerprint_rounded,
-                                    color: AppColors.primary,
-                                    size: 24,
+                                  title: const Text(
+                                    'Giao diện Tối (Dark Mode)',
+                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                  ),
+                                  subtitle: Text(
+                                    ThemeService.instance.isDarkMode ? 'Đang bật nền tối' : 'Đang bật nền sáng',
+                                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  ),
+                                  value: ThemeService.instance.isDarkMode,
+                                  activeThumbColor: AppColors.primary,
+                                  onChanged: (_) async {
+                                    await ThemeService.instance.toggleTheme();
+                                    if (mounted) setState(() {});
+                                  },
+                                ),
+                                const Divider(height: 16, thickness: 0.6),
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.notifications_active_rounded, color: AppColors.primary, size: 20),
+                                  ),
+                                  title: const Text(
+                                    'Thông báo trên máy',
+                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                  ),
+                                  subtitle: const Text(
+                                    'Quản lý chuông & tin báo đẩy tức thì',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  ),
+                                  trailing: FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      minimumSize: Size.zero,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                    onPressed: () async {
+                                      final res = await LocalNotificationService.instance.requestUniversalPermission();
+                                      if (!context.mounted) return;
+                                      if (res == 'granted') {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Đã bật thông báo thành công cho thiết bị! 🎉'),
+                                            backgroundColor: Color(0xFF16A34A),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Trạng thái thông báo: $res')),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('Bật ngay', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                                   ),
                                 ),
-                                title: const Text(
-                                  'Đăng nhập Vân tay / Face ID',
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // 5. NÚT ĐĂNG XUẤT THIẾT KẾ MỀM MẠI
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.danger,
+                                  side: const BorderSide(color: Color(0xFFFECACA), width: 1.2),
+                                  backgroundColor: const Color(0xFFFEF2F2),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
-                                subtitle: const Text(
-                                  'Mở khóa nhanh ứng dụng không cần gõ mật khẩu',
-                                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                                onPressed: _confirmAndLogout,
+                                icon: const Icon(Icons.logout_rounded, size: 19),
+                                label: const Text(
+                                  'Đăng xuất tài khoản',
+                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                                 ),
-                                value: _biometricEnabled,
-                                activeThumbColor: AppColors.primary,
-                                onChanged: _toggleBiometric,
                               ),
                             ),
                           ],
-
-                          // Cài đặt Giao diện Sáng / Tối (Dark Mode)
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              secondary: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Icon(
-                                  ThemeService.instance.isDarkMode
-                                      ? Icons.dark_mode_rounded
-                                      : Icons.light_mode_rounded,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                              ),
-                              title: const Text(
-                                'Giao diện Tối (Dark Mode)',
-                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                              ),
-                              subtitle: Text(
-                                ThemeService.instance.isDarkMode ? 'Đang bật giao diện tối' : 'Đang bật giao diện sáng',
-                                style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-                              ),
-                              value: ThemeService.instance.isDarkMode,
-                              activeThumbColor: AppColors.primary,
-                              onChanged: (_) async {
-                                await ThemeService.instance.toggleTheme();
-                                if (mounted) setState(() {});
-                              },
-                            ),
-                          ),
-
-                          // Kích hoạt nhận Thông báo đẩy (Push Notifications)
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_active_rounded,
-                                    color: AppColors.primary,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Thông báo trên iPhone',
-                                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Nhận tin báo điểm rèn luyện & sự kiện',
-                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  onPressed: () async {
-                                    final res = await LocalNotificationService.instance.requestUniversalPermission();
-                                    if (!context.mounted) return;
-                                    if (res == 'granted') {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Đã kích hoạt thông báo thành công cho thiết bị! 🎉'),
-                                          backgroundColor: Color(0xFF16A34A),
-                                        ),
-                                      );
-                                    } else if (res == 'denied') {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Quyền thông báo bị từ chối. Vui lòng bật trong Cài đặt iPhone.'),
-                                          backgroundColor: AppColors.danger,
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Trạng thái quyền: $res'),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: const Text(
-                                    'Bật ngay',
-                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Nút Đăng xuất to bản ở cuối trang
-                          SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.danger,
-                                side: const BorderSide(color: Color(0xFFFECACA), width: 1.5),
-                                backgroundColor: const Color(0xFFFEF2F2),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                              onPressed: _confirmAndLogout,
-                              icon: const Icon(Icons.logout_rounded, size: 20),
-                              label: const Text(
-                                'ĐĂNG XUẤT TÀI KHOẢN',
-                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 0.5),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
+                        ),
                       ),
       ),
     );
   }
-
-  Future<void> _confirmAndLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.logout_rounded, color: AppColors.danger),
-            SizedBox(width: 8),
-            Text('Đăng xuất tài khoản', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
-          ],
-        ),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.w800)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-      await widget.onLogout();
-    }
-  }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
+/// Thẻ Hero Profile Sinh viên với Avatar, Thông tin chính, Badge trạng thái
+class _HeroStudentCard extends StatelessWidget {
+  const _HeroStudentCard({
     required this.user,
     required this.avatarUpload,
-    required this.avatarName,
     required this.onPickAvatar,
   });
 
   final ProfileUser user;
   final ProfileUpload? avatarUpload;
-  final String? avatarName;
   final VoidCallback onPickAvatar;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.darkBlue, AppColors.primary],
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.28),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Stack(
+          Row(
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.40),
-                    width: 2,
-                  ),
-                ),
-                child: ClipOval(
-                  child: avatarUpload != null
-                      ? Image.memory(
-                          avatarUpload!.bytes,
-                          fit: BoxFit.cover,
-                          width: 72,
-                          height: 72,
-                        )
-                      : (user.avatarUrl.isNotEmpty
-                          ? Image.network(
-                              user.avatarUrl,
+              // Avatar tròn viền trắng & nút đổi ảnh
+              Stack(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: avatarUpload != null
+                          ? Image.memory(
+                              avatarUpload!.bytes,
                               fit: BoxFit.cover,
-                              width: 72,
-                              height: 72,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.person_rounded,
-                                color: Colors.white,
-                                size: 38,
-                              ),
+                              width: 76,
+                              height: 76,
                             )
-                          : const Icon(
-                              Icons.person_rounded,
-                              color: Colors.white,
-                              size: 38,
-                            )),
-                ),
-              ),
-              Positioned(
-                right: -4,
-                bottom: -4,
-                child: IconButton.filled(
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    minimumSize: const Size(32, 32),
-                    padding: EdgeInsets.zero,
+                          : (user.avatarUrl.isNotEmpty
+                              ? Image.network(
+                                  user.avatarUrl,
+                                  fit: BoxFit.cover,
+                                  width: 76,
+                                  height: 76,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                    Icons.person_rounded,
+                                    color: Colors.white70,
+                                    size: 42,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.person_rounded,
+                                  color: Colors.white70,
+                                  size: 42,
+                                )),
+                    ),
                   ),
-                  onPressed: onPickAvatar,
-                  icon: const Icon(Icons.camera_alt_rounded, size: 17),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: GestureDetector(
+                      onTap: onPickAvatar,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+
+              // Họ tên & MSSV
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.circle, color: Color(0xFF10B981), size: 7),
+                              SizedBox(width: 4),
+                              Text(
+                                'Đang học',
+                                style: TextStyle(
+                                  color: Color(0xFF34D399),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      user.name.isEmpty ? user.code : user.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'MSSV: ${user.code}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+
+          const SizedBox(height: 16),
+          // Hàng badge thông tin nhanh
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
               children: [
-                Text(
-                  user.name.isEmpty ? user.code : user.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Lớp học',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        user.studentClass.isNotEmpty ? user.studentClass : '-',
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  avatarName == null ? '${user.code} • ${user.studentClass}' : 'Đã chọn ảnh: $avatarName',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                Container(height: 24, width: 1, color: Colors.white.withValues(alpha: 0.15)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Khoa quản lý',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        user.department.isNotEmpty ? user.department : '-',
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1176,33 +1187,100 @@ class _ProfileHeader extends StatelessWidget {
   }
 }
 
-class _ReadonlyInfo extends StatelessWidget {
-  const _ReadonlyInfo({required this.label, required this.value});
+/// Khối phân nhóm chức năng dạng Grouped Card
+class _SectionGroup extends StatelessWidget {
+  const _SectionGroup({
+    required this.title,
+    required this.icon,
+    required this.children,
+    this.action,
+  });
+
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              ?action,
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+/// Dòng hiển thị thông tin kèm icon
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-                fontSize: 13.5,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
           Text(
             value.isEmpty ? '-' : value,
             style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              fontSize: 13.5,
               color: AppColors.textPrimary,
             ),
           ),
@@ -1212,8 +1290,9 @@ class _ReadonlyInfo extends StatelessWidget {
   }
 }
 
-class _Banner extends StatelessWidget {
-  const _Banner({
+/// Banner thông báo trạng thái thành công / thất bại
+class _StatusBanner extends StatelessWidget {
+  const _StatusBanner({
     required this.message,
     required this.color,
     required this.icon,
@@ -1226,21 +1305,21 @@ class _Banner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: color, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13, height: 1.35),
+              style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13, height: 1.35),
             ),
           ),
         ],
@@ -1249,34 +1328,8 @@ class _Banner extends StatelessWidget {
   }
 }
 
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkBlue.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.message, required this.isError});
+class _EmptyMessage extends StatelessWidget {
+  const _EmptyMessage({required this.message, required this.isError});
 
   final String message;
   final bool isError;

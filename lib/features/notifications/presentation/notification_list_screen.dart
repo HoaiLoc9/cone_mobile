@@ -48,11 +48,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         type: _selectedType,
         unreadOnly: _unreadOnly,
       );
-      setState(() => _list = list);
+      if (mounted) setState(() => _list = list);
     } on ApiException catch (error) {
-      setState(() => _errorMessage = error.message);
+      if (mounted) setState(() => _errorMessage = error.message);
     } catch (_) {
-      setState(() => _errorMessage = 'Không tải được thông báo.');
+      if (mounted) setState(() => _errorMessage = 'Không tải được thông báo.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -61,9 +61,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   }
 
   Future<void> _markRead(AppNotification item) async {
-    if (item.id.isEmpty) {
-      return;
-    }
+    if (item.id.isEmpty) return;
     await widget.service.markRead(item.id);
     _load();
   }
@@ -99,10 +97,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         (item.meta['activity']['id'] != null)) {
       return item.meta['activity']['id'].toString();
     }
-    if (item.type.toLowerCase().contains('activity') &&
-        item.meta['id'] != null) {
-      return item.meta['id'].toString();
-    }
     return null;
   }
 
@@ -132,10 +126,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         (item.meta['appellation']['id'] != null)) {
       return item.meta['appellation']['id'].toString();
     }
-    if (item.type.toLowerCase().contains('appellation') &&
-        item.meta['id'] != null) {
-      return item.meta['id'].toString();
-    }
     return null;
   }
 
@@ -144,11 +134,12 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final title = item.title.toLowerCase();
     final msg = item.message.toLowerCase();
     return t.contains('drl') ||
-        t.contains('ren_luyen') ||
+        t.contains('diem_ren_luyen') ||
+        item.meta.containsKey('drl') ||
         title.contains('điểm rèn luyện') ||
-        title.contains('drl') ||
+        title.contains('đrl') ||
         msg.contains('điểm rèn luyện') ||
-        msg.contains('drl');
+        msg.contains('đrl');
   }
 
   void _handleNotificationTap(AppNotification item) {
@@ -158,15 +149,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     final token = widget.service.token;
 
-    // 1. Nếu là thông báo Hoạt động -> Trỏ thẳng tới màn hình Hoạt động
+    // 1. Hoạt động
     if (_isActivityNotification(item)) {
-      final activityId = _extractActivityId(item);
-      if (activityId != null && activityId.isNotEmpty) {
+      final actId = _extractActivityId(item);
+      if (actId != null && actId.isNotEmpty) {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ActivityDetailScreen(
+              activityId: actId,
               service: ActivityService(token: token),
-              activityId: activityId,
             ),
           ),
         );
@@ -183,15 +174,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       }
     }
 
-    // 2. Nếu là thông báo Danh hiệu -> Trỏ thẳng tới màn hình Danh hiệu
+    // 2. Danh hiệu
     if (_isAppellationNotification(item)) {
-      final appellationId = _extractAppellationId(item);
-      if (appellationId != null && appellationId.isNotEmpty) {
+      final appId = _extractAppellationId(item);
+      if (appId != null && appId.isNotEmpty) {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => AppellationDetailScreen(
+              appellationId: appId,
               service: AppellationService(token: token),
-              appellationId: appellationId,
             ),
           ),
         );
@@ -208,7 +199,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       }
     }
 
-    // 3. Nếu là thông báo Điểm rèn luyện -> Trỏ tới màn hình ĐRL
+    // 3. Điểm rèn luyện
     if (_isDrlNotification(item)) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -220,7 +211,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       return;
     }
 
-    // 4. Nếu là thông báo chung hệ thống khác -> Xem chi tiết
+    // 4. Khác -> Mở chi tiết
     _showDetail(item);
   }
 
@@ -299,11 +290,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               ),
               const SizedBox(height: 18),
               Text(
-                item.title.isEmpty ? 'Chi tiết thông báo' : item.title,
+                item.title,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                  height: 1.3,
                 ),
               ),
               const SizedBox(height: 12),
@@ -311,53 +302,28 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border, width: 0.8),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
                   item.message,
                   style: const TextStyle(
                     fontSize: 14.5,
-                    color: AppColors.textPrimary,
                     height: 1.5,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              if (item.meta.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if ((item.meta['activity_name'] ?? '').toString().isNotEmpty)
-                      _Badge(
-                        label: 'Hoạt động: ${item.meta['activity_name']}',
-                        color: AppColors.primary,
-                      ),
-                    if ((item.meta['appellation_name'] ?? '').toString().isNotEmpty)
-                      _Badge(
-                        label: 'Danh hiệu: ${item.meta['appellation_name']}',
-                        color: const Color(0xFFF59E0B),
-                      ),
-                    if ((item.meta['points'] ?? '').toString().isNotEmpty)
-                      _Badge(
-                        label: 'Điểm: ${item.meta['points']}',
-                        color: const Color(0xFF10B981),
-                      ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
-              // Action button to navigate if applicable
               if (isActivity || isAppellation || isDrl) ...[
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: color,
+                      backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -420,7 +386,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     if (lower.contains('appellation') || lower.contains('danh_hieu')) {
       if (lower.contains('approved')) return 'DANH HIỆU ĐẠT';
       if (lower.contains('rejected')) return 'DANH HIỆU KHÔNG ĐẠT';
-      if (lower.contains('needs_revision') || lower.contains('revision')) return 'CẦN BỔ SUNG HỒ SƠ';
+      if (lower.contains('needs_revision') || lower.contains('revision')) return 'CẦN BỔ SUNG';
       return 'DANH HIỆU';
     }
     if (lower.contains('drl')) {
@@ -428,7 +394,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       if (lower.contains('award')) return 'CỘNG ĐIỂM DRL';
       return 'ĐIỂM RÈN LUYỆN';
     }
-    return 'THÔNG BÁO HỆ THỐNG';
+    return 'HỆ THỐNG';
   }
 
   Color _colorForType(String type) {
@@ -478,83 +444,186 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return 'Xem chi tiết >';
   }
 
+  void _onCategorySelected(String? type, bool unreadOnly) {
+    setState(() {
+      _selectedType = type;
+      _unreadOnly = unreadOnly;
+    });
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = _list;
+    final unreadCount = list?.unreadCount ?? 0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         surfaceTintColor: AppColors.background,
         elevation: 0,
-        title: const Text('Thông báo', style: TextStyle(fontWeight: FontWeight.w900)),
+        centerTitle: false,
+        title: Row(
+          children: [
+            const Text(
+              'Thông báo',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+            ),
+            if (unreadCount > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$unreadCount mới',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
-          if ((list?.unreadCount ?? 0) > 0)
-            TextButton(
-              onPressed: _markAllRead,
-              child: const Text('Đọc tất cả', style: TextStyle(fontWeight: FontWeight.w800)),
+          if (unreadCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                onPressed: _markAllRead,
+                icon: const Icon(Icons.done_all_rounded, size: 18),
+                label: const Text(
+                  'Đọc tất cả',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+              ),
             ),
         ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
-            children: [
-              _HeaderCard(unreadCount: list?.unreadCount ?? 0),
-              const SizedBox(height: 14),
-              const _DeviceNotificationBanner(),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  FilterChip(
-                    label: const Text('Chưa đọc'),
-                    selected: _unreadOnly,
-                    onSelected: (value) {
-                      setState(() => _unreadOnly = value);
-                      _load();
-                    },
-                  ),
-                  DropdownMenu<String>(
-                    width: 230,
-                    initialSelection: _selectedType ?? '',
-                    onSelected: (value) {
-                      setState(() => _selectedType = value == '' ? null : value);
-                      _load();
-                    },
-                    dropdownMenuEntries: const [
-                      DropdownMenuEntry(value: '', label: 'Tất cả loại'),
-                      DropdownMenuEntry(value: 'activity', label: 'Hoạt động'),
-                      DropdownMenuEntry(value: 'appellation', label: 'Danh hiệu'),
-                      DropdownMenuEntry(value: 'drl_deduction', label: 'Trừ điểm DRL'),
-                      DropdownMenuEntry(value: 'drl_award', label: 'Cộng điểm DRL'),
-                      DropdownMenuEntry(value: 'system', label: 'Hệ thống'),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // 1. Thẻ Bật Thông Báo Đẩy Nổi Bật
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: _DeviceNotificationBanner(),
+                ),
+              ),
+
+              // 2. Thanh Danh Mục Bộ Lọc Trượt Ngang (Horizontal Filter Pills)
+              SliverToBoxAdapter(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _FilterPill(
+                        label: 'Tất cả',
+                        isSelected: !_unreadOnly && _selectedType == null,
+                        icon: Icons.all_inbox_rounded,
+                        onTap: () => _onCategorySelected(null, false),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterPill(
+                        label: 'Chưa đọc',
+                        badgeCount: unreadCount > 0 ? unreadCount : null,
+                        isSelected: _unreadOnly,
+                        icon: Icons.mark_chat_unread_outlined,
+                        onTap: () => _onCategorySelected(null, true),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterPill(
+                        label: 'Hoạt động',
+                        isSelected: !_unreadOnly && _selectedType == 'activity',
+                        icon: Icons.event_note_rounded,
+                        onTap: () => _onCategorySelected('activity', false),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterPill(
+                        label: 'Danh hiệu',
+                        isSelected: !_unreadOnly && _selectedType == 'appellation',
+                        icon: Icons.emoji_events_rounded,
+                        onTap: () => _onCategorySelected('appellation', false),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterPill(
+                        label: 'Điểm ĐRL',
+                        isSelected: !_unreadOnly && _selectedType == 'drl',
+                        icon: Icons.assessment_rounded,
+                        onTap: () => _onCategorySelected('drl', false),
+                      ),
+                      const SizedBox(width: 8),
+                      _FilterPill(
+                        label: 'Hệ thống',
+                        isSelected: !_unreadOnly && _selectedType == 'system',
+                        icon: Icons.settings_rounded,
+                        onTap: () => _onCategorySelected('system', false),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 14),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+              // 3. Trạng Thái Đang Tải / Lỗi / Danh Sách Rỗng
               if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.only(top: 120),
+                const SliverFillRemaining(
+                  hasScrollBody: false,
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (_errorMessage != null)
-                _Message(message: _errorMessage!, isError: true)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _EmptyStateView(
+                    icon: Icons.wifi_off_rounded,
+                    title: 'Lỗi tải thông báo',
+                    subtitle: _errorMessage!,
+                    buttonLabel: 'Thử lại',
+                    onButtonTap: _load,
+                  ),
+                )
               else if (list == null || list.items.isEmpty)
-                const _Message(message: 'Bạn chưa có thông báo nào.', isError: false)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _EmptyStateView(
+                    icon: Icons.notifications_off_rounded,
+                    title: _unreadOnly
+                        ? 'Không có thông báo chưa đọc'
+                        : 'Bạn chưa có thông báo nào',
+                    subtitle: _unreadOnly
+                        ? 'Tuyệt vời! Bạn đã xem hết tất cả thông báo.'
+                        : 'Các thông báo hoạt động, điểm rèn luyện sẽ hiển thị tại đây.',
+                  ),
+                )
               else
-                ...list.items.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _NotificationCard(
-                      item: item,
-                      actionText: _actionTextForNotification(item),
-                      onTap: () => _handleNotificationTap(item),
-                      onMarkRead: () => _markRead(item),
+                // 4. Danh Sách Thông Báo Đã Thiết Kế Lại Hiện Đại
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = list.items[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _NotificationCard(
+                            item: item,
+                            actionText: _actionTextForNotification(item),
+                            onTap: () => _handleNotificationTap(item),
+                            onMarkRead: () => _markRead(item),
+                          ),
+                        );
+                      },
+                      childCount: list.items.length,
                     ),
                   ),
                 ),
@@ -566,56 +635,93 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.unreadCount});
+/// Nút lọc danh mục (Pill Button) phong cách hiện đại
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.icon,
+    required this.onTap,
+    this.badgeCount,
+  });
 
-  final int unreadCount;
+  final String label;
+  final bool isSelected;
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? badgeCount;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.darkBlue, AppColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 40),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Thông báo của bạn',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  unreadCount > 0 ? '$unreadCount thông báo chưa đọc' : 'Không có thông báo chưa đọc',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w700),
+              ),
+              if (badgeCount != null) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white.withValues(alpha: 0.25) : AppColors.danger,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    badgeCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
+/// Thẻ kích hoạt Thông báo đẩy thiết kế phong cách Apple / Glassmorphism
 class _DeviceNotificationBanner extends StatefulWidget {
   const _DeviceNotificationBanner();
 
@@ -650,7 +756,7 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
       if (res == 'granted') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã kích hoạt thông báo thành công cho thiết bị! 🎉'),
+            content: Text('Đã kích hoạt nhận thông báo đẩy thành công! 🎉'),
             backgroundColor: Color(0xFF16A34A),
           ),
         );
@@ -677,7 +783,7 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đã gửi thông báo thử nghiệm tới màn hình điện thoại!'),
+          content: Text('Đã gửi thông báo thử nghiệm tới màn hình!'),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -689,107 +795,129 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
     final isGranted = _permissionStatus == 'granted';
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isGranted ? const Color(0xFFF0FDF4) : const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isGranted ? const Color(0xFFBBF7D0) : const Color(0xFFBFDBFE),
+        gradient: LinearGradient(
+          colors: isGranted
+              ? [const Color(0xFF0F766E), const Color(0xFF059669)]
+              : [const Color(0xFF1E3A8A), const Color(0xFF2563EB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: (isGranted ? const Color(0xFF059669) : AppColors.primary).withValues(alpha: 0.28),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: Material(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isGranted ? const Color(0xFFDCFCE7) : const Color(0xFFDBEAFE),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  isGranted ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
-                  color: isGranted ? const Color(0xFF16A34A) : AppColors.primary,
-                  size: 26,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      isGranted ? Icons.notifications_active_rounded : Icons.cell_tower_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isGranted ? 'Thông báo đẩy: ĐÃ SẴN SÀNG' : 'Thông báo đẩy lên thiết bị',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isGranted
+                              ? 'Nhận tin báo điểm rèn luyện & điểm danh ngay tức thì.'
+                              : 'Bật nhận thông báo ngay cả khi đã tắt app.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.88),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isGranted ? 'Thông báo đẩy: Đang Bật' : 'Thông báo đẩy lên iPhone / ĐT',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        color: isGranted ? const Color(0xFF166534) : const Color(0xFF1E3A8A),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  if (isGranted) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
+                          backgroundColor: Colors.white.withValues(alpha: 0.12),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _sendTestNotification,
+                        icon: const Icon(Icons.send_rounded, size: 16),
+                        label: const Text(
+                          'Gửi thử thông báo lên máy',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isGranted
-                          ? 'Thiết bị sẵn sàng nhận thông báo khi có điểm rèn luyện & hoạt động mới.'
-                          : 'Bật để nhận thông báo ngay cả khi không mở ứng dụng.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isGranted ? const Color(0xFF15803D) : AppColors.textSecondary,
+                  ] else ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1E3A8A),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _isRequesting ? null : _requestPermission,
+                        icon: _isRequesting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.touch_app_rounded, size: 18),
+                        label: Text(
+                          _isRequesting ? 'Đang yêu cầu...' : 'Kích hoạt thông báo ngay',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: isGranted
-                ? OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF166534),
-                      side: const BorderSide(color: Color(0xFF86EFAC)),
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: _sendTestNotification,
-                    icon: const Icon(Icons.send_rounded, size: 18),
-                    label: const Text('Bấm để gửi thử thông báo lên máy', style: TextStyle(fontWeight: FontWeight.w700)),
-                  )
-                : FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: _isRequesting ? null : _requestPermission,
-                    icon: _isRequesting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Icon(Icons.touch_app_rounded, size: 18),
-                    label: Text(
-                      _isRequesting ? 'Đang yêu cầu cấp quyền...' : 'Bật nhận thông báo ngay',
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                    ),
-                  ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
+/// Thẻ thông báo từng mục với thiết kế tinh tế, thẻ bo góc nhẹ, chỉ báo chưa đọc
 class _NotificationCard extends StatelessWidget {
   const _NotificationCard({
     required this.item,
@@ -840,34 +968,37 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _colorForType(item.type);
+    final isUnread = !item.isRead;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: item.isRead ? AppColors.card : color.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(20),
+            color: isUnread ? color.withValues(alpha: 0.05) : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: item.isRead ? AppColors.border : color.withValues(alpha: 0.25),
-              width: 0.8,
+              color: isUnread ? color.withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
+              width: isUnread ? 1.2 : 0.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.025),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Icon biểu trưng
               Container(
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
@@ -875,6 +1006,8 @@ class _NotificationCard extends StatelessWidget {
                 child: Icon(_iconForType(item.type), color: color, size: 22),
               ),
               const SizedBox(width: 12),
+
+              // Nội dung
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -883,54 +1016,58 @@ class _NotificationCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            item.title.isEmpty ? 'Thông báo' : item.title,
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: item.isRead ? FontWeight.w700 : FontWeight.w900,
                               fontSize: 14.5,
+                              fontWeight: isUnread ? FontWeight.w900 : FontWeight.w700,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                        if (!item.isRead)
+                        if (isUnread) ...[
+                          const SizedBox(width: 6),
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
+                              color: color,
                               shape: BoxShape.circle,
-                              color: AppColors.danger,
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       item.message,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
                         fontSize: 13,
+                        color: AppColors.textSecondary,
                         height: 1.35,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           compactDate(item.createdAt),
                           style: const TextStyle(
-                            color: AppColors.textSecondary,
                             fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Spacer(),
                         Text(
                           actionText,
                           style: TextStyle(
+                            fontSize: 12,
                             color: color,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
@@ -946,55 +1083,71 @@ class _NotificationCard extends StatelessWidget {
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
+/// Trạng thái rỗng / Lỗi
+class _EmptyStateView extends StatelessWidget {
+  const _EmptyStateView({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.buttonLabel,
+    this.onButtonTap,
+  });
 
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    if (label.isEmpty || label == '-') {
-      return const SizedBox.shrink();
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String? buttonLabel;
+  final VoidCallback? onButtonTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 120),
-      child: Column(
-        children: [
-          Icon(
-            isError ? Icons.error_outline_rounded : Icons.notifications_none_rounded,
-            color: isError ? AppColors.danger : AppColors.textSecondary,
-            size: 48,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isError ? AppColors.danger : AppColors.textSecondary,
-              fontWeight: FontWeight.w800,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 54, color: AppColors.primary),
             ),
-          ),
-        ],
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            if (buttonLabel != null && onButtonTap != null) ...[
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: onButtonTap,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text(buttonLabel!),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
