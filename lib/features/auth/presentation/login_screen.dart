@@ -10,7 +10,6 @@ import '../../../core/services/biometric_auth_service.dart';
 import '../../../features/admin/data/admin_models.dart';
 import '../../../features/admin/data/admin_service.dart';
 import '../../../features/admin/presentation/admin_forgot_password_screen.dart';
-import '../data/student_user.dart';
 import '../data/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -320,16 +319,32 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final creds = await BiometricAuthService.instance.getSavedCredentials();
-    final savedBio = await BiometricAuthService.instance.getBiometricSession();
-    final savedStudent = await widget.authService.getSavedSession();
-    final savedAdmin = await widget.adminService.getSavedSession();
 
-    if (creds == null && savedStudent == null && savedAdmin == null && savedBio == null) {
+    if (creds == null) {
+      // Nếu chưa lưu thông tin Face ID:
+      // Kiểm tra xem người dùng có đang điền sẵn tài khoản & mật khẩu trong ô không
+      final idText = identifierController.text.trim();
+      final passText = passwordController.text;
+
+      if (idText.isNotEmpty && passText.isNotEmpty) {
+        final authenticated = await BiometricAuthService.instance.authenticate(
+          reason: 'Xác thực vân tay hoặc Face ID để kích hoạt đăng nhập nhanh',
+        );
+        if (authenticated && mounted) {
+          _submit();
+        }
+        return;
+      }
+
+      // Xóa phiên sinh trắc học cũ đã hết hạn để tránh bị loop lỗi 401
+      await BiometricAuthService.instance.clearBiometricSession();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Vui lòng đăng nhập bằng mật khẩu một lần trước để kích hoạt Face ID.'),
+            content: Text('Vui lòng nhập MSSV & Mật khẩu đăng nhập 1 lần để kích hoạt Face ID cho máy này.'),
             backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 4),
           ),
         );
       }
@@ -343,48 +358,33 @@ class _LoginScreenState extends State<LoginScreen> {
     if (authenticated && mounted) {
       setState(() => isLoading = true);
       try {
-        if (creds != null) {
-          final username = creds['username']!;
-          final pass = creds['password']!;
-          final role = creds['role'] ?? 'student';
+        final username = creds['username']!;
+        final pass = creds['password']!;
+        final role = creds['role'] ?? 'student';
 
-          if (role == 'admin') {
-            try {
-              final adminSession = await widget.adminService.login(
-                email: username,
-                password: pass,
-              );
-              widget.onAdminLoggedIn(adminSession);
-              return;
-            } catch (_) {}
-          }
-
-          // Mặc định đăng nhập sinh viên
-          final studentSession = await widget.authService.login(
-            identifier: username,
-            password: pass,
-          );
-          await widget.authService.saveSession(studentSession);
-          await BiometricAuthService.instance.saveBiometricSession(
-            studentSession.token,
-            jsonEncode(studentSession.user.toJson()),
-          );
-          widget.onLoggedIn(studentSession);
-          return;
+        if (role == 'admin') {
+          try {
+            final adminSession = await widget.adminService.login(
+              email: username,
+              password: pass,
+            );
+            widget.onAdminLoggedIn(adminSession);
+            return;
+          } catch (_) {}
         }
 
-        // Fallback phiên nếu chưa có creds
-        if (savedStudent != null) {
-          widget.onLoggedIn(savedStudent);
-        } else if (savedAdmin != null) {
-          widget.onAdminLoggedIn(savedAdmin);
-        } else if (savedBio != null) {
-          final userJson = jsonDecode(savedBio['user']!) as Map<String, dynamic>;
-          final user = StudentUser.fromJson(userJson);
-          final session = AuthSession(token: savedBio['token']!, user: user);
-          await widget.authService.saveSession(session);
-          widget.onLoggedIn(session);
-        }
+        // Đăng nhập lấy phiên mới 100% từ server
+        final studentSession = await widget.authService.login(
+          identifier: username,
+          password: pass,
+        );
+        await widget.authService.saveSession(studentSession);
+        await BiometricAuthService.instance.saveBiometricSession(
+          studentSession.token,
+          jsonEncode(studentSession.user.toJson()),
+        );
+        widget.onLoggedIn(studentSession);
+        return;
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
