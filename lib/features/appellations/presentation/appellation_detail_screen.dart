@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../data/appellation_models.dart';
@@ -126,10 +127,15 @@ class _AppellationDetailScreenState extends State<AppellationDetailScreen> {
     if (result == null) {
       return const [];
     }
-    final files = result.files
-        .where((file) => file.bytes != null)
-        .map((file) => AppellationUpload(name: file.name, bytes: file.bytes!))
-        .toList();
+    final files = <AppellationUpload>[];
+    for (final file in result.files) {
+      if (file.bytes == null) continue;
+      final compressed = await ImageCompressor.compressImage(
+        fileName: file.name,
+        bytes: file.bytes!,
+      );
+      files.add(AppellationUpload(name: compressed.name, bytes: compressed.bytes));
+    }
     if (files.isEmpty) {
       setState(() => _errorMessage = 'Không đọc được file đã chọn.');
     }

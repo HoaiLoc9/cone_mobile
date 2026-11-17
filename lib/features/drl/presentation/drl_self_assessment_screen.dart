@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../data/drl_models.dart';
 import '../data/drl_service.dart';
@@ -96,10 +97,15 @@ class _DrlSelfAssessmentScreenState extends State<DrlSelfAssessmentScreen> {
       return;
     }
 
-    final picked = result.files
-        .where((file) => file.bytes != null)
-        .map((file) => DrlEvidenceUpload(name: file.name, bytes: file.bytes!))
-        .toList();
+    final picked = <DrlEvidenceUpload>[];
+    for (final file in result.files) {
+      if (file.bytes == null) continue;
+      final compressed = await ImageCompressor.compressImage(
+        fileName: file.name,
+        bytes: file.bytes!,
+      );
+      picked.add(DrlEvidenceUpload(name: compressed.name, bytes: compressed.bytes));
+    }
 
     if (picked.isEmpty) {
       setState(() => _errorMessage = 'Không đọc được file minh chứng đã chọn.');

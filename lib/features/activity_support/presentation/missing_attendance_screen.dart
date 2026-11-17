@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../data/activity_support_models.dart';
@@ -180,8 +181,12 @@ class _SubmitSheetState extends State<_SubmitSheet> {
     if (file?.bytes == null) {
       return;
     }
+    final compressed = await ImageCompressor.compressImage(
+      fileName: file!.name,
+      bytes: file.bytes!,
+    );
     setState(
-      () => _upload = SupportUpload(name: file!.name, bytes: file.bytes!),
+      () => _upload = SupportUpload(name: compressed.name, bytes: compressed.bytes),
     );
   }
 

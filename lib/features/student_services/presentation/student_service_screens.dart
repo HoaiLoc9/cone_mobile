@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/app_state_view.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/cone_card.dart';
@@ -947,7 +948,11 @@ class _PermissionFormState extends State<_PermissionForm> {
     final result = await FilePicker.platform.pickFiles(withData: true);
     final file = result?.files.single;
     if (file?.bytes == null) return;
-    setState(() => _file = FilePayload(name: file!.name, bytes: file.bytes!));
+    final compressed = await ImageCompressor.compressImage(
+      fileName: file!.name,
+      bytes: file.bytes!,
+    );
+    setState(() => _file = FilePayload(name: compressed.name, bytes: compressed.bytes));
   }
 
   Future<void> _submit() async {
@@ -1043,7 +1048,11 @@ class _DocumentFormState extends State<_DocumentForm> {
     final result = await FilePicker.platform.pickFiles(withData: true);
     final file = result?.files.single;
     if (file?.bytes == null) return;
-    setState(() => _file = FilePayload(name: file!.name, bytes: file.bytes!));
+    final compressed = await ImageCompressor.compressImage(
+      fileName: file!.name,
+      bytes: file.bytes!,
+    );
+    setState(() => _file = FilePayload(name: compressed.name, bytes: compressed.bytes));
   }
 
   Future<void> _submit() async {
