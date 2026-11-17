@@ -35,9 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool obscurePassword = true;
   bool isLoading = false;
   String? errorMessage;
-
-  bool? _isServerConnected;
-  bool _isCheckingServer = false;
+  String _biometricType = 'biometric';
 
   final identifierController = TextEditingController();
   final passwordController = TextEditingController();
@@ -45,28 +43,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkServerConnection();
+    _detectBiometric();
   }
 
-  Future<void> _checkServerConnection() async {
-    if (!mounted) return;
-    setState(() => _isCheckingServer = true);
-    try {
-      final client = ApiClient();
-      await client.get('/mobile/login');
-      if (mounted) setState(() => _isServerConnected = true);
-    } on ApiException catch (e) {
-      // 401, 404, 405, 422 indicate the server is online and responding!
-      final status = e.statusCode;
-      if (status != null && status > 0) {
-        if (mounted) setState(() => _isServerConnected = true);
-      } else {
-        if (mounted) setState(() => _isServerConnected = false);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isServerConnected = false);
-    } finally {
-      if (mounted) setState(() => _isCheckingServer = false);
+  Future<void> _detectBiometric() async {
+    final type = await BiometricAuthService.instance.getBiometricType();
+    if (mounted) {
+      setState(() => _biometricType = type);
     }
   }
 
@@ -125,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () async {
                   await ApiConfig.resetToDefault();
                   controller.text = ApiConfig.baseUrl;
-                  _checkServerConnection();
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
                 child: const Text('Mặc định'),
@@ -160,7 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
                 onPressed: () async {
                   await ApiConfig.saveConfig(controller.text);
-                  _checkServerConnection();
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
                 child: const Text('Lưu'),
@@ -306,11 +287,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleBiometricLogin() async {
     final available = await BiometricAuthService.instance.isBiometricsAvailable();
+    final bioName = _biometricType == 'face'
+        ? 'Face ID'
+        : (_biometricType == 'fingerprint' ? 'Vân tay' : 'Sinh trắc học');
+
     if (!available) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Thiết bị chưa cài đặt Face ID/Vân tay hoặc trình duyệt chưa cấp quyền.'),
+          SnackBar(
+            content: Text('Thiết bị chưa cài đặt $bioName hoặc trình duyệt chưa cấp quyền.'),
             backgroundColor: AppColors.textSecondary,
           ),
         );
@@ -321,14 +306,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final creds = await BiometricAuthService.instance.getSavedCredentials();
 
     if (creds == null) {
-      // Nếu chưa lưu thông tin Face ID:
+      // Nếu chưa lưu thông tin Face ID / Vân tay:
       // Kiểm tra xem người dùng có đang điền sẵn tài khoản & mật khẩu trong ô không
       final idText = identifierController.text.trim();
       final passText = passwordController.text;
 
       if (idText.isNotEmpty && passText.isNotEmpty) {
         final authenticated = await BiometricAuthService.instance.authenticate(
-          reason: 'Xác thực vân tay hoặc Face ID để kích hoạt đăng nhập nhanh',
+          reason: 'Xác thực $bioName để kích hoạt đăng nhập nhanh',
         );
         if (authenticated && mounted) {
           _submit();
@@ -341,10 +326,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng nhập MSSV & Mật khẩu đăng nhập 1 lần để kích hoạt Face ID cho máy này.'),
+          SnackBar(
+            content: Text('Vui lòng nhập MSSV & Mật khẩu đăng nhập 1 lần để kích hoạt $bioName cho thiết bị này.'),
             backgroundColor: AppColors.primary,
-            duration: Duration(seconds: 4),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -352,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final authenticated = await BiometricAuthService.instance.authenticate(
-      reason: 'Xác thực vân tay hoặc Face ID để đăng nhập vào COne',
+      reason: 'Xác thực $bioName để đăng nhập vào COne',
     );
 
     if (authenticated && mounted) {
@@ -389,7 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Đăng nhập Face ID không thành công: ${e is ApiException ? e.message : "Vui lòng nhập mật khẩu."}'),
+              content: Text('Đăng nhập $bioName không thành công: ${e is ApiException ? e.message : "Vui lòng nhập mật khẩu."}'),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -406,6 +391,216 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AdminForgotPasswordScreen(service: widget.adminService),
+      ),
+    );
+  }
+
+  void _showForgotPasswordHelp() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.help_outline_rounded, color: AppColors.primary, size: 24),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quên mật khẩu?',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Hướng dẫn khôi phục tài khoản COne',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Khối Dành cho Sinh viên
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'SINH VIÊN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Hướng dẫn cho sinh viên',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.key_rounded, size: 16, color: Color(0xFF2563EB)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Mật khẩu mặc định: Trường khởi tạo mật khẩu là Ngày sinh (định dạng ddmmyyyy, ví dụ: sinh 15/08/2004 nhập là 15082004) hoặc số CCCD.',
+                          style: TextStyle(fontSize: 12.5, color: Color(0xFF334155), height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.support_agent_rounded, size: 16, color: Color(0xFF2563EB)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Nếu đã đổi mật khẩu và quên: Vui lòng liên hệ Cố vấn học tập (GVCN) hoặc Văn phòng Công tác Sinh viên (CTSV) kèm Họ tên & MSSV để được hỗ trợ đặt lại mật khẩu nhanh nhất.',
+                          style: TextStyle(fontSize: 12.5, color: Color(0xFF334155), height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Khối Dành cho Cán bộ / Giảng viên
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF475569),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'CÁN BỘ / GIẢNG VIÊN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Cán bộ có thể tự đặt lại mật khẩu bằng mã OTP bảo mật gửi đến Email trường cấp (@cofer.edu.vn).',
+                    style: TextStyle(fontSize: 12.5, color: Color(0xFF334155), height: 1.4),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _openAdminForgotPassword();
+                      },
+                      icon: const Icon(Icons.mail_lock_rounded, size: 18),
+                      label: const Text(
+                        'Đặt lại mật khẩu Cán bộ qua OTP Email',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Đã hiểu & Đóng', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -507,8 +702,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildBrandingHero(isWide: false),
                           const SizedBox(height: 24),
                           _buildFormCard3D(isWide: false),
-                          const SizedBox(height: 24),
-                          _buildFooter(),
                         ],
                       ),
                     ),
@@ -528,61 +721,64 @@ class _LoginScreenState extends State<LoginScreen> {
           isWide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         // 3D Glass Box Logo with Glow & Active Badge
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: isWide ? 88 : 82,
-              height: isWide ? 88 : 82,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.22),
-                    blurRadius: 28,
-                    offset: const Offset(0, 12),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/cofer_logo.png',
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Icon(
-                  Icons.school_rounded,
-                  color: AppColors.primary,
-                  size: 44,
-                ),
-              ),
-            ),
-            // Online status indicator dot on logo
-            Positioned(
-              right: -3,
-              bottom: -3,
-              child: Container(
-                width: 18,
-                height: 18,
+        GestureDetector(
+          onLongPress: _showServerConfigDialog,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: isWide ? 88 : 82,
+                height: isWide ? 88 : 82,
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.5),
-                      blurRadius: 6,
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.22),
+                      blurRadius: 28,
+                      offset: const Offset(0, 12),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
+                child: Image.asset(
+                  'assets/images/cofer_logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.school_rounded,
+                    color: AppColors.primary,
+                    size: 44,
+                  ),
+                ),
               ),
-            ),
-          ],
+              // Online status indicator dot on logo
+              Positioned(
+                right: -3,
+                bottom: -3,
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
         // App title with stylized gradient
@@ -773,7 +969,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const Spacer(),
               TextButton(
-                onPressed: isLoading ? null : _openAdminForgotPassword,
+                onPressed: isLoading ? null : _showForgotPasswordHelp,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   minimumSize: Size.zero,
@@ -894,7 +1090,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 18),
-          // Nút Đăng nhập bằng Sinh trắc học (Face ID / Vân tay) thiết kế Capsule Card cao cấp
+          // Nút Đăng nhập bằng Sinh trắc học (Tự động nhận diện Face ID / Vân tay theo phần cứng thiết bị)
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -923,29 +1119,39 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.fingerprint_rounded,
+                      child: Icon(
+                        _biometricType == 'face'
+                            ? Icons.face_rounded
+                            : Icons.fingerprint_rounded,
                         color: AppColors.primary,
                         size: 24,
                       ),
                     ),
                     const SizedBox(width: 14),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Đăng nhập bằng Face ID / Vân tay',
-                            style: TextStyle(
+                            _biometricType == 'face'
+                                ? 'Đăng nhập bằng Face ID'
+                                : (_biometricType == 'fingerprint'
+                                    ? 'Đăng nhập bằng Vân tay'
+                                    : 'Đăng nhập sinh trắc học'),
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF0F172A),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            'Xác thực tức thì không cần nhập mật khẩu',
-                            style: TextStyle(
+                            _biometricType == 'face'
+                                ? 'Nhận diện khuôn mặt Face ID an toàn'
+                                : (_biometricType == 'fingerprint'
+                                    ? 'Chạm vân tay để xác thực nhanh'
+                                    : 'Xác thực sinh trắc học không cần mật khẩu'),
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF64748B),
@@ -1041,82 +1247,6 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFooter() {
-    final hostDisplay = Uri.tryParse(ApiConfig.webUrl)?.host ?? ApiConfig.webUrl;
-    return Column(
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: _showServerConfigDialog,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _isCheckingServer
-                    ? const SizedBox(
-                        width: 10,
-                        height: 10,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isServerConnected == true
-                              ? const Color(0xFF10B981)
-                              : _isServerConnected == false
-                                  ? const Color(0xFFEF4444)
-                                  : const Color(0xFFF59E0B),
-                        ),
-                      ),
-                const SizedBox(width: 8),
-                Text(
-                  _isServerConnected == true
-                      ? 'Máy chủ: $hostDisplay (Trực tuyến)'
-                      : _isServerConnected == false
-                          ? 'Máy chủ: $hostDisplay (Chưa kết nối)'
-                          : 'Đang kiểm tra kết nối...',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _isServerConnected == false
-                        ? const Color(0xFFDC2626)
-                        : const Color(0xFF475569),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(Icons.tune_rounded, size: 14, color: Color(0xFF94A3B8)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'COne Mobile • Điểm rèn luyện trực tuyến',
-          style: TextStyle(
-            color: Color(0xFF94A3B8),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ],

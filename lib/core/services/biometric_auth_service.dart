@@ -32,6 +32,25 @@ class BiometricAuthService {
     }
   }
 
+  /// Lấy loại sinh trắc học khả dụng của thiết bị: 'face' (Face ID) | 'fingerprint' (Vân tay) | 'biometric' (chung)
+  Future<String> getBiometricType() async {
+    if (kIsWeb) {
+      final isApple = defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS;
+      return isApple ? 'face' : 'fingerprint';
+    }
+    try {
+      final available = await _auth.getAvailableBiometrics();
+      if (available.contains(BiometricType.face)) {
+        return 'face';
+      } else if (available.contains(BiometricType.fingerprint) ||
+          available.contains(BiometricType.strong)) {
+        return 'fingerprint';
+      }
+    } catch (_) {}
+    return 'biometric';
+  }
+
   /// Kiểm tra người dùng đã bật đăng nhập sinh trắc học chưa
   Future<bool> isBiometricEnabled() async {
     final val = await AppStorage.instance.getString(_biometricEnabledKey);
