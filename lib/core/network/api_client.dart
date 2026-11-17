@@ -7,6 +7,8 @@ import 'api_response.dart';
 import 'api_transport.dart';
 
 class ApiClient {
+  static void Function()? onSessionExpired;
+
   ApiClient({ApiTransport? transport})
     : _transport = transport ?? createApiTransport();
 
@@ -96,7 +98,13 @@ class ApiClient {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      if (method == 'GET') {
+      if (response.statusCode == 401) {
+        // Hết phiên đăng nhập: tự động kích hoạt đăng xuất ngay lập tức
+        if (_token != null && _token!.isNotEmpty && !path.contains('/login')) {
+          onSessionExpired?.call();
+        }
+      } else if (method == 'GET' && response.statusCode >= 500) {
+        // Chỉ fallback cache khi lỗi máy chủ 5xx (server nghỉ ngơi/bảo trì)
         final cached = await AppStorage.instance.getString(cacheKey);
         if (cached != null && cached.isNotEmpty) {
           try {

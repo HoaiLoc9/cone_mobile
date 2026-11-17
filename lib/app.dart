@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/config/api_config.dart';
 import 'core/config/app_colors.dart';
 import 'core/config/cone_theme.dart';
+import 'core/network/api_client.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/theme_service.dart';
 import 'features/admin/data/admin_models.dart';
@@ -21,6 +22,8 @@ class QldrlApp extends StatefulWidget {
 }
 
 class _QldrlAppState extends State<QldrlApp> {
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   final AuthService _authService = AuthService();
   final AdminService _adminService = AdminService();
   AuthSession? _session;
@@ -30,6 +33,7 @@ class _QldrlAppState extends State<QldrlApp> {
   @override
   void initState() {
     super.initState();
+    ApiClient.onSessionExpired = _handleSessionExpired;
     ThemeService.instance.loadTheme();
     ThemeService.instance.addListener(_onThemeChanged);
     LocalNotificationService.instance.initialize().then((_) {
@@ -44,8 +48,46 @@ class _QldrlAppState extends State<QldrlApp> {
 
   @override
   void dispose() {
+    ApiClient.onSessionExpired = null;
     ThemeService.instance.removeListener(_onThemeChanged);
     super.dispose();
+  }
+
+  Future<void> _handleSessionExpired() async {
+    if (!mounted) return;
+    if (_session == null && _adminSession == null) return;
+
+    try {
+      await _authService.clearSavedSession();
+      await _adminService.clearSavedSession();
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _session = null;
+        _adminSession = null;
+      });
+
+      _messengerKey.currentState?.showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.danger,
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _restoreSession() async {
@@ -110,6 +152,7 @@ class _QldrlAppState extends State<QldrlApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: _messengerKey,
       debugShowCheckedModeBanner: false,
       title: 'COne',
       theme: COneTheme.light(),
