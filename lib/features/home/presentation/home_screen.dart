@@ -357,6 +357,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       drlService: _drlService,
       activityService: ActivityService(token: _session.token),
       notificationService: _notificationService,
+      session: _session,
     );
   }
 
@@ -397,13 +398,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final user = currentSession.user;
         final displayName = user.name.isEmpty ? user.code : user.name;
 
-        return AppShell(
-          title: 'Xin chào, $displayName',
-          floatingActionButton: CuteAiRobotWidget(
-            onTap: _openChatbot,
-            greetingText: 'Hỏi AI nhé! ✨',
-          ),
-          customTitle: Row(
+        return Stack(
+          children: [
+            AppShell(
+              title: 'Xin chào, $displayName',
+              customTitle: Row(
             children: [
               GestureDetector(
                 onTap: _openProfile,
@@ -642,6 +641,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
+            ),
+            DraggableAiRobotOverlay(
+              onTap: _openChatbot,
+              greetingText: 'Hỏi AI nhé! ✨',
+            ),
+          ],
         );
       },
     );
@@ -1498,14 +1503,14 @@ class _QuickAction3DGrid extends StatelessWidget {
           title: 'Bảng điểm ĐRL',
           subtitle: 'Xem kết quả rèn luyện',
           icon: Icons.bar_chart_rounded,
-          color: const Color(0xFF06B6D4),
+          color: const Color(0xFF1D4ED8),
           onTap: onDrl,
         ),
         _FeatureCard3D(
           title: 'Thống kê',
           subtitle: 'Số liệu & báo cáo',
           icon: Icons.insights_rounded,
-          color: const Color(0xFF6366F1),
+          color: const Color(0xFF0284C7),
           badge: 'MỚI',
           onTap: onStats,
         ),
@@ -1513,28 +1518,28 @@ class _QuickAction3DGrid extends StatelessWidget {
           title: 'Minh chứng',
           subtitle: 'Tải lên & quản lý',
           icon: Icons.upload_file_rounded,
-          color: const Color(0xFF10B981),
+          color: const Color(0xFF1E40AF),
           onTap: onEvidence,
         ),
         _FeatureCard3D(
           title: 'Đã đăng ký',
           subtitle: 'Danh sách hoạt động',
           icon: Icons.event_note_rounded,
-          color: const Color(0xFFF43F5E),
+          color: const Color(0xFF2563EB),
           onTap: onRegisteredActivities,
         ),
         _FeatureCard3D(
           title: 'Khiếu nại',
           subtitle: 'Gửi & theo dõi xử lý',
           icon: Icons.warning_amber_rounded,
-          color: const Color(0xFFF97316),
+          color: const Color(0xFF0369A1),
           onTap: onComplaints,
         ),
         _FeatureCard3D(
           title: 'Danh hiệu',
           subtitle: 'Thành tích của bạn',
           icon: Icons.workspace_premium_rounded,
-          color: const Color(0xFFA855F7),
+          color: const Color(0xFF1D4ED8),
           badge: 'TOP',
           onTap: onAppellations,
         ),
@@ -1542,7 +1547,7 @@ class _QuickAction3DGrid extends StatelessWidget {
           title: 'Dịch vụ khác',
           subtitle: 'Hồ sơ & Tiện ích',
           icon: Icons.grid_view_rounded,
-          color: const Color(0xFFF59E0B),
+          color: const Color(0xFF1E3A8A),
           onTap: onOtherServices,
         ),
       ],
@@ -1844,22 +1849,22 @@ class _AnimatedAiSuggestionBannerState
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: AppColors.isDark
-                        ? const [Color(0xFF2E1A11), Color(0xFF1F110A)]
-                        : const [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+                        ? const [Color(0xFF172554), Color(0xFF0F172A)]
+                        : const [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.isDark
-                        ? const Color(0xFF7C2D12)
-                        : const Color(0xFFFED7AA),
+                        ? const Color(0xFF1E40AF)
+                        : const Color(0xFFBFDBFE),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF97316)
-                          .withValues(alpha: _glowAnimation.value),
+                      color: AppColors.primary
+                          .withValues(alpha: _glowAnimation.value * 0.6),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1867,21 +1872,21 @@ class _AnimatedAiSuggestionBannerState
                 ),
                 child: Row(
                   children: [
-                    // Hộp vuông cam ánh sao lấp lánh
+                    // Hộp vuông xanh ánh sao đồng bộ
                     Container(
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFFB923C), Color(0xFFEA580C)],
+                          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(13),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEA580C)
-                                .withValues(alpha: 0.35),
+                            color: AppColors.primary
+                                .withValues(alpha: 0.30),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -1911,8 +1916,8 @@ class _AnimatedAiSuggestionBannerState
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
-                                      Color(0xFFEA580C),
-                                      Color(0xFFDC2626),
+                                      Color(0xFF2563EB),
+                                      Color(0xFF1E3A8A),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(7),
@@ -1948,8 +1953,8 @@ class _AnimatedAiSuggestionBannerState
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w900,
                                     color: AppColors.isDark
-                                        ? const Color(0xFFFFEDD5)
-                                        : const Color(0xFF431407),
+                                        ? const Color(0xFFDBEAFE)
+                                        : const Color(0xFF1E3A8A),
                                   ),
                                 ),
                               ),
@@ -1962,8 +1967,8 @@ class _AnimatedAiSuggestionBannerState
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: AppColors.isDark
-                                  ? const Color(0xFFFDBA74)
-                                  : const Color(0xFF9A3412),
+                                  ? const Color(0xFF93C5FD)
+                                  : const Color(0xFF1E40AF),
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1972,19 +1977,19 @@ class _AnimatedAiSuggestionBannerState
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Nút cam: Xem ngay >
+                    // Nút đồng bộ: Xem ngay >
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF97316),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEA580C)
-                                .withValues(alpha: 0.35),
+                            color: AppColors.primary
+                                .withValues(alpha: 0.30),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),

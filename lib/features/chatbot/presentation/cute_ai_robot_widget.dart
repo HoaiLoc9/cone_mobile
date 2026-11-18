@@ -7,13 +7,116 @@ class CuteAiRobotWidget extends StatefulWidget {
     super.key,
     required this.onTap,
     this.greetingText = 'Hỏi tớ nhé! ✨',
+    this.alignBubbleLeft = false,
+    this.isDragging = false,
+  });
+
+  final VoidCallback onTap;
+  final String greetingText;
+  final bool alignBubbleLeft;
+  final bool isDragging;
+
+  @override
+  State<CuteAiRobotWidget> createState() => _CuteAiRobotWidgetState();
+}
+
+/// Overlay cho phép kéo thả (Drag & Drop) con Chatbot tự do tới mọi vị trí trên màn hình
+class DraggableAiRobotOverlay extends StatefulWidget {
+  const DraggableAiRobotOverlay({
+    super.key,
+    required this.onTap,
+    this.greetingText = 'Hỏi AI nhé! ✨',
   });
 
   final VoidCallback onTap;
   final String greetingText;
 
   @override
-  State<CuteAiRobotWidget> createState() => _CuteAiRobotWidgetState();
+  State<DraggableAiRobotOverlay> createState() => _DraggableAiRobotOverlayState();
+}
+
+class _DraggableAiRobotOverlayState extends State<DraggableAiRobotOverlay> {
+  static const double _widgetWidth = 110;
+  static const double _widgetHeight = 125;
+
+  Offset? _position;
+  bool _isDragging = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = constraints.maxWidth;
+        final maxH = constraints.maxHeight;
+
+        final defaultX = (maxW - _widgetWidth - 14).clamp(8.0, maxW);
+        final defaultY = (maxH - _widgetHeight - 16).clamp(8.0, maxH);
+
+        final currentPos = _position ?? Offset(defaultX, defaultY);
+        final clampedX = currentPos.dx.clamp(6.0, (maxW - _widgetWidth - 6).clamp(6.0, maxW));
+        final clampedY = currentPos.dy.clamp(6.0, (maxH - _widgetHeight - 6).clamp(6.0, maxH));
+        final isLeftHalf = clampedX < (maxW - _widgetWidth) / 2;
+
+        return Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedPositioned(
+              duration: _isDragging
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              left: clampedX,
+              top: clampedY,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onPanStart: (_) {
+                  setState(() {
+                    _isDragging = true;
+                    _position = Offset(clampedX, clampedY);
+                  });
+                },
+                onPanUpdate: (details) {
+                  setState(() {
+                    final nextX = ((_position?.dx ?? clampedX) + details.delta.dx)
+                        .clamp(6.0, (maxW - _widgetWidth - 6).clamp(6.0, maxW));
+                    final nextY = ((_position?.dy ?? clampedY) + details.delta.dy)
+                        .clamp(6.0, (maxH - _widgetHeight - 6).clamp(6.0, maxH));
+                    _position = Offset(nextX, nextY);
+                  });
+                },
+                onPanEnd: (_) {
+                  setState(() {
+                    _isDragging = false;
+                    // Nếu kéo sát mép trái/phải (< 28px) thì tự động hít gọn vào lề 12px
+                    final curX = _position?.dx ?? clampedX;
+                    final curY = _position?.dy ?? clampedY;
+                    double targetX = curX;
+                    if (curX < 28) {
+                      targetX = 10;
+                    } else if (curX > maxW - _widgetWidth - 28) {
+                      targetX = (maxW - _widgetWidth - 10).clamp(6.0, maxW);
+                    }
+                    _position = Offset(targetX, curY);
+                  });
+                },
+                child: AnimatedScale(
+                  scale: _isDragging ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: CuteAiRobotWidget(
+                    onTap: widget.onTap,
+                    greetingText: widget.greetingText,
+                    alignBubbleLeft: isLeftHalf,
+                    isDragging: _isDragging,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _CuteAiRobotWidgetState extends State<CuteAiRobotWidget>
@@ -435,21 +538,24 @@ class _CuteAiRobotWidgetState extends State<CuteAiRobotWidget>
                   ),
                 ),
 
-                // 3. Bong bóng thoại mời chào cute 3D
+                // 3. Bong bóng thoại mời chào cute 3D (Tự động đổi bên trái/phải khi kéo)
                 if (_showBubble)
                   Positioned(
                     top: 0,
-                    right: 4,
+                    left: widget.alignBubbleLeft ? 4 : null,
+                    right: widget.alignBubbleLeft ? null : 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 9,
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: const Color(0xFFE2E8F0),
+                          color: widget.isDragging
+                              ? AppColors.primary
+                              : const Color(0xFFE2E8F0),
                           width: 1,
                         ),
                         boxShadow: [
@@ -463,8 +569,14 @@ class _CuteAiRobotWidgetState extends State<CuteAiRobotWidget>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(
+                            Icons.drag_indicator_rounded,
+                            size: 12,
+                            color: Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 2),
                           Text(
-                            widget.greetingText,
+                            widget.isDragging ? 'Kéo thả vị trí...' : widget.greetingText,
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,

@@ -14,8 +14,8 @@ import '../../../shared/widgets/app_state_view.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/cone_card.dart';
 import '../../../shared/widgets/primary_button.dart';
-import '../../../shared/widgets/section_header.dart';
 import '../data/student_services_service.dart';
+import 'topcv_builder_screen.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   const ComplaintsScreen({super.key, required this.service});
@@ -1116,230 +1116,26 @@ class ProfileStatusScreen extends StatelessWidget {
   }
 }
 
-class CvScreen extends StatefulWidget {
+class CvScreen extends StatelessWidget {
   const CvScreen({super.key, required this.service});
 
   final StudentServicesService service;
 
   @override
-  State<CvScreen> createState() => _CvScreenState();
-}
-
-class _CvScreenState extends State<CvScreen> {
-  late Future<List<CvDocument>> _future = widget.service.cvs();
-
-  void _reload() => setState(() => _future = widget.service.cvs());
-
-  Future<void> _create() async {
-    final created = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _CvCreateForm(service: widget.service),
-    );
-    if (created == true) _reload();
-  }
-
-  Future<void> _edit(CvDocument cv) async {
-    final updated = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => CvEditorScreen(service: widget.service, cv: cv),
-      ),
-    );
-    if (updated == true) _reload();
-  }
-
-  Future<void> _setDefault(CvDocument cv) async {
-    await widget.service.setDefaultCv(cv.id);
-    _reload();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return _ServiceScaffold(
-      title: 'CV sinh viên',
-      subtitle: 'Tạo, sửa, chọn CV mặc định',
-      action: IconButton(onPressed: _create, icon: const Icon(Icons.add)),
-      child: FutureBuilder<List<CvDocument>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được CV',
-              message: snapshot.error.toString(),
-              actionLabel: 'Thử lại',
-              onAction: _reload,
-            );
-          }
-          final items = snapshot.data!;
-          return _RefreshList(
-            onRefresh: () async => _reload(),
-            children: [
-              SectionHeader(
-                title: 'Danh sách CV',
-                subtitle:
-                    'PDF có API `/mobile/cvs/{id}/pdf`; mở/tải file sẽ cần tích hợp lưu file ở phase sau.',
-                actionLabel: 'Tạo CV',
-                onAction: _create,
-              ),
-              const SizedBox(height: 12),
-              if (items.isEmpty)
-                const AppStateView(
-                  icon: Icons.badge_outlined,
-                  title: 'Chưa có CV',
-                  message: 'Tạo CV từ template có sẵn của hệ thống.',
-                )
-              else
-                for (final cv in items)
-                  _InfoCard(
-                    title: cv.name,
-                    subtitle:
-                        'Template: ${cv.templateId.isEmpty ? 'mặc định' : cv.templateId}',
-                    status: cv.isDefault ? 'Mặc định' : 'Bản nháp',
-                    note: 'Chạm để sửa nội dung CV.',
-                    icon: Icons.badge_outlined,
-                    onTap: () => _edit(cv),
-                    trailing: cv.isDefault
-                        ? null
-                        : TextButton(
-                            onPressed: () => _setDefault(cv),
-                            child: const Text('Chọn mặc định'),
-                          ),
-                  ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _create,
-        icon: const Icon(Icons.add),
-        label: const Text('Tạo CV'),
-      ),
-    );
+    return TopCvBuilderScreen(service: service);
   }
 }
 
-class CvEditorScreen extends StatefulWidget {
+class CvEditorScreen extends StatelessWidget {
   const CvEditorScreen({super.key, required this.service, required this.cv});
 
   final StudentServicesService service;
   final CvDocument cv;
 
   @override
-  State<CvEditorScreen> createState() => _CvEditorScreenState();
-}
-
-class _CvEditorScreenState extends State<CvEditorScreen> {
-  late final TextEditingController _name = TextEditingController(
-    text: widget.cv.name,
-  );
-  late final TextEditingController _fullName = TextEditingController(
-    text: widget.cv.personal['full_name']?.toString() ?? '',
-  );
-  late final TextEditingController _email = TextEditingController(
-    text: widget.cv.personal['email']?.toString() ?? '',
-  );
-  late final TextEditingController _phone = TextEditingController(
-    text: widget.cv.personal['phone']?.toString() ?? '',
-  );
-  bool _saving = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _fullName.dispose();
-    _email.dispose();
-    _phone.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
-    try {
-      final personal = Map<String, dynamic>.from(widget.cv.personal)
-        ..['full_name'] = _fullName.text.trim()
-        ..['email'] = _email.text.trim()
-        ..['phone'] = _phone.text.trim();
-      await widget.service.updateCv(
-        widget.cv.copyWith(name: _name.text.trim(), personal: personal),
-      );
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on ApiException catch (error) {
-      setState(() => _error = error.message);
-    } catch (error) {
-      setState(() => _error = error.toString());
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return _ServiceScaffold(
-      title: 'Sửa CV',
-      subtitle: widget.cv.name,
-      child: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          COneCard(
-            child: Column(
-              children: [
-                AppTextField(
-                  controller: _name,
-                  label: 'Tên CV',
-                  hint: 'CV thực tập',
-                  icon: Icons.badge_outlined,
-                ),
-                const SizedBox(height: 14),
-                AppTextField(
-                  controller: _fullName,
-                  label: 'Họ tên',
-                  hint: 'Nguyễn Văn A',
-                  icon: Icons.person_outline,
-                ),
-                const SizedBox(height: 14),
-                AppTextField(
-                  controller: _email,
-                  label: 'Email',
-                  hint: 'sv001@student.edu.vn',
-                  icon: Icons.mail_outline,
-                ),
-                const SizedBox(height: 14),
-                AppTextField(
-                  controller: _phone,
-                  label: 'Điện thoại',
-                  hint: '09...',
-                  icon: Icons.phone_outlined,
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: AppColors.danger),
-                  ),
-                ],
-                const SizedBox(height: 18),
-                PrimaryButton(
-                  label: 'Luu CV',
-                  onPressed: _save,
-                  isLoading: _saving,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return TopCvEditorScreen(service: service, cv: cv);
   }
 }
 
@@ -2100,91 +1896,6 @@ class _DocumentFormState extends State<_DocumentForm> {
   }
 }
 
-class _CvCreateForm extends StatefulWidget {
-  const _CvCreateForm({required this.service});
-
-  final StudentServicesService service;
-
-  @override
-  State<_CvCreateForm> createState() => _CvCreateFormState();
-}
-
-class _CvCreateFormState extends State<_CvCreateForm> {
-  final _name = TextEditingController(text: 'CV sinh viên');
-  late final Future<List<CvTemplate>> _templates = widget.service.cvTemplates();
-  String? _templateId;
-  bool _saving = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final templateId = _templateId;
-    if (templateId == null || templateId.isEmpty) {
-      setState(() => _error = 'Vui lòng chọn template CV.');
-      return;
-    }
-    setState(() => _saving = true);
-    try {
-      await widget.service.createCv(
-        name: _name.text.trim(),
-        templateId: templateId,
-      );
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (error) {
-      setState(
-        () => _error = error is ApiException ? error.message : error.toString(),
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _FormSheet(
-      title: 'Tạo CV theo template',
-      error: _error,
-      children: [
-        AppTextField(
-          controller: _name,
-          label: 'Tên CV',
-          hint: 'CV ứng tuyển CLB...',
-          icon: Icons.badge_outlined,
-        ),
-        const SizedBox(height: 14),
-        FutureBuilder<List<CvTemplate>>(
-          future: _templates,
-          builder: (context, snapshot) {
-            final templates = snapshot.data ?? const <CvTemplate>[];
-            if (_templateId == null && templates.isNotEmpty) {
-              _templateId = templates.first.id;
-            }
-            return DropdownButtonFormField<String>(
-              initialValue: _templateId,
-              decoration: const InputDecoration(labelText: 'Template'),
-              items: [
-                for (final template in templates)
-                  DropdownMenuItem(
-                    value: template.id,
-                    child: Text(template.name),
-                  ),
-              ],
-              onChanged: (value) => setState(() => _templateId = value),
-            );
-          },
-        ),
-        const SizedBox(height: 18),
-        PrimaryButton(label: 'Tạo CV', onPressed: _submit, isLoading: _saving),
-      ],
-    );
-  }
-}
-
 class _ServiceScaffold extends StatelessWidget {
   const _ServiceScaffold({
     required this.title,
@@ -2255,7 +1966,6 @@ class _InfoCard extends StatelessWidget {
     required this.icon,
     this.footer,
     this.onTap,
-    this.trailing,
   });
 
   final String title;
@@ -2265,7 +1975,6 @@ class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String? footer;
   final VoidCallback? onTap;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -2313,8 +2022,6 @@ class _InfoCard extends StatelessWidget {
                 style: const TextStyle(color: AppColors.primary, fontSize: 12),
               ),
             ],
-            if (trailing != null)
-              Align(alignment: Alignment.centerRight, child: trailing!),
           ],
         ),
       ),

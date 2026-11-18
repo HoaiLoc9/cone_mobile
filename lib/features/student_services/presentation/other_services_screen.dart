@@ -39,14 +39,14 @@ class OtherServicesScreen extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                  colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+                    color: const Color(0xFF1E3A8A).withValues(alpha: 0.25),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -58,11 +58,11 @@ class OtherServicesScreen extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
                     ),
-                    child: const Icon(Icons.hub_rounded, color: Colors.amberAccent, size: 26),
+                    child: const Icon(Icons.hub_rounded, color: Colors.white, size: 26),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
@@ -81,7 +81,7 @@ class OtherServicesScreen extends StatelessWidget {
                         Text(
                           'Hồ sơ hành chính, tài liệu quy chế & hỗ trợ học vụ',
                           style: TextStyle(
-                            color: Color(0xFF94A3B8),
+                            color: Color(0xFFDBEAFE),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -108,7 +108,7 @@ class OtherServicesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildServiceItem(
               icon: Icons.draw_rounded,
-              iconColor: const Color(0xFF7C3AED),
+              iconColor: const Color(0xFF1D4ED8),
               title: 'Chữ ký số',
               subtitle: 'Ký số văn bản điện tử, biên bản cam kết rèn luyện',
               onTap: () => _push(context, SignatureRequestsScreen(service: service)),
@@ -116,7 +116,7 @@ class OtherServicesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildServiceItem(
               icon: Icons.verified_user_rounded,
-              iconColor: const Color(0xFF0D9488),
+              iconColor: const Color(0xFF0284C7),
               title: 'Kiểm tra hồ sơ sinh viên',
               subtitle: 'Xem mức độ hoàn thiện thông tin cá nhân & lý lịch',
               onTap: () => _push(context, ProfileStatusScreen(service: service)),
@@ -128,7 +128,7 @@ class OtherServicesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildServiceItem(
               icon: Icons.folder_copy_rounded,
-              iconColor: const Color(0xFF0284C7),
+              iconColor: const Color(0xFF0369A1),
               title: 'Tài liệu & Quy chế',
               subtitle: 'Biểu mẫu rèn luyện, quyết định, quy chế sinh viên COFER',
               onTap: () => _push(context, DocumentsScreen(service: service)),
@@ -136,7 +136,7 @@ class OtherServicesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildServiceItem(
               icon: Icons.badge_rounded,
-              iconColor: const Color(0xFFEA580C),
+              iconColor: const Color(0xFF1E40AF),
               title: 'CV sinh viên & Năng lực',
               subtitle: 'Tạo và xuất hồ sơ năng lực thành tích rèn luyện ngoại khóa',
               badge: 'CV PRO',

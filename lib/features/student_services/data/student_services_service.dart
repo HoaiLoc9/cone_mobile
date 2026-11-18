@@ -97,15 +97,49 @@ class StudentServicesService {
   Future<CvDocument> updateCv(CvDocument cv) async {
     final data = await _apiClient.patch(
       '/mobile/cvs/${cv.id}',
-      body: {'name': cv.name, 'personal': cv.personal, 'sections': cv.sections},
+      body: {
+        'name': cv.name,
+        'template_id': cv.templateId,
+        'personal': cv.personal,
+        'appearance': cv.appearance,
+        'sections': cv.sections,
+      },
     );
     final payload = _object(data['data']);
     return CvDocument.fromJson(_object(payload['document'] ?? payload));
   }
 
+  Future<CvDocument> duplicateCv(String id) async {
+    final data = await _apiClient.post('/mobile/cvs/$id/duplicate');
+    return CvDocument.fromJson(_object(data['data']));
+  }
+
+  Future<void> deleteCv(String id) async {
+    await _apiClient.delete('/mobile/cvs/$id');
+  }
+
   Future<CvDocument> setDefaultCv(String id) async {
     final data = await _apiClient.post('/mobile/cvs/$id/default');
     return CvDocument.fromJson(_object(data['data']));
+  }
+
+  Future<Map<String, dynamic>> fetchUserProfile() async {
+    try {
+      final data = await _apiClient.get('/mobile/profile');
+      final payload = _object(data['data']);
+      return _object(payload['user'] ?? payload);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchRegisteredActivitiesForCv() async {
+    try {
+      final data = await _apiClient.get('/mobile/activities/registered');
+      return _items(data);
+    } catch (_) {
+      return const [];
+    }
   }
 
   Future<List<ActivitySuggestion>> activitySuggestions() async {
@@ -282,13 +316,30 @@ class ProfileStatus {
 }
 
 class CvTemplate {
-  const CvTemplate({required this.id, required this.name});
+  const CvTemplate({
+    required this.id,
+    required this.name,
+    this.description = '',
+    this.layout = 'two-column',
+    this.primaryColor = '#1d4ed8',
+  });
 
   final String id;
   final String name;
+  final String description;
+  final String layout;
+  final String primaryColor;
 
   factory CvTemplate.fromJson(Map<String, dynamic> json) {
-    return CvTemplate(id: _text(json['id']), name: _text(json['name']));
+    return CvTemplate(
+      id: _text(json['id']),
+      name: _text(json['name']),
+      description: _text(json['description']),
+      layout: _text(json['layout']).isEmpty ? 'two-column' : _text(json['layout']),
+      primaryColor: _text(json['primary_color']).isEmpty
+          ? '#1d4ed8'
+          : _text(json['primary_color']),
+    );
   }
 }
 
@@ -300,6 +351,9 @@ class CvDocument {
     required this.isDefault,
     required this.personal,
     required this.sections,
+    this.appearance = const {},
+    this.updatedAt = '',
+    this.avatarUrl = '',
   });
 
   final String id;
@@ -308,32 +362,45 @@ class CvDocument {
   final bool isDefault;
   final Map<String, dynamic> personal;
   final List<dynamic> sections;
+  final Map<String, dynamic> appearance;
+  final String updatedAt;
+  final String avatarUrl;
 
   factory CvDocument.fromJson(Map<String, dynamic> json) {
     return CvDocument(
       id: _text(json['id']),
       name: _text(json['name']).isEmpty ? 'CV sinh viên' : _text(json['name']),
-      templateId: _text(json['template_id']),
+      templateId: _text(json['template_id']).isEmpty
+          ? 'modern'
+          : _text(json['template_id']),
       isDefault: json['is_default'] == true || json['is_default'] == 1,
       personal: _object(json['personal']),
       sections: json['sections'] is List
           ? json['sections'] as List<dynamic>
           : const [],
+      appearance: _object(json['appearance']),
+      updatedAt: _text(json['updated_at']),
+      avatarUrl: ApiConfig.storageUrl(_text(json['avatar_url'])),
     );
   }
 
   CvDocument copyWith({
     String? name,
+    String? templateId,
     Map<String, dynamic>? personal,
     List<dynamic>? sections,
+    Map<String, dynamic>? appearance,
   }) {
     return CvDocument(
       id: id,
       name: name ?? this.name,
-      templateId: templateId,
+      templateId: templateId ?? this.templateId,
       isDefault: isDefault,
       personal: personal ?? this.personal,
       sections: sections ?? this.sections,
+      appearance: appearance ?? this.appearance,
+      updatedAt: updatedAt,
+      avatarUrl: avatarUrl,
     );
   }
 }

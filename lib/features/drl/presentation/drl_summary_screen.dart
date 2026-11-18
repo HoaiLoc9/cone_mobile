@@ -108,7 +108,7 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
           if (summary != null)
             IconButton(
               onPressed: () => _openShareStory(summary),
-              icon: const Icon(Icons.share_rounded, color: Color(0xFFF59E0B)),
+              icon: const Icon(Icons.share_rounded, color: AppColors.primary),
               tooltip: 'Chia sẻ Story thành tích',
             ),
           IconButton(

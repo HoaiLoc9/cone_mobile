@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
 
 class AppColors {
-  // Brand 3D Palette - Deep Space & Electric Glow
+  // Brand Palette - Unified COFER Navy & Royal Blue
   static const primary = Color(0xFF2563EB);
   static const primaryDark = Color(0xFF1D4ED8);
+  static const primaryDeep = Color(0xFF1E3A8A);
   static const darkBlue = Color(0xFF0F172A);
   static const primarySoft = Color(0xFFEFF6FF);
+  static const accentBlue = Color(0xFF0284C7);
+  static const slateBlue = Color(0xFF3B82F6);
 
   static bool get isDark => ThemeService.instance.isDarkMode;
 
@@ -46,22 +49,22 @@ class AppColors {
   static const textSecondaryLight = Color(0xFF64748B);
   static const borderLight = Color(0xFFE2E8F0);
 
-  // Neon & Semantic Colors với độ rực 3D
+  // Semantic & Unified Brand Accent Colors
   static const success = Color(0xFF10B981);
   static const warning = Color(0xFFF59E0B);
-  static const purple = Color(0xFF8B5CF6);
-  static const cyan = Color(0xFF06B6D4);
-  static const teal = Color(0xFF14B8A6);
+  static const purple = Color(0xFF1D4ED8);
+  static const cyan = Color(0xFF0284C7);
+  static const teal = Color(0xFF0369A1);
   static const danger = Color(0xFFEF4444);
-  static const gold = Color(0xFFFBBF24);
+  static const gold = Color(0xFF3B82F6);
 
-  // 3D Gradients phản quang
+  // Unified Brand Gradients
   static const card3DGradient = LinearGradient(
     begin: Alignment(-0.9, -0.9),
     end: Alignment(0.9, 0.9),
     colors: [
       Color(0xFF0F172A),
-      Color(0xFF1E1B4B),
+      Color(0xFF172554),
       Color(0xFF1E3A8A),
       Color(0xFF2563EB),
     ],
@@ -72,28 +75,28 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFFFDF7A),
-      Color(0xFFD4AF37),
-      Color(0xFF996515),
-      Color(0xFFFFE599),
+      Color(0xFFDBEAFE),
+      Color(0xFF93C5FD),
+      Color(0xFF3B82F6),
+      Color(0xFFEFF6FF),
     ],
   );
 
   static const neonButtonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
   );
 
   static const purpleGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFA855F7), Color(0xFF6D28D9)],
+    colors: [Color(0xFF1E40AF), Color(0xFF1E3A8A)],
   );
 
   static const emeraldGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF34D399), Color(0xFF059669)],
+    colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
   );
 }
