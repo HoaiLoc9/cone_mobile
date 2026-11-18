@@ -35,6 +35,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   Future<void> _create() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _ComplaintForm(service: widget.service),
@@ -45,25 +46,29 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Khiếu nại & Phản hồi',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: AppColors.adaptiveTextPrimary,
+            fontSize: 18,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.adaptiveAppBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -190,8 +195,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                             Container(
                               width: 60,
                               height: 60,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFEFF6FF),
+                              decoration: BoxDecoration(
+                                color: AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.done_all_rounded, color: AppColors.primary, size: 30),
@@ -199,12 +204,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                             const SizedBox(height: 14),
                             Text(
                               allItems.isEmpty ? 'Chưa có đơn khiếu nại nào' : 'Không có đơn trong danh mục này',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.adaptiveTextPrimary,
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
+                            Text(
                               'Nhấn nút "Tạo khiếu nại" bên dưới khi bạn cần phản ánh.',
-                              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                              style: TextStyle(fontSize: 12.5, color: AppColors.adaptiveTextSecondary),
                             ),
                           ],
                         ),
@@ -232,16 +241,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          color: isSelected ? AppColors.primary : AppColors.adaptiveCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+            color: isSelected ? AppColors.primary : AppColors.adaptiveBorder,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -259,16 +268,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: hasResponse
               ? const Color(0xFF10B981).withValues(alpha: 0.3)
-              : const Color(0xFFE2E8F0),
+              : AppColors.adaptiveBorder,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -306,13 +315,13 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   ],
                 ),
               ),
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.report_problem_outlined, size: 14, color: Color(0xFF64748B)),
-                  SizedBox(width: 4),
+                  Icon(Icons.report_problem_outlined, size: 14, color: AppColors.adaptiveTextSecondary),
+                  const SizedBox(width: 4),
                   Text(
                     'Đơn phản ánh',
-                    style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11.5, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -322,18 +331,18 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
 
           Text(
             item.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: AppColors.adaptiveTextPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             item.content,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF475569),
+              color: AppColors.adaptiveTextSecondary,
               height: 1.4,
             ),
           ),
@@ -343,23 +352,25 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: AppColors.isDark ? const Color(0xFF172554) : const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
+                border: Border.all(
+                  color: AppColors.isDark ? const Color(0xFF1E40AF) : const Color(0xFFBFDBFE),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.verified_rounded, size: 16, color: Color(0xFF2563EB)),
-                      SizedBox(width: 6),
+                      const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF2563EB)),
+                      const SizedBox(width: 6),
                       Text(
                         'Phản hồi từ Nhà trường / Cán bộ:',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E40AF),
+                          color: AppColors.isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                         ),
                       ),
                     ],
@@ -367,9 +378,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   const SizedBox(height: 6),
                   Text(
                     item.response,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
-                      color: Color(0xFF1E3A8A),
+                      color: AppColors.isDark ? const Color(0xFFDBEAFE) : const Color(0xFF1E3A8A),
                       height: 1.4,
                     ),
                   ),
@@ -378,9 +389,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             ),
           ] else ...[
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Ban Quản lý đang tiếp nhận hồ sơ và sẽ phản hồi sớm nhất.',
-              style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: AppColors.adaptiveTextSecondary),
             ),
           ],
         ],
@@ -400,73 +411,558 @@ class PermissionRequestsScreen extends StatefulWidget {
 }
 
 class _PermissionRequestsScreenState extends State<PermissionRequestsScreen> {
-  late Future<List<PermissionRequestItem>> _future = widget.service
-      .permissionRequests();
+  late Future<List<PermissionRequestItem>> _future = widget.service.permissionRequests();
+  String _filter = 'all';
 
-  void _reload() =>
-      setState(() => _future = widget.service.permissionRequests());
+  void _reload() => setState(() => _future = widget.service.permissionRequests());
 
   Future<void> _create() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => _PermissionForm(service: widget.service),
     );
     if (created == true) _reload();
   }
 
+  void _showEvidenceDialog(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: AppColors.adaptiveCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Minh chứng đính kèm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.adaptiveTextPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close_rounded, color: AppColors.adaptiveTextSecondary),
+                    onPressed: () => Navigator.of(dialogCtx).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (ctx, child, progress) {
+                    if (progress == null) return child;
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                  errorBuilder: (ctx, err, stack) {
+                    return Container(
+                      height: 160,
+                      color: AppColors.adaptiveBorder.withValues(alpha: 0.3),
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.insert_drive_file_outlined, size: 40, color: AppColors.primary),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tài liệu minh chứng đã được lưu trữ.',
+                            style: TextStyle(fontSize: 13, color: AppColors.adaptiveTextPrimary),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterPill(String label, String value) {
+    final isSelected = _filter == value;
+    return InkWell(
+      onTap: () => setState(() => _filter = value),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.adaptiveCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.adaptiveBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionCard(PermissionRequestItem item) {
+    final isApproved = item.status == 'approved';
+    final isRejected = item.status == 'rejected';
+    final statusColor = isApproved
+        ? const Color(0xFF10B981)
+        : isRejected
+            ? const Color(0xFFEF4444)
+            : const Color(0xFFF59E0B);
+    final statusBg = isApproved
+        ? const Color(0xFFD1FAE5)
+        : isRejected
+            ? const Color(0xFFFEE2E2)
+            : const Color(0xFFFEF3C7);
+    final statusLabel = isApproved
+        ? 'ĐÃ DUYỆT'
+        : isRejected
+            ? 'TỪ CHỐI'
+            : 'CHỜ DUYỆT';
+
+    final isAbsence = item.type == 'absence';
+    final isMakeup = item.type == 'makeup';
+    final typeBadgeColor = isAbsence
+        ? const Color(0xFF6366F1)
+        : isMakeup
+            ? const Color(0xFF8B5CF6)
+            : const Color(0xFF0EA5E9);
+    final typeBadgeBg = typeBadgeColor.withValues(alpha: 0.12);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isApproved
+              ? const Color(0xFF10B981).withValues(alpha: 0.3)
+              : isRejected
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                  : AppColors.adaptiveBorder,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: typeBadgeBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isAbsence
+                          ? Icons.event_busy_rounded
+                          : isMakeup
+                              ? Icons.update_rounded
+                              : Icons.verified_user_rounded,
+                      size: 13,
+                      color: typeBadgeColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      item.typeLabel.isNotEmpty ? item.typeLabel : 'Xin phép',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: typeBadgeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isApproved
+                          ? Icons.check_circle_rounded
+                          : isRejected
+                              ? Icons.cancel_rounded
+                              : Icons.hourglass_top_rounded,
+                      size: 13,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            item.title,
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.adaptiveTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.reason,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.adaptiveTextSecondary,
+              height: 1.4,
+            ),
+          ),
+          if (item.evidenceUrl.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: () => _showEvidenceDialog(context, item.evidenceUrl),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.adaptiveBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.attachment_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Xem minh chứng đính kèm',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.open_in_new_rounded, size: 13, color: AppColors.primary),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (item.adminNote.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isApproved
+                    ? const Color(0xFF10B981).withValues(alpha: 0.08)
+                    : isRejected
+                        ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                        : (AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isApproved
+                      ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                      : isRejected
+                          ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                          : AppColors.adaptiveBorder,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings_rounded,
+                        size: 15,
+                        color: isApproved
+                            ? const Color(0xFF10B981)
+                            : isRejected
+                                ? const Color(0xFFEF4444)
+                                : AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Phản hồi từ Cán bộ quản lý:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.adminNote,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.adaptiveTextSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text(
+              'Ban Quản lý đang tiếp nhận và xem xét giải quyết hồ sơ.',
+              style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: AppColors.adaptiveTextSecondary),
+            ),
+          ],
+          if (item.createdAt.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Thời gian: ${item.createdAt}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return _ServiceScaffold(
-      title: 'Giấy xin phép',
-      subtitle: 'Vắng hoạt động, bù hoạt động, miễn hoạt động',
-      action: IconButton(onPressed: _create, icon: const Icon(Icons.add)),
-      child: FutureBuilder<List<PermissionRequestItem>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được giấy xin phép',
-              message: snapshot.error.toString(),
-              actionLabel: 'Thử lại',
-              onAction: _reload,
-            );
-          }
-          final items = snapshot.data!;
-          if (items.isEmpty) {
-            return AppStateView(
-              icon: Icons.assignment_outlined,
-              title: 'Chưa có giấy xin phép',
-              message: 'Tạo giấy xin phép và đính kèm minh chứng nếu có.',
-              actionLabel: 'Tạo giấy',
-              onAction: _create,
-            );
-          }
-          return _RefreshList(
-            onRefresh: () async => _reload(),
-            children: [
-              for (final item in items)
-                _InfoCard(
-                  title: item.title,
-                  subtitle: '${item.typeLabel}\n${item.reason}',
-                  status: item.statusLabel,
-                  note: item.adminNote.isEmpty
-                      ? 'Chưa có ghi chú xử lý.'
-                      : item.adminNote,
-                  icon: Icons.assignment_turned_in_outlined,
-                ),
-            ],
-          );
-        },
+    return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.adaptiveTextPrimary, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Giấy xin phép',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: AppColors.adaptiveTextPrimary,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextPrimary),
+            onPressed: _reload,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
-        icon: const Icon(Icons.add),
-        label: const Text('Tạo giấy'),
+        backgroundColor: AppColors.primary,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text(
+          'Tạo giấy mới',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: SafeArea(
+        child: FutureBuilder<List<PermissionRequestItem>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 44),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Chưa tải được giấy xin phép',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _reload,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final allItems = snapshot.data ?? [];
+            final pendingCount = allItems.where((i) => i.status == 'pending').length;
+            final approvedCount = allItems.where((i) => i.status == 'approved').length;
+            final rejectedCount = allItems.where((i) => i.status == 'rejected').length;
+
+            final filteredItems = allItems.where((item) {
+              if (_filter == 'pending') return item.status == 'pending';
+              if (_filter == 'approved') return item.status == 'approved';
+              if (_filter == 'rejected') return item.status == 'rejected';
+              return true;
+            }).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async => _reload(),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                children: [
+                  // Thẻ hướng dẫn quy trình
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.assignment_ind_rounded, color: Colors.lightBlueAccent, size: 26),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Quy trình Xin phép trực tuyến',
+                                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Nộp đơn xin vắng hoạt động, bù hoạt động hoặc miễn hoạt động rèn luyện. Kèm theo minh chứng để được xét duyệt nhanh nhất.',
+                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.35),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bộ lọc Tab
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterPill('Tất cả (${allItems.length})', 'all'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('Chờ duyệt ($pendingCount)', 'pending'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('Đã duyệt ($approvedCount)', 'approved'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('Từ chối ($rejectedCount)', 'rejected'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  if (filteredItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 50),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.assignment_turned_in_rounded, color: AppColors.primary, size: 30),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              allItems.isEmpty ? 'Chưa có giấy xin phép nào' : 'Không có giấy trong danh mục này',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.adaptiveTextPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Nhấn nút "Tạo giấy mới" bên dưới khi bạn cần nộp đơn.',
+                              style: TextStyle(fontSize: 12.5, color: AppColors.adaptiveTextSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ...filteredItems.map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildPermissionCard(item),
+                        )),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -489,6 +985,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Future<void> _upload() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _DocumentForm(service: widget.service),
     );
@@ -635,6 +1133,8 @@ class _CvScreenState extends State<CvScreen> {
   Future<void> _create() async {
     final created = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _CvCreateForm(service: widget.service),
     );
@@ -1172,12 +1672,12 @@ class _ComplaintFormState extends State<_ComplaintForm> {
     final title = _title.text.trim();
     final content = _content.text.trim();
 
-    if (title.isEmpty) {
-      setState(() => _error = 'Vui lòng nhập tiêu đề khiếu nại.');
+    if (title.length < 2) {
+      setState(() => _error = 'Tiêu đề khiếu nại cần tối thiểu 2 ký tự.');
       return;
     }
-    if (content.isEmpty) {
-      setState(() => _error = 'Vui lòng nhập nội dung giải trình chi tiết.');
+    if (content.length < 3) {
+      setState(() => _error = 'Nội dung chi tiết cần tối thiểu 3 ký tự.');
       return;
     }
 
@@ -1204,6 +1704,7 @@ class _ComplaintFormState extends State<_ComplaintForm> {
   Widget build(BuildContext context) {
     return _FormSheet(
       title: 'Gửi đơn khiếu nại rèn luyện',
+      subtitle: 'Nêu rõ ý kiến khiếu nại về điểm rèn luyện hoặc hoạt động',
       error: _error,
       children: [
         AppTextField(
@@ -1218,8 +1719,9 @@ class _ComplaintFormState extends State<_ComplaintForm> {
           label: 'Nội dung chi tiết',
           hint: 'Trình bày rõ lý do, thời gian tham gia và đề xuất của bạn...',
           icon: Icons.notes_rounded,
+          maxLines: 4,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         PrimaryButton(label: 'Gửi khiếu nại ngay', onPressed: _submit, isLoading: _saving),
       ],
     );
@@ -1262,12 +1764,27 @@ class _PermissionFormState extends State<_PermissionForm> {
   }
 
   Future<void> _submit() async {
-    setState(() => _saving = true);
+    final title = _title.text.trim();
+    final reason = _reason.text.trim();
+
+    if (title.length < 2) {
+      setState(() => _error = 'Tiêu đề cần tối thiểu 2 ký tự.');
+      return;
+    }
+    if (reason.length < 3) {
+      setState(() => _error = 'Lý do cần tối thiểu 3 ký tự.');
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       await widget.service.createPermissionRequest(
         type: _type,
-        title: _title.text.trim(),
-        reason: _reason.text.trim(),
+        title: title,
+        reason: reason,
         evidence: _file,
       );
       if (mounted) Navigator.of(context).pop(true);
@@ -1280,45 +1797,213 @@ class _PermissionFormState extends State<_PermissionForm> {
     }
   }
 
+  Widget _buildTypeOption(String value, String label, IconData icon) {
+    final selected = _type == value;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _type = value),
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : (AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.adaptiveBorder,
+              width: selected ? 1.8 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: selected ? AppColors.primary : AppColors.adaptiveTextSecondary,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? AppColors.primary : AppColors.adaptiveTextPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return _FormSheet(
       title: 'Tạo giấy xin phép',
+      subtitle: 'Điền thông tin và đính kèm minh chứng để gửi Ban Quản lý',
       error: _error,
       children: [
-        DropdownButtonFormField<String>(
-          initialValue: _type,
-          decoration: const InputDecoration(labelText: 'Loại giấy'),
-          items: const [
-            DropdownMenuItem(value: 'absence', child: Text('Vắng hoạt động')),
-            DropdownMenuItem(value: 'makeup', child: Text('Bù hoạt động')),
-            DropdownMenuItem(value: 'exemption', child: Text('Miễn hoạt động')),
+        // Chọn loại giấy
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Loại giấy xin phép',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildTypeOption('absence', 'Vắng hoạt động', Icons.event_busy_rounded),
+                const SizedBox(width: 8),
+                _buildTypeOption('makeup', 'Bù hoạt động', Icons.update_rounded),
+                const SizedBox(width: 8),
+                _buildTypeOption('exemption', 'Miễn hoạt động', Icons.verified_user_rounded),
+              ],
+            ),
           ],
-          onChanged: (value) => setState(() => _type = value ?? _type),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
+
         AppTextField(
           controller: _title,
-          label: 'Tiêu đề',
-          hint: 'Xin phép vắng hoạt động...',
-          icon: Icons.title,
+          label: 'Tiêu đề đơn',
+          hint: 'Ví dụ: Xin phép vắng buổi sinh hoạt định kỳ...',
+          icon: Icons.title_rounded,
         ),
         const SizedBox(height: 14),
+
         AppTextField(
           controller: _reason,
-          label: 'Lý do',
-          hint: 'Nêu lý do và thời gian liên quan',
-          icon: Icons.notes_outlined,
+          label: 'Lý do xin phép chi tiết',
+          hint: 'Nêu rõ lý do (ví dụ: bị bệnh, trùng lịch thi...) và thời gian cụ thể...',
+          icon: Icons.notes_rounded,
+          maxLines: 3,
         ),
-        const SizedBox(height: 14),
-        OutlinedButton.icon(
-          onPressed: _pickFile,
-          icon: const Icon(Icons.attach_file),
-          label: Text(_file == null ? 'Chọn minh chứng' : _file!.name),
+        const SizedBox(height: 16),
+
+        // Chọn minh chứng
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tài liệu minh chứng (tùy chọn)',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_file == null)
+              InkWell(
+                onTap: _pickFile,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.adaptiveBorder,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 24),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Đính kèm minh chứng / ảnh giấy tờ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Hỗ trợ JPG, PNG, PDF (tối đa 8MB)',
+                        style: TextStyle(fontSize: 11, color: AppColors.adaptiveTextSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.description_rounded, color: AppColors.primary, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _file!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.adaptiveTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${(_file!.bytes.length / 1024).toStringAsFixed(1)} KB • Sẵn sàng gửi',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF10B981), fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _file = null),
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFFEF4444)),
+                      tooltip: 'Hủy chọn file',
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
+
         PrimaryButton(
-          label: 'Gửi giấy',
+          label: 'Gửi giấy xin phép',
           onPressed: _submit,
           isLoading: _saving,
         ),
@@ -1663,37 +2348,146 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _FormSheet extends StatelessWidget {
-  const _FormSheet({required this.title, required this.children, this.error});
+  const _FormSheet({
+    required this.title,
+    required this.children,
+    this.subtitle,
+    this.error,
+  });
 
   final String title;
+  final String? subtitle;
   final List<Widget> children;
   final String? error;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          18,
-          18,
-          18,
-          MediaQuery.of(context).viewInsets.bottom + 18,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(color: AppColors.adaptiveBorder, width: 1.2),
+          left: BorderSide(color: AppColors.adaptiveBorder, width: 0.5),
+          right: BorderSide(color: AppColors.adaptiveBorder, width: 0.5),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.35 : 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Thanh kéo gạt ở đỉnh
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptiveBorder,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Tiêu đề + Nút đóng
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.adaptiveTextPrimary,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              subtitle!,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.adaptiveTextSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardSubtle,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: AppColors.adaptiveTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                if (error != null) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFECACA)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            error!,
+                            style: const TextStyle(
+                              color: Color(0xFFDC2626),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                ...children,
+              ],
             ),
-            const SizedBox(height: 18),
-            ...children,
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              Text(error!, style: const TextStyle(color: AppColors.danger)),
-            ],
-          ],
+          ),
         ),
       ),
     );

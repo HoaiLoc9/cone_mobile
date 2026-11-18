@@ -199,6 +199,7 @@ class PermissionRequestItem {
     required this.statusLabel,
     required this.adminNote,
     required this.evidenceUrl,
+    this.createdAt = '',
   });
 
   final String id;
@@ -210,6 +211,7 @@ class PermissionRequestItem {
   final String statusLabel;
   final String adminNote;
   final String evidenceUrl;
+  final String createdAt;
 
   factory PermissionRequestItem.fromJson(Map<String, dynamic> json) {
     return PermissionRequestItem(
@@ -222,6 +224,7 @@ class PermissionRequestItem {
       statusLabel: _text(json['status_label']),
       adminNote: _text(json['admin_note']),
       evidenceUrl: ApiConfig.storageUrl(_text(json['evidence_url'])),
+      createdAt: _text(json['created_at']),
     );
   }
 }

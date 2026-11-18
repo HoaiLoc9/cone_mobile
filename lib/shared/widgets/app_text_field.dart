@@ -11,6 +11,7 @@ class AppTextField extends StatelessWidget {
     required this.icon,
     this.obscureText = false,
     this.enabled = true,
+    this.maxLines = 1,
     this.suffix,
     this.textInputAction,
     this.keyboardType,
@@ -23,6 +24,7 @@ class AppTextField extends StatelessWidget {
   final IconData icon;
   final bool obscureText;
   final bool enabled;
+  final int maxLines;
   final Widget? suffix;
   final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
@@ -35,8 +37,8 @@ class AppTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.adaptiveTextPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -45,6 +47,7 @@ class AppTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           enabled: enabled,
+          maxLines: maxLines,
           textInputAction: textInputAction,
           keyboardType: keyboardType,
           onSubmitted: onSubmitted,

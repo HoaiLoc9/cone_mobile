@@ -115,7 +115,19 @@ class ApiClient {
           } catch (_) {}
         }
       }
-      String? message = decoded['message']?.toString();
+      String? message;
+      if (response.statusCode == 422 && decoded['errors'] is Map) {
+        final errors = decoded['errors'] as Map;
+        if (errors.isNotEmpty) {
+          final firstVal = errors.values.first;
+          if (firstVal is List && firstVal.isNotEmpty) {
+            message = firstVal.first.toString();
+          } else if (firstVal is String) {
+            message = firstVal;
+          }
+        }
+      }
+      message ??= decoded['message']?.toString();
       if (message == null || message.isEmpty) {
         if (decoded['error'] != null) {
           message = decoded['error'].toString();
@@ -126,14 +138,7 @@ class ApiClient {
         } else if (response.statusCode == 404) {
           message = 'Không tìm thấy chức năng này trên máy chủ (404).';
         } else if (response.statusCode == 422) {
-          final errors = decoded['errors'];
-          if (errors is Map && errors.isNotEmpty) {
-            final firstErrList = errors.values.first;
-            if (firstErrList is List && firstErrList.isNotEmpty) {
-              message = firstErrList.first.toString();
-            }
-          }
-          message ??= 'Dữ liệu gửi lên không hợp lệ.';
+          message = 'Dữ liệu gửi lên không hợp lệ.';
         } else if (response.statusCode >= 500) {
           message = 'Máy chủ đang gặp sự cố nội bộ (${response.statusCode}).';
         } else {
