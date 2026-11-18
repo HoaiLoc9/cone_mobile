@@ -214,8 +214,8 @@ class _AppellationDetailScreenState extends State<AppellationDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.adaptiveBackground,
+        surfaceTintColor: AppColors.adaptiveBackground,
         title: const Text('Chi tiết danh hiệu', style: TextStyle(fontWeight: FontWeight.w900)),
       ),
       body: SafeArea(

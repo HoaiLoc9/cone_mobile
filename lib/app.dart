@@ -21,7 +21,7 @@ class QldrlApp extends StatefulWidget {
   State<QldrlApp> createState() => _QldrlAppState();
 }
 
-class _QldrlAppState extends State<QldrlApp> {
+class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldMessengerState> _messengerKey =
       GlobalKey<ScaffoldMessengerState>();
   final AuthService _authService = AuthService();
@@ -33,6 +33,7 @@ class _QldrlAppState extends State<QldrlApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     ApiClient.onSessionExpired = _handleSessionExpired;
     ThemeService.instance.loadTheme();
     ThemeService.instance.addListener(_onThemeChanged);
@@ -47,7 +48,13 @@ class _QldrlAppState extends State<QldrlApp> {
   }
 
   @override
+  void didChangePlatformBrightness() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     ApiClient.onSessionExpired = null;
     ThemeService.instance.removeListener(_onThemeChanged);
     super.dispose();
@@ -159,9 +166,9 @@ class _QldrlAppState extends State<QldrlApp> {
       darkTheme: COneTheme.dark(),
       themeMode: ThemeService.instance.themeMode,
       home: _isCheckingSession
-          ? const Scaffold(
-              backgroundColor: AppColors.background,
-              body: Center(
+          ? Scaffold(
+              backgroundColor: AppColors.adaptiveBackground,
+              body: const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),

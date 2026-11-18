@@ -509,15 +509,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = _user;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: AppColors.adaptiveAppBarBg,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
+        title: Text(
           'Tài khoản & Cá nhân',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            color: AppColors.adaptiveTextPrimary,
+          ),
         ),
         actions: [
           IconButton(
@@ -576,10 +580,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: Icon(
                                   _isEditingContact ? Icons.close_rounded : Icons.edit_note_rounded,
                                   size: 18,
+                                  color: AppColors.primary,
                                 ),
                                 label: Text(
                                   _isEditingContact ? 'Đóng' : 'Cập nhật',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary),
                                 ),
                               ),
                               children: [
@@ -588,16 +593,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 _InfoTile(label: 'Lớp sinh hoạt', value: user.studentClass, icon: Icons.class_outlined),
                                 _InfoTile(label: 'Khoa / Viện', value: user.department, icon: Icons.account_balance_outlined),
 
-                                const Divider(height: 20, thickness: 0.6),
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
 
                                 // Trạng thái đang chờ duyệt
                                 if (_pendingRequest != null) ...[
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFEF3C7),
+                                      color: AppColors.isDark
+                                          ? const Color(0xFF451A03).withValues(alpha: 0.35)
+                                          : const Color(0xFFFEF3C7),
                                       borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: const Color(0xFFFDE68A)),
+                                      border: Border.all(
+                                        color: AppColors.isDark
+                                            ? const Color(0xFFB45309).withValues(alpha: 0.5)
+                                            : const Color(0xFFFDE68A),
+                                      ),
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -720,17 +731,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             child: const Icon(Icons.key_rounded, color: AppColors.primary, size: 20),
                                           ),
                                           const SizedBox(width: 12),
-                                          const Expanded(
+                                          Expanded(
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   'Đổi mật khẩu qua OTP Email',
-                                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 14.5,
+                                                    color: AppColors.adaptiveTextPrimary,
+                                                  ),
                                                 ),
                                                 Text(
                                                   'Xác thực mã bảo mật gửi đến hộp thư sinh viên',
-                                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                  style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                                 ),
                                               ],
                                             ),
@@ -739,7 +754,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             _isPasswordSectionExpanded
                                                 ? Icons.keyboard_arrow_up_rounded
                                                 : Icons.keyboard_arrow_down_rounded,
-                                            color: AppColors.textSecondary,
+                                            color: AppColors.adaptiveTextSecondary,
                                           ),
                                         ],
                                       ),
@@ -843,7 +858,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
 
                                 // Đăng nhập sinh trắc học
-                                const Divider(height: 24, thickness: 0.6),
+                                Divider(height: 24, thickness: 0.6, color: AppColors.adaptiveBorder),
                                 SwitchListTile.adaptive(
                                   contentPadding: EdgeInsets.zero,
                                   secondary: Container(
@@ -854,13 +869,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF059669), size: 22),
                                   ),
-                                  title: const Text(
+                                  title: Text(
                                     'Vân tay & Face ID',
-                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14.5,
+                                      color: AppColors.adaptiveTextPrimary,
+                                    ),
                                   ),
-                                  subtitle: const Text(
+                                  subtitle: Text(
                                     'Mở khóa và đăng nhập app nhanh chóng',
-                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                   ),
                                   value: _biometricEnabled,
                                   activeThumbColor: AppColors.primary,
@@ -892,13 +911,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       size: 20,
                                     ),
                                   ),
-                                  title: const Text(
+                                  title: Text(
                                     'Giao diện Tối (Dark Mode)',
-                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14.5,
+                                      color: AppColors.adaptiveTextPrimary,
+                                    ),
                                   ),
                                   subtitle: Text(
                                     ThemeService.instance.isDarkMode ? 'Đang bật nền tối' : 'Đang bật nền sáng',
-                                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                   ),
                                   value: ThemeService.instance.isDarkMode,
                                   activeThumbColor: AppColors.primary,
@@ -1224,12 +1247,12 @@ class _SectionGroup extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.25 : 0.025),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1245,10 +1268,11 @@ class _SectionGroup extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.2,
+                    color: AppColors.adaptiveTextPrimary,
                   ),
                 ),
               ),
@@ -1278,21 +1302,21 @@ class _InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Icon(icon, size: 16, color: AppColors.textSecondary),
+            child: Icon(icon, size: 16, color: AppColors.adaptiveTextSecondary),
           ),
           const SizedBox(width: 8),
           SizedBox(
             width: 110,
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -1303,10 +1327,10 @@ class _InfoTile extends StatelessWidget {
             child: Text(
               value.isEmpty ? '-' : value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 13.5,
-                color: AppColors.textPrimary,
+                color: AppColors.adaptiveTextPrimary,
               ),
             ),
           ),
@@ -1369,7 +1393,7 @@ class _EmptyMessage extends StatelessWidget {
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
+            color: isError ? AppColors.danger : AppColors.adaptiveTextSecondary,
             fontWeight: FontWeight.w800,
           ),
         ),

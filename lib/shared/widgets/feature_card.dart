@@ -29,9 +29,9 @@ class FeatureCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Ink(
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 0.8),
+            border: Border.all(color: AppColors.adaptiveBorder, width: 0.8),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF0F172A).withValues(alpha: 0.04),
@@ -90,8 +90,8 @@ class FeatureCard extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: AppColors.adaptiveTextPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),
@@ -102,8 +102,8 @@ class FeatureCard extends StatelessWidget {
                       subtitle!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),

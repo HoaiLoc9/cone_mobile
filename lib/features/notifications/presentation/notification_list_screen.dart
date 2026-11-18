@@ -458,17 +458,17 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     final unreadCount = list?.unreadCount ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: AppColors.adaptiveAppBarBg,
         elevation: 0,
         centerTitle: false,
         title: Row(
           children: [
-            const Text(
+            Text(
               'Thông báo',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: AppColors.adaptiveTextPrimary),
             ),
             if (unreadCount > 0) ...[
               const SizedBox(width: 8),

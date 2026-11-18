@@ -9,7 +9,11 @@ class ThemeService extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
 
   ThemeMode get themeMode => _themeMode;
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  bool get isDarkMode {
+    if (_themeMode == ThemeMode.dark) return true;
+    if (_themeMode == ThemeMode.light) return false;
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+  }
 
   Future<void> loadTheme() async {
     try {

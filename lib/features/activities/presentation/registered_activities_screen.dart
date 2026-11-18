@@ -48,11 +48,11 @@ class _RegisteredActivitiesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         title: Text(
           'Hoạt động đã đăng ký',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
@@ -60,13 +60,13 @@ class _RegisteredActivitiesScreenState
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(
@@ -247,7 +247,7 @@ class _RegisteredActivitiesScreenState
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.adaptiveTextSecondary),
           ),
         ],
       ),
@@ -367,13 +367,13 @@ class _RegisteredActivitiesScreenState
                 style: TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: AppColors.adaptiveTextPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                  Icon(Icons.access_time_rounded, size: 14, color: AppColors.adaptiveTextSecondary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(

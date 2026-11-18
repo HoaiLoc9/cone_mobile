@@ -43,11 +43,11 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         title: Text(
           'Thống kê rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
@@ -55,13 +55,13 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(
@@ -375,7 +375,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
           const SizedBox(height: 2),
           Text(
             unit,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.adaptiveTextSecondary),
           ),
         ],
       ),
@@ -399,7 +399,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+                color: AppColors.adaptiveTextPrimary,
               ),
             ),
           ],

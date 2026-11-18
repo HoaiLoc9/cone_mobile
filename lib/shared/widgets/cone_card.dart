@@ -25,11 +25,11 @@ class COneCard extends StatelessWidget {
     final content = Ink(
       padding: padding,
       decoration: BoxDecoration(
-        color: gradient == null ? AppColors.card : null,
+        color: gradient == null ? AppColors.adaptiveCard : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
         border: gradient == null
-            ? Border.all(color: AppColors.border, width: 0.8)
+            ? Border.all(color: AppColors.adaptiveBorder, width: 0.8)
             : null,
         boxShadow: [
           BoxShadow(

@@ -122,8 +122,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: AppColors.background,
+          backgroundColor: AppColors.adaptiveBackground,
+          surfaceTintColor: AppColors.adaptiveBackground,
           leading: IconButton(
             onPressed: () => Navigator.of(context).pop(_activity),
             icon: const Icon(Icons.arrow_back_rounded),

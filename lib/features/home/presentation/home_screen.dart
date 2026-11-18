@@ -646,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       body: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
@@ -2041,9 +2041,9 @@ class _AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         border: Border(
-          top: BorderSide(color: AppColors.border, width: 1.0),
+          top: BorderSide(color: AppColors.adaptiveBorder, width: 1.0),
         ),
         boxShadow: [
           BoxShadow(
@@ -2084,7 +2084,7 @@ class _AppBottomNavBar extends StatelessWidget {
     bool hasBadge = false,
   }) {
     final isActive = currentIndex == index;
-    final color = isActive ? AppColors.primary : AppColors.textSecondary;
+    final color = isActive ? AppColors.primary : AppColors.adaptiveTextSecondary;
 
     return InkWell(
       onTap: () => onTap(index),

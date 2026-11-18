@@ -38,12 +38,12 @@ class ActivityCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isRegistered
                   ? const Color(0xFF10B981).withValues(alpha: 0.35)
-                  : AppColors.border,
+                  : AppColors.adaptiveBorder,
               width: isRegistered ? 1.5 : 1.0,
             ),
             boxShadow: [
@@ -128,7 +128,7 @@ class ActivityCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: AppColors.adaptiveTextPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   height: 1.35,
@@ -149,7 +149,7 @@ class ActivityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                       ),
                     ),
                   ),
@@ -170,7 +170,7 @@ class ActivityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                       ),
                     ),
                   ),
@@ -187,7 +187,7 @@ class ActivityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                       ),
                     ),
                     Text(

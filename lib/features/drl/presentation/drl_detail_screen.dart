@@ -91,8 +91,8 @@ class _DrlDetailScreenState extends State<DrlDetailScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: AppColors.background,
+          backgroundColor: AppColors.adaptiveBackground,
+          surfaceTintColor: AppColors.adaptiveBackground,
           title: Text(
             detail?.semester.name ?? 'Chi tiết DRL',
             style: const TextStyle(fontWeight: FontWeight.w900),

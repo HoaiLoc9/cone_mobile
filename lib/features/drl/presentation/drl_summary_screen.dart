@@ -73,25 +73,25 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
     final summary = _summary;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Bảng điểm Rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         actions: [
           IconButton(
             onPressed: _load,
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(
@@ -118,7 +118,7 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                                 Text(
                                   'Bảng điểm theo học kỳ',
                                   style: TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.adaptiveTextPrimary,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -305,7 +305,7 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                       style: TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColors.adaptiveTextPrimary,
                       ),
                     ),
                   ),
@@ -458,18 +458,18 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColors.adaptiveTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Chưa có dữ liệu rèn luyện',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+              Icon(Icons.chevron_right_rounded, color: AppColors.adaptiveTextSecondary),
             ],
           ),
         ),

@@ -175,8 +175,8 @@ class _DrlSelfAssessmentScreenState extends State<DrlSelfAssessmentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.adaptiveBackground,
+        surfaceTintColor: AppColors.adaptiveBackground,
         title: const Text(
           'Tự đánh giá DRL',
           style: TextStyle(fontWeight: FontWeight.w900),

@@ -79,25 +79,25 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Danh hiệu & Giải thưởng',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         actions: [
           IconButton(
             onPressed: _load,
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(
@@ -395,13 +395,13 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.adaptiveTextPrimary,
                           ),
                         ),
                         const SizedBox(height: 5),
                         Row(
                           children: [
-                            Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.textSecondary),
+                            Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.adaptiveTextSecondary),
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(

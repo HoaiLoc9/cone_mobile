@@ -98,7 +98,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
@@ -108,19 +108,19 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 18,
-            color: AppColors.textPrimary,
+            color: AppColors.adaptiveTextPrimary,
           ),
         ),
         actions: [
           IconButton(
             onPressed: () => _load(refresh: true),
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(
@@ -139,9 +139,9 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                       // Thanh tìm kiếm cao cấp
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.card,
+                          color: AppColors.adaptiveCard,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.adaptiveBorder),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -157,7 +157,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Tìm kiếm hoạt động, sự kiện...',
-                            hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
+                            hintStyle: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 13.5),
                             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 22),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -281,10 +281,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.card,
+          color: isSelected ? AppColors.primary : AppColors.adaptiveCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.adaptiveBorder,
           ),
           boxShadow: isSelected
               ? [
@@ -299,7 +299,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -342,7 +342,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppColors.adaptiveTextPrimary,
               ),
             ),
             const SizedBox(height: 6),

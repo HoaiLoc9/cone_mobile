@@ -16,18 +16,18 @@ class OtherServicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         title: Text(
           'Dịch vụ & Tiện ích khác',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary),
         ),
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
         ),
       ),
       body: SafeArea(

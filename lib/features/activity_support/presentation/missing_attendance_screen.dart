@@ -79,11 +79,11 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     final requestCount = data?.requests.length ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         title: Text(
           'Minh chứng rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
@@ -91,7 +91,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
         actions: [
           IconButton(
             onPressed: _load,
-            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
           ),
         ],
@@ -102,7 +102,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
             child: TabBar(
               controller: _tabController,
               labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
+              unselectedLabelColor: AppColors.adaptiveTextSecondary,
               labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
               indicatorColor: AppColors.primary,
@@ -321,7 +321,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+              Icon(Icons.access_time_rounded, size: 14, color: AppColors.adaptiveTextSecondary),
               const SizedBox(width: 5),
               Text(
                 '${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
@@ -641,7 +641,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
               const SizedBox(height: 16),
               Text(
                 'LÝ DO CHƯA ĐIỂM DANH ĐƯỢC',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.adaptiveTextSecondary),
               ),
               const SizedBox(height: 6),
               TextField(
