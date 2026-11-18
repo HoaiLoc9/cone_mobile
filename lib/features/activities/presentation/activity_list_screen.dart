@@ -98,29 +98,29 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Hoạt động sinh viên',
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 18,
-            color: Color(0xFF0F172A),
+            color: AppColors.textPrimary,
           ),
         ),
         actions: [
           IconButton(
             onPressed: () => _load(refresh: true),
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -139,12 +139,12 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                       // Thanh tìm kiếm cao cấp
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.card,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: AppColors.border),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
+                              color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -154,10 +154,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           controller: _searchController,
                           textInputAction: TextInputAction.search,
                           onSubmitted: (_) => _load(refresh: true),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Tìm kiếm hoạt động, sự kiện...',
-                            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
+                            hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
                             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 22),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -281,10 +281,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
+          color: isSelected ? AppColors.primary : AppColors.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+            color: isSelected ? AppColors.primary : AppColors.border,
           ),
           boxShadow: isSelected
               ? [
@@ -299,7 +299,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : AppColors.textSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -327,7 +327,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
               decoration: BoxDecoration(
                 color: isError
                     ? const Color(0xFFFEE2E2)
-                    : const Color(0xFFEFF6FF),
+                    : (AppColors.isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF)),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -339,10 +339,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),

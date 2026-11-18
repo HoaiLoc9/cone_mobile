@@ -79,25 +79,25 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Danh hiệu & Giải thưởng',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
         ),
         actions: [
           IconButton(
             onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -113,12 +113,12 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
               // Ô tìm kiếm danh hiệu
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -265,16 +265,16 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          color: isSelected ? AppColors.primary : AppColors.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+            color: isSelected ? AppColors.primary : AppColors.border,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : AppColors.textSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -308,16 +308,16 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isRegistered
                   ? const Color(0xFF10B981).withValues(alpha: 0.35)
-                  : const Color(0xFFE2E8F0),
+                  : AppColors.border,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -392,21 +392,21 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
                       children: [
                         Text(
                           item.name.isEmpty ? 'Danh hiệu sinh viên' : item.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 5),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_today_rounded, size: 13, color: Color(0xFF64748B)),
+                            Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.textSecondary),
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(
                                 'Thời hạn: ${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -423,11 +423,11 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
                   item.note,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.35),
+                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.35),
                 ),
               ],
               const SizedBox(height: 12),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              Divider(height: 1, color: AppColors.border),
               const SizedBox(height: 10),
 
               Row(

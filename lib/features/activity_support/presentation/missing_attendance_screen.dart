@@ -79,30 +79,30 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     final requestCount = data?.requests.length ?? 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Minh chứng rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: Colors.white,
+            color: AppColors.appBarBg,
             child: TabBar(
               controller: _tabController,
               labelColor: AppColors.primary,
-              unselectedLabelColor: const Color(0xFF64748B),
+              unselectedLabelColor: AppColors.textSecondary,
               labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
               indicatorColor: AppColors.primary,
@@ -269,12 +269,12 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -316,16 +316,16 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
           const SizedBox(height: 10),
           Text(
             item.name,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+              Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 5),
               Text(
                 '${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -358,12 +358,12 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -399,21 +399,21 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               ),
               Text(
                 item.missingTypeLabel,
-                style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             item.activityName,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
           ),
           if (item.reason.isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppColors.cardSubtle,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -608,9 +608,9 @@ class _SubmitSheetState extends State<_SubmitSheet> {
       ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SafeArea(
           top: false,
@@ -623,15 +623,15 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: AppColors.border,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Nộp minh chứng điểm danh',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 4),
               Text(
@@ -639,22 +639,23 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                 style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'LÝ DO CHƯA ĐIỂM DANH ĐƯỢC',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _reasonController,
                 maxLines: 3,
+                style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'VD: Máy quét mã báo lỗi, điện thoại hết pin lúc check-out...',
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: AppColors.cardSubtle,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),

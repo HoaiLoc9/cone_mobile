@@ -919,8 +919,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.danger,
-                                  side: const BorderSide(color: Color(0xFFFECACA), width: 1.2),
-                                  backgroundColor: const Color(0xFFFEF2F2),
+                                  side: BorderSide(
+                                    color: AppColors.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA),
+                                    width: 1.2,
+                                  ),
+                                  backgroundColor: AppColors.isDark
+                                      ? const Color(0xFF450A0A).withValues(alpha: 0.3)
+                                      : const Color(0xFFFEF2F2),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
                                 onPressed: _confirmAndLogout,
@@ -929,6 +934,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   'Đăng xuất tài khoản',
                                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                                 ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // 6. THÔNG TIN PHIÊN BẢN ỨNG DỤNG
+                            Center(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.cardSubtle,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: AppColors.border),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF10B981),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'COne Mobile v1.0.2 • Build 2026.11',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Hệ thống Quản lý Điểm rèn luyện Sinh viên',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -1172,7 +1226,7 @@ class _SectionGroup extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.025),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/theme_service.dart';
+
 class AppColors {
   // Brand 3D Palette - Deep Space & Electric Glow
   static const primary = Color(0xFF2563EB);
@@ -7,14 +9,42 @@ class AppColors {
   static const darkBlue = Color(0xFF0F172A);
   static const primarySoft = Color(0xFFEFF6FF);
 
-  // Background không gian 3D
-  static const background = Color(0xFFF1F5F9); // Slate 100 cao cấp
-  static const backgroundDark = Color(0xFF0B0F19);
+  static bool get isDark => ThemeService.instance.isDarkMode;
+
+  // Static constants (dùng cho const constructors trên toàn app)
+  static const background = Color(0xFFF8FAFC);
+  static const backgroundDark = Color(0xFF0B1120);
   static const card = Color(0xFFFFFFFF);
   static const cardDark = Color(0xFF1E293B);
   static const textPrimary = Color(0xFF0F172A);
+  static const textPrimaryDark = Color(0xFFF8FAFC);
   static const textSecondary = Color(0xFF64748B);
+  static const textSecondaryDark = Color(0xFF94A3B8);
   static const border = Color(0xFFE2E8F0);
+  static const borderDark = Color(0xFF334155);
+  static const cardSubtleLight = Color(0xFFF1F5F9);
+  static const cardSubtleDark = Color(0xFF0F172A);
+
+  // Background & Surface thích ứng linh hoạt theo Dark/Light Mode
+  static Color get adaptiveBackground => isDark ? backgroundDark : background;
+  static Color get adaptiveCard => isDark ? cardDark : card;
+  static Color get adaptiveCardSubtle => isDark ? cardSubtleDark : cardSubtleLight;
+  static Color get adaptiveBorder => isDark ? borderDark : border;
+  static Color get adaptiveTextPrimary => isDark ? textPrimaryDark : textPrimary;
+  static Color get adaptiveTextSecondary => isDark ? textSecondaryDark : textSecondary;
+  static Color get adaptiveAppBarBg => isDark ? backgroundDark : Colors.white;
+  static Color get adaptiveInputFill => isDark ? cardDark : background;
+
+  // Tiện ích alias cho các màn hình
+  static Color get cardSubtle => adaptiveCardSubtle;
+  static Color get appBarBg => adaptiveAppBarBg;
+
+  // Constants phục vụ Theme definitions
+  static const backgroundLight = Color(0xFFF8FAFC);
+  static const cardLight = Color(0xFFFFFFFF);
+  static const textPrimaryLight = Color(0xFF0F172A);
+  static const textSecondaryLight = Color(0xFF64748B);
+  static const borderLight = Color(0xFFE2E8F0);
 
   // Neon & Semantic Colors với độ rực 3D
   static const success = Color(0xFF10B981);

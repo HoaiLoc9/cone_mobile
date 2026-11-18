@@ -299,9 +299,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+              border: Border.all(color: AppColors.border, width: 1.0),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -313,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(icon, size: 20, color: const Color(0xFF1E293B)),
+                Icon(icon, size: 20, color: AppColors.textPrimary),
                 if (hasBadge)
                   Positioned(
                     top: 8,
@@ -455,10 +455,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             'Xin chào, $displayName',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -467,14 +467,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ],
                     ),
                     const SizedBox(height: 1),
-                    const Text(
+                    Text(
                       'COne • Hệ thống rèn luyện sinh viên',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -570,12 +570,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Tiện ích hệ thống',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: Color(0xFF0F172A),
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                               InkWell(
@@ -1115,8 +1115,8 @@ class _Dashboard3DGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+              gradient: LinearGradient(
+                colors: [AppColors.card, AppColors.cardSubtle],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1129,10 +1129,10 @@ class _Dashboard3DGrid extends StatelessWidget {
                   offset: const Offset(0, 8),
                   spreadRadius: -2,
                 ),
-                const BoxShadow(
-                  color: Color(0x0A0F172A),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
                   blurRadius: 8,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -1209,7 +1209,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                       height: 94,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
+                        color: AppColors.card,
                         boxShadow: [
                           BoxShadow(
                             color: gradeColor.withValues(alpha: 0.18),
@@ -1227,7 +1227,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                             child: CircularProgressIndicator(
                               value: (score / 100).clamp(0.0, 1.0),
                               strokeWidth: 9,
-                              backgroundColor: const Color(0xFFF1F5F9),
+                              backgroundColor: AppColors.cardSubtle,
                               valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
                               strokeCap: StrokeCap.round,
                             ),
@@ -1271,9 +1271,9 @@ class _Dashboard3DGrid extends StatelessWidget {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: AppColors.cardSubtle,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
                               children: [
@@ -1326,9 +1326,9 @@ class _Dashboard3DGrid extends StatelessWidget {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: AppColors.cardSubtle,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
                               children: [
@@ -1381,7 +1381,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                Divider(height: 1, thickness: 0.8, color: AppColors.border),
                 const SizedBox(height: 12),
                 // Footer thanh bấm vào xem chi tiết
                 const Row(
@@ -1579,12 +1579,12 @@ class _FeatureCard3D extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
+            border: Border.all(color: AppColors.border, width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -1623,8 +1623,8 @@ class _FeatureCard3D extends StatelessWidget {
                             title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF0F172A),
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
                             ),
@@ -1659,8 +1659,8 @@ class _FeatureCard3D extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
                         fontSize: 10.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1701,12 +1701,12 @@ class _DashboardFallback extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+        border: Border.all(color: AppColors.border, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1732,12 +1732,12 @@ class _DashboardFallback extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Dashboard chưa tải được',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1745,8 +1745,8 @@ class _DashboardFallback extends StatelessWidget {
                   'Hồ sơ: $profileStatus • $message',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1756,9 +1756,9 @@ class _DashboardFallback extends StatelessWidget {
           ),
           IconButton(
             onPressed: onRetry,
-            icon: const Icon(
+            icon: Icon(
               Icons.refresh_rounded,
-              color: Color(0xFF64748B),
+              color: AppColors.textSecondary,
               size: 22,
             ),
           ),
@@ -1778,9 +1778,9 @@ class _DashboardSkeleton extends StatelessWidget {
     return Container(
       height: 90,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
       ),
       child: const Center(
         child: CircularProgressIndicator(strokeWidth: 2.4),
@@ -1844,17 +1844,18 @@ class _AnimatedAiSuggestionBannerState
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFFFF7ED),
-                      Color(0xFFFFEDD5),
-                    ],
+                  gradient: LinearGradient(
+                    colors: AppColors.isDark
+                        ? const [Color(0xFF2E1A11), Color(0xFF1F110A)]
+                        : const [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFFFED7AA),
+                    color: AppColors.isDark
+                        ? const Color(0xFF7C2D12)
+                        : const Color(0xFFFED7AA),
                     width: 1.2,
                   ),
                   boxShadow: [
@@ -1940,7 +1941,7 @@ class _AnimatedAiSuggestionBannerState
                                 ),
                               ),
                               const SizedBox(width: 7),
-                              const Flexible(
+                              Flexible(
                                 child: Text(
                                   'Gợi ý rèn luyện',
                                   maxLines: 1,
@@ -1948,19 +1949,23 @@ class _AnimatedAiSuggestionBannerState
                                   style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w900,
-                                    color: Color(0xFF431407),
+                                    color: AppColors.isDark
+                                        ? const Color(0xFFFFEDD5)
+                                        : const Color(0xFF431407),
                                   ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 3),
-                          const Text(
+                          Text(
                             'Khám phá hoạt động phù hợp với bạn.',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: Color(0xFF9A3412),
+                              color: AppColors.isDark
+                                  ? const Color(0xFFFDBA74)
+                                  : const Color(0xFF9A3412),
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                             ),
@@ -2036,13 +2041,13 @@ class _AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
-          top: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        color: AppColors.card,
+        border: Border(
+          top: BorderSide(color: AppColors.border, width: 1.0),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.25 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
@@ -2079,7 +2084,7 @@ class _AppBottomNavBar extends StatelessWidget {
     bool hasBadge = false,
   }) {
     final isActive = currentIndex == index;
-    final color = isActive ? AppColors.primary : const Color(0xFF64748B);
+    final color = isActive ? AppColors.primary : AppColors.textSecondary;
 
     return InkWell(
       onTap: () => onTap(index),

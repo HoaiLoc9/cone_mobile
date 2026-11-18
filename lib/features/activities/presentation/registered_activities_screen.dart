@@ -48,25 +48,25 @@ class _RegisteredActivitiesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Hoạt động đã đăng ký',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -227,12 +227,12 @@ class _RegisteredActivitiesScreenState
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -247,7 +247,7 @@ class _RegisteredActivitiesScreenState
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -262,16 +262,16 @@ class _RegisteredActivitiesScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          color: isSelected ? AppColors.primary : AppColors.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+            color: isSelected ? AppColors.primary : AppColors.border,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : AppColors.textSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -295,16 +295,16 @@ class _RegisteredActivitiesScreenState
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isAttended
                   ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                  : const Color(0xFFE2E8F0),
+                  : AppColors.border,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -364,21 +364,21 @@ class _RegisteredActivitiesScreenState
               const SizedBox(height: 10),
               Text(
                 item.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+                  Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       '${formatDateTime(item.timeStart)} - ${formatDateTime(item.timeStop)}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -391,13 +391,13 @@ class _RegisteredActivitiesScreenState
                   Expanded(
                     child: Text(
                       item.location.isEmpty ? 'Chưa cập nhật địa điểm' : item.location,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              Divider(height: 1, color: AppColors.border),
               const SizedBox(height: 8),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.end,

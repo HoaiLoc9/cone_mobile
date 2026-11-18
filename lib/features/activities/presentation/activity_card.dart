@@ -38,19 +38,19 @@ class ActivityCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isRegistered
                   ? const Color(0xFF10B981).withValues(alpha: 0.35)
-                  : const Color(0xFFE2E8F0),
+                  : AppColors.border,
               width: isRegistered ? 1.5 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
                 color: isRegistered
                     ? const Color(0xFF10B981).withValues(alpha: 0.06)
-                    : const Color(0xFF0F172A).withValues(alpha: 0.04),
+                    : Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
                 blurRadius: 14,
                 offset: const Offset(0, 5),
               ),
@@ -127,8 +127,8 @@ class ActivityCard extends StatelessWidget {
                 activity.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF0F172A),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   height: 1.35,
@@ -139,17 +139,17 @@ class ActivityCard extends StatelessWidget {
               // Thời gian tổ chức
               Row(
                 children: [
-                  const Icon(Icons.access_time_rounded, size: 15, color: Color(0xFF64748B)),
+                  Icon(Icons.access_time_rounded, size: 15, color: AppColors.textSecondary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       formatDateTime(activity.timeStart),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -167,10 +167,10 @@ class ActivityCard extends StatelessWidget {
                       activity.location.isEmpty ? 'Chưa cập nhật địa điểm' : activity.location,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -184,10 +184,10 @@ class ActivityCard extends StatelessWidget {
                   children: [
                     Text(
                       'Đã đăng ký ${activity.registeredCount}/${activity.maxRegistrations}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
@@ -206,7 +206,7 @@ class ActivityCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 6,
-                    backgroundColor: const Color(0xFFF1F5F9),
+                    backgroundColor: AppColors.cardSubtle,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       progress >= 1.0
                           ? const Color(0xFFEF4444)

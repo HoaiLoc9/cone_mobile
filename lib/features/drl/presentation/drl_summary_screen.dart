@@ -73,25 +73,25 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
     final summary = _summary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Bảng điểm Rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
         ),
         actions: [
           IconButton(
             onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -111,14 +111,14 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                             const SizedBox(height: 24),
 
                             // 2. Tiêu đề danh sách theo học kỳ
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.history_edu_rounded, color: AppColors.primary, size: 22),
-                                SizedBox(width: 8),
+                                const Icon(Icons.history_edu_rounded, color: AppColors.primary, size: 22),
+                                const SizedBox(width: 8),
                                 Text(
                                   'Bảng điểm theo học kỳ',
                                   style: TextStyle(
-                                    color: Color(0xFF0F172A),
+                                    color: AppColors.textPrimary,
                                     fontSize: 17,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -282,12 +282,12 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -302,10 +302,10 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                   Expanded(
                     child: Text(
                       item.semesterName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -443,9 +443,9 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
@@ -455,21 +455,21 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                   children: [
                     Text(
                       semester.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Chưa có dữ liệu rèn luyện',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+              Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
             ],
           ),
         ),

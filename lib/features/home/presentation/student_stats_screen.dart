@@ -43,25 +43,25 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Thống kê rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary, fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Làm mới',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -345,12 +345,12 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -370,12 +370,12 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 2),
           Text(
             unit,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -390,16 +390,16 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 20),
-            SizedBox(width: 8),
+            const Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
             Text(
               'Lịch sử rèn luyện qua các học kỳ',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
+                color: AppColors.textPrimary,
               ),
             ),
           ],
@@ -408,12 +408,12 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -435,7 +435,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
                       children: [
                         Text(
                           item.semesterName,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                         ),
                         Row(
                           children: [
@@ -465,7 +465,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
                       child: LinearProgressIndicator(
                         value: p,
                         minHeight: 8,
-                        backgroundColor: const Color(0xFFF1F5F9),
+                        backgroundColor: AppColors.cardSubtle,
                         valueColor: AlwaysStoppedAnimation<Color>(color),
                       ),
                     ),
@@ -483,25 +483,25 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Thang điểm xếp loại chuẩn COFER',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 12),
           _buildRankRow('Xuất sắc', '90 - 100 điểm', const Color(0xFF10B981)),
-          const Divider(height: 14, color: Color(0xFFF1F5F9)),
+          Divider(height: 14, color: AppColors.border),
           _buildRankRow('Tốt', '80 - 89 điểm', const Color(0xFF2563EB)),
-          const Divider(height: 14, color: Color(0xFFF1F5F9)),
+          Divider(height: 14, color: AppColors.border),
           _buildRankRow('Khá', '65 - 79 điểm', const Color(0xFFF59E0B)),
-          const Divider(height: 14, color: Color(0xFFF1F5F9)),
-          _buildRankRow('Trung bình', '50 - 64 điểm', const Color(0xFF64748B)),
+          Divider(height: 14, color: AppColors.border),
+          _buildRankRow('Trung bình', '50 - 64 điểm', AppColors.textSecondary),
         ],
       ),
     );

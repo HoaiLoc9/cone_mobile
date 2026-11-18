@@ -11,44 +11,45 @@ class COneTheme {
       seedColor: AppColors.primary,
       primary: AppColors.primary,
       secondary: AppColors.darkBlue,
-      surface: AppColors.card,
+      surface: AppColors.cardLight,
       error: AppColors.danger,
     );
 
     final baseTextTheme = ThemeData.light().textTheme;
     final textTheme = GoogleFonts.plusJakartaSansTextTheme(baseTextTheme).apply(
-      bodyColor: AppColors.textPrimary,
-      displayColor: AppColors.textPrimary,
+      bodyColor: AppColors.textPrimaryLight,
+      displayColor: AppColors.textPrimaryLight,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.backgroundLight,
+      cardColor: AppColors.cardLight,
       textTheme: textTheme,
       visualDensity: VisualDensity.standard,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: AppColors.backgroundLight,
+        foregroundColor: AppColors.textPrimaryLight,
         titleTextStyle: GoogleFonts.plusJakartaSans(
-          color: AppColors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimaryLight,
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         height: 68,
-        backgroundColor: AppColors.card,
+        backgroundColor: AppColors.cardLight,
         indicatorColor: AppColors.primarySoft,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => GoogleFonts.plusJakartaSans(
             color: states.contains(WidgetState.selected)
                 ? AppColors.primary
-                : AppColors.textSecondary,
+                : AppColors.textSecondaryLight,
             fontSize: 12,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
@@ -76,7 +77,7 @@ class COneTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.border, width: 1.2),
+          side: const BorderSide(color: AppColors.borderLight, width: 1.2),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -91,11 +92,11 @@ class COneTheme {
         filled: true,
         fillColor: Colors.white,
         hintStyle: GoogleFonts.plusJakartaSans(
-          color: AppColors.textSecondary,
+          color: AppColors.textSecondaryLight,
           fontSize: 14,
         ),
         prefixIconColor: AppColors.primary,
-        suffixIconColor: AppColors.textSecondary,
+        suffixIconColor: AppColors.textSecondaryLight,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 16,
@@ -106,7 +107,7 @@ class COneTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+          borderSide: const BorderSide(color: AppColors.borderLight, width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -122,15 +123,15 @@ class COneTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.card,
+        color: AppColors.cardLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.border, width: 0.8),
+          side: const BorderSide(color: AppColors.borderLight, width: 0.8),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: AppColors.border,
+        color: AppColors.borderLight,
         thickness: 0.8,
         space: 24,
       ),
@@ -138,56 +139,51 @@ class COneTheme {
   }
 
   static ThemeData dark() {
-    const bgDark = Color(0xFF0F172A);
-    const cardDark = Color(0xFF1E293B);
-    const borderDark = Color(0xFF334155);
-    const textPrimaryDark = Color(0xFFF8FAFC);
-    const textSecondaryDark = Color(0xFF94A3B8);
-
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.dark,
       primary: AppColors.primary,
       secondary: const Color(0xFF38BDF8),
-      surface: cardDark,
+      surface: AppColors.cardDark,
       error: AppColors.danger,
     );
 
     final baseTextTheme = ThemeData.dark().textTheme;
     final textTheme = GoogleFonts.plusJakartaSansTextTheme(baseTextTheme).apply(
-      bodyColor: textPrimaryDark,
-      displayColor: textPrimaryDark,
+      bodyColor: AppColors.textPrimaryDark,
+      displayColor: AppColors.textPrimaryDark,
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: bgDark,
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      cardColor: AppColors.cardDark,
       textTheme: textTheme,
       visualDensity: VisualDensity.standard,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: bgDark,
-        foregroundColor: textPrimaryDark,
+        backgroundColor: AppColors.backgroundDark,
+        foregroundColor: AppColors.textPrimaryDark,
         titleTextStyle: GoogleFonts.plusJakartaSans(
-          color: textPrimaryDark,
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimaryDark,
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         height: 68,
-        backgroundColor: cardDark,
+        backgroundColor: AppColors.cardDark,
         indicatorColor: AppColors.primary.withValues(alpha: 0.25),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => GoogleFonts.plusJakartaSans(
             color: states.contains(WidgetState.selected)
                 ? const Color(0xFF60A5FA)
-                : textSecondaryDark,
+                : AppColors.textSecondaryDark,
             fontSize: 12,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
@@ -213,7 +209,7 @@ class COneTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFF60A5FA),
-          side: const BorderSide(color: borderDark, width: 1.2),
+          side: const BorderSide(color: AppColors.borderDark, width: 1.2),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -226,13 +222,13 @@ class COneTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF1E293B),
+        fillColor: AppColors.cardDark,
         hintStyle: GoogleFonts.plusJakartaSans(
-          color: textSecondaryDark,
+          color: AppColors.textSecondaryDark,
           fontSize: 14,
         ),
         prefixIconColor: const Color(0xFF60A5FA),
-        suffixIconColor: textSecondaryDark,
+        suffixIconColor: AppColors.textSecondaryDark,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 16,
@@ -243,7 +239,7 @@ class COneTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: borderDark, width: 1.2),
+          borderSide: const BorderSide(color: AppColors.borderDark, width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -259,15 +255,15 @@ class COneTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: cardDark,
+        color: AppColors.cardDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: borderDark, width: 0.8),
+          side: const BorderSide(color: AppColors.borderDark, width: 0.8),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: borderDark,
+        color: AppColors.borderDark,
         thickness: 0.8,
         space: 24,
       ),

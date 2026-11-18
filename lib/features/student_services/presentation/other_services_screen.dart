@@ -16,18 +16,18 @@ class OtherServicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Dịch vụ & Tiện ích khác',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+          style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.textPrimary),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+          child: Container(color: AppColors.border, height: 1),
         ),
       ),
       body: SafeArea(
@@ -150,12 +150,12 @@ class OtherServicesScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -164,16 +164,16 @@ class OtherServicesScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.school_rounded, color: AppColors.primary, size: 22),
-                      SizedBox(width: 10),
+                      const Icon(Icons.school_rounded, color: AppColors.primary, size: 22),
+                      const SizedBox(width: 10),
                       Text(
                         'Phòng Công tác Sinh viên (CTSV)',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -269,12 +269,12 @@ class OtherServicesScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -301,10 +301,10 @@ class OtherServicesScreen extends StatelessWidget {
                         Flexible(
                           child: Text(
                             title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -332,9 +332,9 @@ class OtherServicesScreen extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -342,7 +342,7 @@ class OtherServicesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFCBD5E1)),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -354,14 +354,14 @@ class OtherServicesScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF64748B)),
+        Icon(icon, size: 16, color: AppColors.textSecondary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12.5,
-              color: Color(0xFF334155),
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               height: 1.35,
             ),
@@ -374,9 +374,9 @@ class OtherServicesScreen extends StatelessWidget {
   Widget _buildFaqTile({required String question, required String answer}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Theme(
         data: ThemeData().copyWith(dividerColor: Colors.transparent),
@@ -385,18 +385,18 @@ class OtherServicesScreen extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
           title: Text(
             question,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
+              color: AppColors.textPrimary,
             ),
           ),
           children: [
             Text(
               answer,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: Color(0xFF64748B),
+                color: AppColors.textSecondary,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
               ),
