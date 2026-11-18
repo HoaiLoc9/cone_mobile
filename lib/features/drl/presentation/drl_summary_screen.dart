@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../shared/widgets/achievement_story_modal.dart';
+import '../../auth/data/auth_service.dart';
 import '../data/drl_models.dart';
 import '../data/drl_service.dart';
 import 'drl_detail_screen.dart';
@@ -9,9 +11,10 @@ import 'drl_score_format.dart';
 import 'drl_self_assessment_screen.dart';
 
 class DrlSummaryScreen extends StatefulWidget {
-  const DrlSummaryScreen({super.key, required this.service});
+  const DrlSummaryScreen({super.key, required this.service, this.session});
 
   final DrlService service;
+  final AuthSession? session;
 
   @override
   State<DrlSummaryScreen> createState() => _DrlSummaryScreenState();
@@ -68,6 +71,25 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
     _load();
   }
 
+  void _openShareStory(DrlSummary summary) {
+    final user = widget.session?.user;
+    final latestSemester = summary.semesterSummaries.isNotEmpty
+        ? summary.semesterSummaries.first.semesterName
+        : (summary.semesters.isNotEmpty ? summary.semesters.first.name : '');
+    final (rankLabel, _) = _getRankBadge(summary.totalPoints);
+
+    AchievementStoryModal.show(
+      context,
+      studentName: user?.name.isNotEmpty == true ? user!.name : 'Sinh viên COne',
+      studentCode: user?.code.isNotEmpty == true ? user!.code : 'SV',
+      studentClass: user?.studentClass.isNotEmpty == true ? user!.studentClass : 'KHTN',
+      totalScore: summary.totalPoints,
+      rankLabel: rankLabel,
+      semesterName: latestSemester,
+      activityCount: summary.semesterSummaries.fold<int>(0, (sum, item) => sum + item.activityCount),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
@@ -83,6 +105,12 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         actions: [
+          if (summary != null)
+            IconButton(
+              onPressed: () => _openShareStory(summary),
+              icon: const Icon(Icons.share_rounded, color: Color(0xFFF59E0B)),
+              tooltip: 'Chia sẻ Story thành tích',
+            ),
           IconButton(
             onPressed: _load,
             icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
@@ -258,6 +286,37 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
               color: Colors.white.withValues(alpha: 0.8),
               fontSize: 12.5,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () => _openShareStory(summary),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.share_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'Chia sẻ Story thành tích ✨',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

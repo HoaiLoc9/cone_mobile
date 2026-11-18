@@ -118,13 +118,16 @@ class ApiClient {
       String? message;
       if (response.statusCode == 422 && decoded['errors'] is Map) {
         final errors = decoded['errors'] as Map;
-        if (errors.isNotEmpty) {
-          final firstVal = errors.values.first;
-          if (firstVal is List && firstVal.isNotEmpty) {
-            message = firstVal.first.toString();
-          } else if (firstVal is String) {
-            message = firstVal;
+        final errorList = <String>[];
+        for (final entry in errors.entries) {
+          if (entry.value is List && (entry.value as List).isNotEmpty) {
+            errorList.add((entry.value as List).first.toString());
+          } else if (entry.value is String && (entry.value as String).isNotEmpty) {
+            errorList.add(entry.value as String);
           }
+        }
+        if (errorList.isNotEmpty) {
+          message = errorList.join('\n');
         }
       }
       message ??= decoded['message']?.toString();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
 import 'activity_card.dart';
@@ -194,10 +195,8 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
               ),
 
               if (_isLoading)
-                const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                const SliverToBoxAdapter(
+                  child: ShimmerListLoading(itemCount: 4),
                 )
               else if (_errorMessage != null)
                 SliverFillRemaining(

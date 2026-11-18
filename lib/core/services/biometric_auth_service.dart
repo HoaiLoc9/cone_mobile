@@ -16,6 +16,7 @@ class BiometricAuthService {
   static const String _biometricUsernameKey = 'cone_bio_saved_username';
   static const String _biometricPasswordKey = 'cone_bio_saved_password';
   static const String _biometricRoleKey = 'cone_bio_saved_role';
+  static const String _appLockEnabledKey = 'cone_app_lock_enabled';
 
   /// Kiểm tra thiết bị có hỗ trợ phần cứng sinh trắc học không (Android, iOS Native & iOS Safari PWA/Web)
   Future<bool> isBiometricsAvailable() async {
@@ -55,6 +56,17 @@ class BiometricAuthService {
   Future<bool> isBiometricEnabled() async {
     final val = await AppStorage.instance.getString(_biometricEnabledKey);
     return val == 'true';
+  }
+
+  /// Kiểm tra tính năng Khóa ứng dụng khi rời màn hình (App Lock)
+  Future<bool> isAppLockEnabled() async {
+    final val = await AppStorage.instance.getString(_appLockEnabledKey);
+    return val == 'true';
+  }
+
+  /// Bật hoặc tắt Khóa ứng dụng khi rời màn hình (App Lock)
+  Future<void> setAppLockEnabled(bool enabled) async {
+    await AppStorage.instance.setString(_appLockEnabledKey, enabled ? 'true' : 'false');
   }
 
   /// Bật hoặc tắt tính năng đăng nhập sinh trắc học
@@ -123,6 +135,12 @@ class BiometricAuthService {
       return {'token': token, 'user': userStr};
     }
     return null;
+  }
+
+  /// Xóa token phiên cũ nhưng giữ lại credentials để Face ID đăng nhập cấp mới
+  Future<void> clearBiometricTokenOnly() async {
+    await AppStorage.instance.remove(_biometricTokenKey);
+    await AppStorage.instance.remove(_biometricUserKey);
   }
 
   /// Xóa phiên sinh trắc học

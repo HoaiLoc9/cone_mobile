@@ -44,6 +44,7 @@ dependencies:
   flutter_local_notifications: ^23.0.2
   pdf: ^3.13.1
   printing: ^5.15.1
+  qr: ^3.0.3
 
 dev_dependencies:
   flutter_test:

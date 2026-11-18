@@ -7,6 +7,8 @@ import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
+import '../../../core/storage/app_storage.dart';
+import '../../../shared/widgets/primary_button.dart';
 import '../../../features/admin/data/admin_models.dart';
 import '../../../features/admin/data/admin_service.dart';
 import '../../../features/admin/presentation/admin_forgot_password_screen.dart';
@@ -44,6 +46,18 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _detectBiometric();
+    _loadRememberedUser();
+  }
+
+  Future<void> _loadRememberedUser() async {
+    try {
+      final savedUser = await AppStorage.instance.getString('cone_remembered_username');
+      if (savedUser != null && savedUser.trim().isNotEmpty && mounted) {
+        setState(() {
+          identifierController.text = savedUser.trim();
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _detectBiometric() async {
@@ -193,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
             password: password,
             role: 'admin',
           );
+          await AppStorage.instance.setString('cone_remembered_username', identifier.trim());
           widget.onAdminLoggedIn(adminSession);
           return;
         } on ApiException catch (adminErr) {
@@ -216,6 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
               studentSession.token,
               jsonEncode(studentSession.user.toJson()),
             );
+            await AppStorage.instance.setString('cone_remembered_username', identifier.trim());
             widget.onLoggedIn(studentSession);
             return;
           } on ApiException {
@@ -243,6 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
             studentSession.token,
             jsonEncode(studentSession.user.toJson()),
           );
+          await AppStorage.instance.setString('cone_remembered_username', identifier.trim());
           widget.onLoggedIn(studentSession);
           return;
         } on ApiException catch (studentErr) {
@@ -261,6 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
               password: password,
               role: 'admin',
             );
+            await AppStorage.instance.setString('cone_remembered_username', identifier.trim());
             widget.onAdminLoggedIn(adminSession);
             return;
           } on ApiException {
@@ -306,8 +324,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final creds = await BiometricAuthService.instance.getSavedCredentials();
 
     if (creds == null) {
-      // Nếu chưa lưu thông tin Face ID / Vân tay:
-      // Kiểm tra xem người dùng có đang điền sẵn tài khoản & mật khẩu trong ô không
       final idText = identifierController.text.trim();
       final passText = passwordController.text;
 
@@ -321,17 +337,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Xóa phiên sinh trắc học cũ đã hết hạn để tránh bị loop lỗi 401
-      await BiometricAuthService.instance.clearBiometricSession();
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Vui lòng nhập MSSV & Mật khẩu đăng nhập 1 lần để kích hoạt $bioName cho thiết bị này.'),
-            backgroundColor: AppColors.primary,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        _showBiometricSetupSheet(bioName);
       }
       return;
     }
@@ -353,6 +360,7 @@ class _LoginScreenState extends State<LoginScreen> {
               email: username,
               password: pass,
             );
+            await AppStorage.instance.setString('cone_remembered_username', username.trim());
             widget.onAdminLoggedIn(adminSession);
             return;
           } catch (_) {}
@@ -372,12 +380,17 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đăng nhập $bioName không thành công: ${e is ApiException ? e.message : "Vui lòng nhập mật khẩu."}'),
-              backgroundColor: AppColors.danger,
-            ),
-          );
+          // Nếu mật khẩu cũ không còn hợp lệ, mở sheet để cập nhật mật khẩu mới
+          if (e is ApiException && e.statusCode == 401) {
+            _showBiometricSetupSheet(bioName, prefilledUser: creds['username']);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đăng nhập $bioName không thành công: ${e is ApiException ? e.message : "Vui lòng kiểm tra mật khẩu."}'),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
         }
       } finally {
         if (mounted) {
@@ -385,6 +398,196 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     }
+  }
+
+  void _showBiometricSetupSheet(String bioName, {String? prefilledUser}) {
+    final setupIdCtrl = TextEditingController(
+      text: (prefilledUser != null && prefilledUser.isNotEmpty)
+          ? prefilledUser
+          : identifierController.text.trim(),
+    );
+    final setupPassCtrl = TextEditingController();
+    bool setupLoading = false;
+    String? setupError;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            decoration: BoxDecoration(
+              color: AppColors.isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppColors.isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        _biometricType == 'face'
+                            ? Icons.face_rounded
+                            : Icons.fingerprint_rounded,
+                        color: AppColors.primary,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Kích hoạt $bioName',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.adaptiveTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Xác thực 1 lần để lưu vào máy an toàn',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.adaptiveTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (setupError != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.danger.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      setupError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                TextField(
+                  controller: setupIdCtrl,
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'MSSV / Tài khoản',
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: setupPassCtrl,
+                  obscureText: true,
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu của bạn',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                PrimaryButton(
+                  label: 'Xác thực & Kích hoạt $bioName',
+                  isLoading: setupLoading,
+                  onPressed: () async {
+                    final id = setupIdCtrl.text.trim();
+                    final pwd = setupPassCtrl.text;
+                    if (id.isEmpty || pwd.isEmpty) {
+                      setSheetState(() => setupError = 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.');
+                      return;
+                    }
+                    setSheetState(() {
+                      setupLoading = true;
+                      setupError = null;
+                    });
+                    try {
+                      final authenticated = await BiometricAuthService.instance.authenticate(
+                        reason: 'Xác thực $bioName để liên kết tài khoản COne',
+                      );
+                      if (!authenticated) {
+                        setSheetState(() {
+                          setupLoading = false;
+                          setupError = 'Xác thực $bioName không thành công.';
+                        });
+                        return;
+                      }
+
+                      // Đăng nhập thử để đảm bảo tài khoản & mật khẩu chuẩn xác
+                      final studentSession = await widget.authService.login(
+                        identifier: id,
+                        password: pwd,
+                      );
+                      await widget.authService.saveSession(studentSession);
+                      await BiometricAuthService.instance.saveBiometricCredentials(
+                        username: id,
+                        password: pwd,
+                        role: 'student',
+                      );
+                      await BiometricAuthService.instance.saveBiometricSession(
+                        studentSession.token,
+                        jsonEncode(studentSession.user.toJson()),
+                      );
+                      await AppStorage.instance.setString('cone_remembered_username', id);
+
+                      if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                      if (mounted) widget.onLoggedIn(studentSession);
+                    } catch (err) {
+                      setSheetState(() {
+                        setupLoading = false;
+                        setupError = err is ApiException ? err.message : err.toString();
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _openAdminForgotPassword() {

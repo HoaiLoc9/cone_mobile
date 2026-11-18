@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activities/data/activity_service.dart';
 import '../../drl/data/drl_models.dart';
 import '../../drl/data/drl_service.dart';
@@ -69,7 +70,9 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const SingleChildScrollView(
+                child: ShimmerListLoading(itemCount: 4),
+              );
             }
             if (snapshot.hasError) {
               return Center(

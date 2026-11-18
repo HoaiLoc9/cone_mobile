@@ -14,6 +14,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../auth/data/auth_service.dart';
 import '../data/profile_models.dart';
 import '../data/profile_service.dart';
+import 'digital_student_id_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -63,6 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _successMessage;
 
   bool _biometricEnabled = false;
+  bool _appLockEnabled = false;
 
   @override
   void initState() {
@@ -140,9 +142,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       final bioEnabled = await BiometricAuthService.instance.isBiometricEnabled();
+      final appLock = await BiometricAuthService.instance.isAppLockEnabled();
       if (mounted) {
         setState(() {
           _biometricEnabled = bioEnabled;
+          _appLockEnabled = appLock;
         });
       }
     } on ApiException catch (error) {
@@ -420,12 +424,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<String?> _promptPasswordForBiometrics() async {
+    final pwdCtrl = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Row(
+          children: [
+            Icon(Icons.security_rounded, color: AppColors.primary),
+            SizedBox(width: 10),
+            Text('Lưu mật khẩu sinh trắc học', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Vui lòng nhập mật khẩu đăng nhập để hoàn tất liên kết Face ID / Vân tay cho các lần đăng nhập tiếp theo:',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: pwdCtrl,
+              obscureText: true,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu hiện tại',
+                prefixIcon: const Icon(Icons.lock_outline_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Bỏ qua'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(pwdCtrl.text),
+            child: const Text('Xác nhận & Lưu'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _toggleBiometric(bool val) async {
     if (val) {
       final authenticated = await BiometricAuthService.instance.authenticate(
         reason: 'Xác thực vân tay hoặc Face ID để kích hoạt tính năng này',
       );
       if (authenticated) {
+        final existingCreds = await BiometricAuthService.instance.getSavedCredentials();
+        if (existingCreds == null && mounted) {
+          final pwd = await _promptPasswordForBiometrics();
+          if (pwd != null && pwd.isNotEmpty) {
+            await BiometricAuthService.instance.saveBiometricCredentials(
+              username: widget.session.user.code.isNotEmpty ? widget.session.user.code : widget.session.user.email,
+              password: pwd,
+              role: 'student',
+            );
+          }
+        }
         await BiometricAuthService.instance.setBiometricEnabled(true);
         await BiometricAuthService.instance.saveBiometricSession(
           widget.session.token,
@@ -463,6 +531,129 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
+  }
+
+  Future<void> _toggleAppLock(bool value) async {
+    if (value) {
+      final success = await BiometricAuthService.instance.authenticate(
+        reason: 'Xác thực để kích hoạt tính năng Khóa ứng dụng bảo mật',
+      );
+      if (!success) return;
+    }
+    await BiometricAuthService.instance.setAppLockEnabled(value);
+    if (mounted) {
+      setState(() => _appLockEnabled = value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(value
+              ? 'Đã bật Khóa ứng dụng bảo vệ bằng sinh trắc học.'
+              : 'Đã tắt Khóa ứng dụng.'),
+          backgroundColor: value ? const Color(0xFF10B981) : const Color(0xFF475569),
+        ),
+      );
+    }
+  }
+
+  void _checkUpdate() {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: AppColors.adaptiveCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.verified_rounded, color: Color(0xFF10B981), size: 26),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'COne Mobile',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.adaptiveTextPrimary,
+                          ),
+                        ),
+                        const Text(
+                          'Phiên bản mới nhất: v1.0.4',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Nhật ký cập nhật v1.0.4:',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildUpdateBullet('Thẻ Sinh Viên Điện Tử (Digital ID Card) tích hợp QR cá nhân.'),
+              _buildUpdateBullet('Chế độ Tối (Dark Mode) chuẩn OLED độ tương phản cao.'),
+              _buildUpdateBullet('Đồng bộ hoạt động rèn luyện vào Google / Apple Calendar.'),
+              _buildUpdateBullet('Khóa bảo mật ứng dụng bằng Face ID / Vân tay (App Lock).'),
+              _buildUpdateBullet('Cải tiến quy trình Giấy xin phép & Khiếu nại trực tuyến.'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                  ),
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateBullet(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 12.5, color: AppColors.adaptiveTextSecondary, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmAndLogout() async {
@@ -885,6 +1076,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   activeThumbColor: AppColors.primary,
                                   onChanged: _toggleBiometric,
                                 ),
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
+                                SwitchListTile.adaptive(
+                                  contentPadding: EdgeInsets.zero,
+                                  secondary: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.security_rounded, color: Color(0xFF6366F1), size: 22),
+                                  ),
+                                  title: Text(
+                                    'Khóa ứng dụng (App Lock)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14.5,
+                                      color: AppColors.adaptiveTextPrimary,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Yêu cầu Face ID / Vân tay khi quay lại app',
+                                    style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
+                                  ),
+                                  value: _appLockEnabled,
+                                  activeThumbColor: AppColors.primary,
+                                  onChanged: _toggleAppLock,
+                                ),
                               ],
                             ),
 
@@ -962,47 +1180,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             const SizedBox(height: 24),
 
-                            // 6. THÔNG TIN PHIÊN BẢN ỨNG DỤNG
+                            // 6. THÔNG TIN PHIÊN BẢN ỨNG DỤNG & KIỂM TRA CẬP NHẬT
                             Center(
                               child: Column(
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.cardSubtle,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: AppColors.border),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF10B981),
-                                            shape: BoxShape.circle,
+                                  InkWell(
+                                    onTap: _checkUpdate,
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.adaptiveCardSubtle,
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: AppColors.adaptiveBorder),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF10B981),
+                                              shape: BoxShape.circle,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'COne Mobile v1.0.2 • Build 2026.11',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textSecondary,
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'COne Mobile v1.0.4 • Build 2026.11',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.adaptiveTextSecondary,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 6),
+                                          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.adaptiveTextSecondary),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      minimumSize: Size.zero,
+                                    ),
+                                    onPressed: _checkUpdate,
+                                    icon: const Icon(Icons.sync_rounded, size: 15, color: AppColors.primary),
+                                    label: const Text(
+                                      'Kiểm tra bản cập nhật mới',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Hệ thống Quản lý Điểm rèn luyện Sinh viên',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                      color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -1220,6 +1457,50 @@ class _HeroStudentCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => DigitalStudentIdCardModal.show(context, user),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.qr_code_rounded, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Mở Thẻ Sinh Viên Số & Mã QR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 12),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

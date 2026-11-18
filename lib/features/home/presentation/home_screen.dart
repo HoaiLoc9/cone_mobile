@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _openDrl() {
-    _pushScreen(DrlSummaryScreen(service: _drlService));
+    _pushScreen(DrlSummaryScreen(service: _drlService, session: _session));
   }
 
   void _openEvidence() {
@@ -399,6 +399,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
         return AppShell(
           title: 'Xin chào, $displayName',
+          floatingActionButton: CuteAiRobotWidget(
+            onTap: _openChatbot,
+            greetingText: 'Hỏi AI nhé! ✨',
+          ),
           customTitle: Row(
             children: [
               GestureDetector(
@@ -684,12 +688,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           }
         },
       ),
-      floatingActionButton: _currentNavIndex == 0
-          ? CuteAiRobotWidget(
-              onTap: _openChatbot,
-              greetingText: 'Hỏi AI nhé! ✨',
-            )
-          : null,
     );
   }
 

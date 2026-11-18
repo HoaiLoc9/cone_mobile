@@ -1710,14 +1710,14 @@ class _ComplaintFormState extends State<_ComplaintForm> {
         AppTextField(
           controller: _title,
           label: 'Tiêu đề khiếu nại',
-          hint: 'Ví dụ: Phúc khảo điểm hoạt động Chào tân sinh viên',
+          hint: 'Ví dụ: Phúc khảo điểm hoạt động Chào tân sinh viên (tối thiểu 2 ký tự)',
           icon: Icons.title_rounded,
         ),
         const SizedBox(height: 14),
         AppTextField(
           controller: _content,
           label: 'Nội dung chi tiết',
-          hint: 'Trình bày rõ lý do, thời gian tham gia và đề xuất của bạn...',
+          hint: 'Trình bày rõ lý do, thời gian tham gia và đề xuất của bạn... (tối thiểu 3 ký tự)',
           icon: Icons.notes_rounded,
           maxLines: 4,
         ),
@@ -1879,7 +1879,7 @@ class _PermissionFormState extends State<_PermissionForm> {
         AppTextField(
           controller: _title,
           label: 'Tiêu đề đơn',
-          hint: 'Ví dụ: Xin phép vắng buổi sinh hoạt định kỳ...',
+          hint: 'Ví dụ: Xin phép vắng buổi sinh hoạt (tối thiểu 2 ký tự)...',
           icon: Icons.title_rounded,
         ),
         const SizedBox(height: 14),
@@ -1887,7 +1887,7 @@ class _PermissionFormState extends State<_PermissionForm> {
         AppTextField(
           controller: _reason,
           label: 'Lý do xin phép chi tiết',
-          hint: 'Nêu rõ lý do (ví dụ: bị bệnh, trùng lịch thi...) và thời gian cụ thể...',
+          hint: 'Nêu rõ lý do (tối thiểu 3 ký tự, ví dụ: bị bệnh sốt siêu vi, trùng lịch thi...)...',
           icon: Icons.notes_rounded,
           maxLines: 3,
         ),
@@ -2485,6 +2485,7 @@ class _FormSheet extends StatelessWidget {
                   ),
                 ],
                 ...children,
+                const SizedBox(height: 32),
               ],
             ),
           ),

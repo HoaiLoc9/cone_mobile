@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
@@ -109,6 +110,194 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     );
   }
 
+  String _formatIsoForCalendar(DateTime? dt) {
+    final valid = dt?.toUtc() ?? DateTime.now().toUtc();
+    return '${valid.year.toString().padLeft(4, '0')}'
+        '${valid.month.toString().padLeft(2, '0')}'
+        '${valid.day.toString().padLeft(2, '0')}T'
+        '${valid.hour.toString().padLeft(2, '0')}'
+        '${valid.minute.toString().padLeft(2, '0')}'
+        '${valid.second.toString().padLeft(2, '0')}Z';
+  }
+
+  void _showAddToCalendarModal(ActivityItem act) {
+    final startIso = _formatIsoForCalendar(act.timeStart);
+    final endIso = _formatIsoForCalendar(act.timeStop ?? act.timeStart);
+    final titleEnc = Uri.encodeComponent(act.name);
+    final descEnc = Uri.encodeComponent(
+      'Hoạt động rèn luyện: ${act.name}\nĐịa điểm: ${act.location}\nChi tiết: ${act.description}',
+    );
+    final locEnc = Uri.encodeComponent(act.location);
+    final googleCalUrl =
+        'https://calendar.google.com/calendar/render?action=TEMPLATE&text=$titleEnc&dates=$startIso/$endIso&details=$descEnc&location=$locEnc';
+
+    final eventSummary =
+        '📅 Hoạt động: ${act.name}\n'
+        '⏰ Bắt đầu: ${formatDateTime(act.timeStart)}\n'
+        '🏁 Kết thúc: ${formatDateTime(act.timeStop)}\n'
+        '📍 Địa điểm: ${act.location.isNotEmpty ? act.location : "Chưa cập nhật"}\n'
+        '📝 Mô tả: ${act.description}';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
+        decoration: BoxDecoration(
+          color: AppColors.adaptiveCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: AppColors.adaptiveBorder),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  color: AppColors.adaptiveBorder,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: Color(0xFF2563EB),
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Đồng bộ Lịch sự kiện',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Nhắc nhở tham gia hoạt động rèn luyện',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.adaptiveTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.cardSubtle,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.adaptiveBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    act.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14.5,
+                      color: AppColors.adaptiveTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule, size: 14, color: Color(0xFF2563EB)),
+                      const SizedBox(width: 6),
+                      Text(
+                        formatDateTime(act.timeStart),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(ctx);
+                await Clipboard.setData(ClipboardData(text: googleCalUrl));
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã sao chép link Google Calendar! Hãy dán vào trình duyệt để tạo lịch.'),
+                    backgroundColor: Color(0xFF2563EB),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.link_rounded),
+              label: const Text(
+                'Mở Google Calendar / Sao chép link',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.adaptiveTextPrimary,
+                side: BorderSide(color: AppColors.adaptiveBorder),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(ctx);
+                await Clipboard.setData(ClipboardData(text: eventSummary));
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã sao chép toàn bộ thông tin hoạt động vào Bộ nhớ tạm! 📋'),
+                    backgroundColor: Color(0xFF10B981),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.copy_rounded, size: 18),
+              label: const Text('Sao chép tóm tắt & Lịch trình hoạt động'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activity = _activity;
@@ -173,6 +362,27 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                           onPressed: _openCertificate,
                           icon: const Icon(Icons.card_membership_rounded),
                           label: const Text('Xem giấy chứng nhận'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: Color(0xFF93C5FD), width: 1.2),
+                            backgroundColor: AppColors.isDark
+                                ? const Color(0xFF1E3A8A).withValues(alpha: 0.2)
+                                : const Color(0xFFEFF6FF),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () => _showAddToCalendarModal(activity),
+                          icon: const Icon(Icons.event_available_rounded, size: 20),
+                          label: const Text(
+                            'Thêm vào Lịch điện thoại (Google Calendar)',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                     ],
