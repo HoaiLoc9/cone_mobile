@@ -12,156 +12,212 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeColor = activity.isRegistered
-        ? const Color(0xFF059669)
-        : activity.canRegister
-            ? AppColors.primary
-            : AppColors.textSecondary;
+    final isRegistered = activity.isRegistered;
+    final canRegister = activity.canRegister;
+
+    final Color statusColor = isRegistered
+        ? const Color(0xFF10B981)
+        : (canRegister ? const Color(0xFF2563EB) : const Color(0xFF64748B));
+
+    final String statusText = isRegistered
+        ? 'ĐÃ ĐĂNG KÝ'
+        : (canRegister ? 'ĐANG MỞ ĐĂNG KÝ' : 'ĐÃ ĐÓNG ĐĂNG KÝ');
+
+    final double progress = (activity.maxRegistrations > 0)
+        ? (activity.registeredCount / activity.maxRegistrations).clamp(0.0, 1.0)
+        : 0.0;
+
+    final String pointStr = activity.points.toStringAsFixed(
+        activity.points.truncateToDouble() == activity.points ? 0 : 1);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          padding: const EdgeInsets.all(18),
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: isRegistered
+                  ? const Color(0xFF10B981).withValues(alpha: 0.35)
+                  : const Color(0xFFE2E8F0),
+              width: isRegistered ? 1.5 : 1.0,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.darkBlue.withValues(alpha: 0.07),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
+                color: isRegistered
+                    ? const Color(0xFF10B981).withValues(alpha: 0.06)
+                    : const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Hàng đỉnh: Trạng thái pill + Điểm ĐRL thưởng
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(Icons.event_available, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          activity.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: statusColor,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(width: 6),
                         Text(
-                          activity.location.isEmpty ? 'Chưa cập nhật địa điểm' : activity.location,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.textSecondary),
+                          statusText,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stars_rounded, size: 15, color: Color(0xFFD97706)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '+$pointStr ĐRL',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFB45309),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _Chip(icon: Icons.schedule, label: formatDateTime(activity.timeStart)),
-                  _Chip(icon: Icons.stars_outlined, label: '${activity.points.toStringAsFixed(activity.points.truncateToDouble() == activity.points ? 0 : 1)} điểm'),
-                  _Chip(
-                    icon: Icons.how_to_reg_outlined,
-                    label: activity.maxRegistrations > 0
-                        ? '${activity.registeredCount}/${activity.maxRegistrations}'
-                        : '${activity.registeredCount} đăng ký',
-                  ),
-                ],
+              const SizedBox(height: 12),
+
+              // Tiêu đề hoạt động
+              Text(
+                activity.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  height: 1.35,
+                ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
+
+              // Thời gian tổ chức
               Row(
                 children: [
+                  const Icon(Icons.access_time_rounded, size: 15, color: Color(0xFF64748B)),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      activity.statusLabel,
+                      formatDateTime(activity.timeStart),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      activity.isRegistered
-                          ? activity.registrationStatusLabel
-                          : activity.canRegister
-                              ? 'Có thể đăng ký'
-                              : 'Chưa mở/đã đóng',
-                      style: TextStyle(
-                        color: badgeColor,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
                       ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+
+              // Địa điểm
+              Row(
+                children: [
+                  const Icon(Icons.location_on_rounded, size: 15, color: Color(0xFFEF4444)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      activity.location.isEmpty ? 'Chưa cập nhật địa điểm' : activity.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              if (activity.maxRegistrations > 0) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Đã đăng ký ${activity.registeredCount}/${activity.maxRegistrations}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: progress >= 1.0 ? const Color(0xFFEF4444) : AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 6,
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      progress >= 1.0
+                          ? const Color(0xFFEF4444)
+                          : (isRegistered ? const Color(0xFF10B981) : AppColors.primary),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: AppColors.primary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }

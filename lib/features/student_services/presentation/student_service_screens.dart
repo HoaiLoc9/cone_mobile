@@ -28,6 +28,7 @@ class ComplaintsScreen extends StatefulWidget {
 
 class _ComplaintsScreenState extends State<ComplaintsScreen> {
   late Future<List<StudentComplaint>> _future = widget.service.complaints();
+  String _filter = 'all'; // 'all', 'pending', 'resolved'
 
   void _reload() => setState(() => _future = widget.service.complaints());
 
@@ -35,6 +36,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     final created = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => _ComplaintForm(service: widget.service),
     );
     if (created == true) _reload();
@@ -42,57 +44,346 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return _ServiceScaffold(
-      title: 'Khiếu nại',
-      subtitle: 'Theo dõi trạng thái và phản hồi từ admin',
-      action: IconButton(onPressed: _create, icon: const Icon(Icons.add)),
-      child: FutureBuilder<List<StudentComplaint>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được khiếu nại',
-              message: snapshot.error.toString(),
-              actionLabel: 'Thử lại',
-              onAction: _reload,
-            );
-          }
-          final items = snapshot.data!;
-          if (items.isEmpty) {
-            return AppStateView(
-              icon: Icons.mark_email_unread_outlined,
-              title: 'Chưa có đơn khiếu nại',
-              message:
-                  'Bạn có thể tạo đơn mới khi cần phản hồi điểm hoặc hồ sơ.',
-              actionLabel: 'Tạo đơn',
-              onAction: _create,
-            );
-          }
-          return _RefreshList(
-            onRefresh: () async => _reload(),
-            children: [
-              for (final item in items)
-                _InfoCard(
-                  title: item.title,
-                  subtitle: item.content,
-                  status: item.statusLabel,
-                  note: item.response.isEmpty
-                      ? 'Chưa có phản hồi.'
-                      : item.response,
-                  icon: Icons.report_problem_outlined,
-                ),
-            ],
-          );
-        },
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text(
+          'Khiếu nại & Phản hồi',
+          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+        ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _reload,
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            tooltip: 'Làm mới',
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
-        icon: const Icon(Icons.add),
-        label: const Text('Tạo đơn'),
+        backgroundColor: AppColors.primary,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text(
+          'Tạo khiếu nại',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: SafeArea(
+        child: FutureBuilder<List<StudentComplaint>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 44),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Chưa tải được danh sách khiếu nại',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _reload,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final allItems = snapshot.data ?? [];
+            final pendingCount = allItems.where((i) => i.response.isEmpty).length;
+            final resolvedCount = allItems.where((i) => i.response.isNotEmpty).length;
+
+            final filteredItems = allItems.where((item) {
+              if (_filter == 'pending') return item.response.isEmpty;
+              if (_filter == 'resolved') return item.response.isNotEmpty;
+              return true;
+            }).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async => _reload(),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                children: [
+                  // Thẻ hướng dẫn quy trình
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.shield_outlined, color: Colors.amberAccent, size: 26),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Quyền lợi & Phúc khảo rèn luyện',
+                                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Nếu điểm hoạt động hoặc điểm rèn luyện chưa chính xác, bạn hãy gửi khiếu nại để Ban quản lý và Cán bộ xác minh giải quyết.',
+                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.35),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bộ lọc Tab
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterPill('Tất cả (${allItems.length})', 'all'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('Chờ phản hồi ($pendingCount)', 'pending'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('Đã giải quyết ($resolvedCount)', 'resolved'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  if (filteredItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 50),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEFF6FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.done_all_rounded, color: AppColors.primary, size: 30),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              allItems.isEmpty ? 'Chưa có đơn khiếu nại nào' : 'Không có đơn trong danh mục này',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Nhấn nút "Tạo khiếu nại" bên dưới khi bạn cần phản ánh.',
+                              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ...filteredItems.map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildComplaintCard(item),
+                        )),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterPill(String label, String value) {
+    final isSelected = _filter == value;
+    return InkWell(
+      onTap: () => setState(() => _filter = value),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF475569),
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComplaintCard(StudentComplaint item) {
+    final hasResponse = item.response.isNotEmpty;
+    final statusColor = hasResponse ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final statusBg = hasResponse ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7);
+    final statusLabel = hasResponse ? 'ĐÃ PHẢN HỒI' : 'CHỜ XỬ LÝ';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: hasResponse
+              ? const Color(0xFF10B981).withValues(alpha: 0.3)
+              : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      hasResponse ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+                      size: 13,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Row(
+                children: [
+                  Icon(Icons.report_problem_outlined, size: 14, color: Color(0xFF64748B)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Đơn phản ánh',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          Text(
+            item.title,
+            style: const TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.content,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF475569),
+              height: 1.4,
+            ),
+          ),
+
+          if (hasResponse) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.verified_rounded, size: 16, color: Color(0xFF2563EB)),
+                      SizedBox(width: 6),
+                      Text(
+                        'Phản hồi từ Nhà trường / Cán bộ:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E40AF),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    item.response,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF1E3A8A),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 10),
+            const Text(
+              'Ban Quản lý đang tiếp nhận hồ sơ và sẽ phản hồi sớm nhất.',
+              style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Color(0xFF94A3B8)),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -878,11 +1169,26 @@ class _ComplaintFormState extends State<_ComplaintForm> {
   }
 
   Future<void> _submit() async {
-    setState(() => _saving = true);
+    final title = _title.text.trim();
+    final content = _content.text.trim();
+
+    if (title.isEmpty) {
+      setState(() => _error = 'Vui lòng nhập tiêu đề khiếu nại.');
+      return;
+    }
+    if (content.isEmpty) {
+      setState(() => _error = 'Vui lòng nhập nội dung giải trình chi tiết.');
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       await widget.service.createComplaint(
-        title: _title.text.trim(),
-        content: _content.text.trim(),
+        title: title,
+        content: content,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -897,24 +1203,24 @@ class _ComplaintFormState extends State<_ComplaintForm> {
   @override
   Widget build(BuildContext context) {
     return _FormSheet(
-      title: 'Tạo đơn khiếu nại',
+      title: 'Gửi đơn khiếu nại rèn luyện',
       error: _error,
       children: [
         AppTextField(
           controller: _title,
-          label: 'Tiêu đề',
-          hint: 'Ví dụ: Khiếu nại điểm hoạt động',
-          icon: Icons.title,
+          label: 'Tiêu đề khiếu nại',
+          hint: 'Ví dụ: Phúc khảo điểm hoạt động Chào tân sinh viên',
+          icon: Icons.title_rounded,
         ),
         const SizedBox(height: 14),
         AppTextField(
           controller: _content,
-          label: 'Nội dung',
-          hint: 'Mô tả rõ vấn đề cần xử lý',
-          icon: Icons.notes_outlined,
+          label: 'Nội dung chi tiết',
+          hint: 'Trình bày rõ lý do, thời gian tham gia và đề xuất của bạn...',
+          icon: Icons.notes_rounded,
         ),
         const SizedBox(height: 18),
-        PrimaryButton(label: 'Gửi đơn', onPressed: _submit, isLoading: _saving),
+        PrimaryButton(label: 'Gửi khiếu nại ngay', onPressed: _submit, isLoading: _saving),
       ],
     );
   }

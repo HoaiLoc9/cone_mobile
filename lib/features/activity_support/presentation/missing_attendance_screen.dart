@@ -19,7 +19,9 @@ class MissingAttendanceScreen extends StatefulWidget {
       _MissingAttendanceScreenState();
 }
 
-class _MissingAttendanceScreenState extends State<MissingAttendanceScreen> {
+class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isLoading = true;
   String? _errorMessage;
   MissingAttendanceData? _data;
@@ -27,7 +29,14 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -42,7 +51,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen> {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Không tải được dữ liệu bổ sung điểm danh.',
+        () => _errorMessage = 'Không tải được dữ liệu minh chứng.',
       );
     } finally {
       if (mounted) {
@@ -66,72 +75,445 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final data = _data;
+    final eligibleCount = data?.eligible.length ?? 0;
+    final requestCount = data?.requests.length ?? 0;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'Bổ sung điểm danh',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          'Minh chứng rèn luyện',
+          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
         ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+          IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            tooltip: 'Làm mới',
+          ),
         ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-              ? _Message(message: _errorMessage!, isError: true)
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
-                  children: [
-                    const _HeaderCard(),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Có thể gửi yêu cầu',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if ((data?.eligible ?? const []).isEmpty)
-                      const _EmptyCard(
-                        message: 'Chưa có hoạt động thiếu đúng một lượt quét.',
-                      )
-                    else
-                      ...(data?.eligible ?? const []).map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _EligibleCard(
-                            item: item,
-                            onSubmit: () => _openSubmit(item),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: const Color(0xFF64748B),
+              labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+              indicatorColor: AppColors.primary,
+              indicatorWeight: 3,
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Cần nộp'),
+                      if (eligibleCount > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$eligibleCount',
+                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Yêu cầu đã gửi',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if ((data?.requests ?? const []).isEmpty)
-                      const _EmptyCard(
-                        message: 'Bạn chưa gửi yêu cầu bổ sung nào.',
-                      )
-                    else
-                      ...(data?.requests ?? const []).map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _RequestCard(item: item),
+                      ],
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Lịch sử đã gửi'),
+                      if (requestCount > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$requestCount',
+                            style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? _buildErrorView()
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Tab 1: Cần nộp minh chứng
+                      RefreshIndicator(
+                        onRefresh: _load,
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          children: [
+                            _buildInfoGuideCard(),
+                            const SizedBox(height: 16),
+                            if ((data?.eligible ?? const []).isEmpty)
+                              _buildEmptyTab(
+                                icon: Icons.check_circle_outline_rounded,
+                                title: 'Không có hoạt động cần bổ sung',
+                                message: 'Tuyệt vời! Bạn không bị thiếu lượt quét mã check-in hoặc check-out ở hoạt động nào.',
+                              )
+                            else
+                              ...(data?.eligible ?? const []).map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildEligibleItemCard(item: item, onSubmit: () => _openSubmit(item)),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
+
+                      // Tab 2: Lịch sử đã gửi minh chứng
+                      RefreshIndicator(
+                        onRefresh: _load,
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          children: [
+                            if ((data?.requests ?? const []).isEmpty)
+                              _buildEmptyTab(
+                                icon: Icons.history_rounded,
+                                title: 'Chưa có yêu cầu nào',
+                                message: 'Lịch sử các yêu cầu nộp minh chứng và phản hồi duyệt từ Nhà trường sẽ xuất hiện ở đây.',
+                              )
+                            else
+                              ...(data?.requests ?? const []).map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildRequestItemCard(item: item),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildInfoGuideCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.camera_alt_outlined, color: Colors.amberAccent, size: 28),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quy định nộp minh chứng',
+                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Khi tham gia hoạt động nhưng máy lỗi không quét được check-in/out, bạn hãy chụp ảnh tại sự kiện để gửi xét duyệt cộng điểm bù.',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEligibleItemCard({
+    required MissingAttendanceEligible item,
+    required VoidCallback onSubmit,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  item.missingTypeLabel.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFB45309),
+                  ),
+                ),
+              ),
+              const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 15, color: Color(0xFFF59E0B)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Chưa hoàn tất',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFFF59E0B), fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.name,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+              const SizedBox(width: 5),
+              Text(
+                '${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              onPressed: onSubmit,
+              icon: const Icon(Icons.upload_file_rounded, size: 18),
+              label: const Text('Nộp ảnh minh chứng', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequestItemCard({required MissingAttendanceRequest item}) {
+    final (statusColor, statusBg, statusIcon) = switch (item.status) {
+      'approved' => (const Color(0xFF10B981), const Color(0xFFD1FAE5), Icons.check_circle_rounded),
+      'rejected' => (const Color(0xFFEF4444), const Color(0xFFFEE2E2), Icons.cancel_rounded),
+      _ => (const Color(0xFFF59E0B), const Color(0xFFFEF3C7), Icons.hourglass_top_rounded),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(statusIcon, size: 14, color: statusColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      item.statusLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                      ),
+                    ),
                   ],
                 ),
+              ),
+              Text(
+                item.missingTypeLabel,
+                style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.activityName,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+          ),
+          if (item.reason.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.format_quote_rounded, size: 16, color: Color(0xFF94A3B8)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      item.reason,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (item.evidenceName.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.attachment_rounded, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    item.evidenceName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyTab({
+    required IconData icon,
+    required String title,
+    required String message,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 32),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 44),
+            const SizedBox(height: 12),
+            Text(
+              _errorMessage ?? 'Đã xảy ra lỗi',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Thử lại'),
+            ),
+          ],
         ),
       ),
     );
@@ -165,22 +547,11 @@ class _SubmitSheetState extends State<_SubmitSheet> {
       allowMultiple: false,
       withData: true,
       type: FileType.custom,
-      allowedExtensions: const [
-        'png',
-        'jpg',
-        'jpeg',
-        'pdf',
-        'doc',
-        'docx',
-        'xls',
-        'xlsx',
-        'txt',
-      ],
+      allowedExtensions: const ['png', 'jpg', 'jpeg'],
     );
     final file = result?.files.firstOrNull;
-    if (file?.bytes == null) {
-      return;
-    }
+    if (file?.bytes == null) return;
+
     final compressed = await ImageCompressor.compressImage(
       fileName: file!.name,
       bytes: file.bytes!,
@@ -191,6 +562,16 @@ class _SubmitSheetState extends State<_SubmitSheet> {
   }
 
   Future<void> _submit() async {
+    final reason = _reasonController.text.trim();
+    if (reason.isEmpty) {
+      setState(() => _errorMessage = 'Vui lòng nhập lý do nộp minh chứng.');
+      return;
+    }
+    if (_upload == null) {
+      setState(() => _errorMessage = 'Vui lòng tải lên ảnh minh chứng tại sự kiện.');
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -198,19 +579,19 @@ class _SubmitSheetState extends State<_SubmitSheet> {
     try {
       await widget.service.submitMissingAttendance(
         activityId: widget.item.id,
-        reason: _reasonController.text.trim(),
+        reason: reason,
         evidence: _upload,
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã gửi yêu cầu bổ sung điểm danh.')),
+        const SnackBar(content: Text('Đã nộp minh chứng thành công! Ban quản lý sẽ xem xét.')),
       );
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
       setState(
-        () => _errorMessage = 'Không gửi được yêu cầu. Kiểm tra kết nối API.',
+        () => _errorMessage = 'Không gửi được minh chứng. Kiểm tra kết nối mạng.',
       );
     } finally {
       if (mounted) {
@@ -226,9 +607,9 @@ class _SubmitSheetState extends State<_SubmitSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
         decoration: const BoxDecoration(
-          color: AppColors.background,
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SafeArea(
@@ -237,53 +618,105 @@ class _SubmitSheetState extends State<_SubmitSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Nộp minh chứng điểm danh',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 4),
               Text(
                 widget.item.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'LÝ DO CHƯA ĐIỂM DANH ĐƯỢC',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 6),
-              Text(
-                widget.item.missingTypeLabel,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 14),
               TextField(
                 controller: _reasonController,
-                minLines: 3,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Lý do bổ sung',
-                  hintText: 'Nhập lý do tối thiểu 10 ký tự...',
-                  prefixIcon: Icon(Icons.edit_note_rounded),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'VD: Máy quét mã báo lỗi, điện thoại hết pin lúc check-out...',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _isSubmitting ? null : _pickFile,
-                icon: const Icon(Icons.attach_file_rounded),
-                label: Text(
-                  _upload == null ? 'Chọn minh chứng' : _upload!.name,
+              const SizedBox(height: 16),
+              const Text(
+                'ẢNH CHỨNG MINH THAM GIA HOẠT ĐỘNG',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 8),
+              if (_upload != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.image_rounded, color: Color(0xFF16A34A)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _upload!.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(() => _upload = null),
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 8),
+              ],
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  side: const BorderSide(color: Color(0xFFCBD5E1)),
+                ),
+                onPressed: _pickFile,
+                icon: const Icon(Icons.add_photo_alternate_rounded),
+                label: Text(_upload == null ? 'Chọn ảnh minh chứng từ máy' : 'Đổi ảnh khác'),
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(
-                    color: AppColors.danger,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12.5, fontWeight: FontWeight.w600),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               PrimaryButton(
-                label: 'Gửi yêu cầu',
+                label: 'Gửi minh chứng ngay',
                 isLoading: _isSubmitting,
                 onPressed: _submit,
               ),
@@ -291,232 +724,6 @@ class _SubmitSheetState extends State<_SubmitSheet> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.darkBlue, AppColors.primary],
-        ),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.fact_check_outlined, color: Colors.white, size: 42),
-          SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              'Gửi yêu cầu khi bạn chỉ thiếu check-in hoặc check-out, kèm minh chứng để admin xét duyệt.',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EligibleCard extends StatelessWidget {
-  const _EligibleCard({required this.item, required this.onSubmit});
-
-  final MissingAttendanceEligible item;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.name,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _Badge(
-                label: item.missingTypeLabel,
-                color: const Color(0xFFF59E0B),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: onSubmit,
-                child: const Text('Gửi bổ sung'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RequestCard extends StatelessWidget {
-  const _RequestCard({required this.item});
-
-  final MissingAttendanceRequest item;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (item.status) {
-      'approved' => const Color(0xFF059669),
-      'rejected' => AppColors.danger,
-      _ => const Color(0xFFF59E0B),
-    };
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.activityName,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _Badge(label: item.statusLabel, color: color),
-              _Badge(label: item.missingTypeLabel, color: AppColors.primary),
-              if (item.evidenceName.isNotEmpty)
-                _Badge(
-                  label: item.evidenceName,
-                  color: AppColors.textSecondary,
-                ),
-            ],
-          ),
-          if (item.reason.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              item.reason,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                height: 1.35,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkBlue.withValues(alpha: 0.07),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w900,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyCard extends StatelessWidget {
-  const _EmptyCard({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Card(
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(28),
-      children: [
-        const SizedBox(height: 130),
-        Icon(
-          isError ? Icons.error_outline : Icons.inbox_outlined,
-          color: isError ? AppColors.danger : AppColors.textSecondary,
-          size: 48,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -52,7 +52,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
     try {
       final result = await widget.service.fetchActivities(
         page: refresh ? 1 : _page + 1,
-        keyword: _searchController.text,
+        keyword: _searchController.text.trim(),
         status: _status,
       );
       setState(() {
@@ -98,37 +98,137 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
-          'Hoạt động',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          'Hoạt động sinh viên',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => _load(refresh: true),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            tooltip: 'Làm mới',
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE2E8F0), height: 1),
         ),
       ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => _load(refresh: true),
           child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             slivers: [
-              SliverToBoxAdapter(child: _buildHeader(onSearch: () => _load(refresh: true))),
-              SliverToBoxAdapter(child: _buildFilters()),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                  child: Column(
+                    children: [
+                      // Thanh tìm kiếm cao cấp
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) => _load(refresh: true),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          decoration: InputDecoration(
+                            hintText: 'Tìm kiếm hoạt động, sự kiện...',
+                            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
+                            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 22),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _load(refresh: true);
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Bộ lọc nhanh (Tất cả, Đang mở, Đã đóng)
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('Tất cả', ''),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Đang mở đăng ký 🟢', 'open'),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Đã đóng đăng ký', 'closed'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               if (_isLoading)
                 const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
                 )
               else if (_errorMessage != null)
-                SliverFillRemaining(child: _Message(message: _errorMessage!, isError: true))
+                SliverFillRemaining(
+                  child: _buildEmptyOrError(
+                    icon: Icons.error_outline_rounded,
+                    title: 'Đã xảy ra lỗi',
+                    message: _errorMessage!,
+                    isError: true,
+                    onRetry: () => _load(refresh: true),
+                  ),
+                )
               else if (_items.isEmpty)
-                const SliverFillRemaining(
-                  child: _Message(message: 'Chưa có hoạt động phù hợp.', isError: false),
+                SliverFillRemaining(
+                  child: _buildEmptyOrError(
+                    icon: Icons.event_busy_rounded,
+                    title: 'Chưa có hoạt động phù hợp',
+                    message: 'Hiện chưa có hoạt động nào trong danh mục hoặc từ khóa tìm kiếm này.',
+                    isError: false,
+                    onRetry: () {
+                      _searchController.clear();
+                      setState(() => _status = '');
+                      _load(refresh: true);
+                    },
+                  ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                   sliver: SliverList.separated(
                     itemCount: _items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 14),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final activity = _items[index];
                       return ActivityCard(
@@ -138,11 +238,17 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                     },
                   ),
                 ),
+
               if (!_isLoading && _page < _lastPage)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                     child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                      ),
                       onPressed: _isLoadingMore ? null : () => _load(refresh: false),
                       child: _isLoadingMore
                           ? const SizedBox(
@@ -150,7 +256,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Tải thêm'),
+                          : const Text(
+                              'Xem thêm hoạt động',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
                     ),
                   ),
                 ),
@@ -161,110 +270,102 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
     );
   }
 
-  Widget _buildHeader({required VoidCallback onSearch}) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.darkBlue],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Khám phá hoạt động sinh viên',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Cập nhật liên tục các hoạt động rèn luyện mới nhất.',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.82)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _searchController,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => onSearch(),
-              decoration: InputDecoration(
-                hintText: 'Tìm hoạt động...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  onPressed: onSearch,
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-      child: Row(
-        children: [
-          _buildFilterChip(label: 'Tất cả', value: ''),
-          const SizedBox(width: 8),
-          _buildFilterChip(label: 'Đang mở', value: 'open'),
-          const SizedBox(width: 8),
-          _buildFilterChip(label: 'Đã đóng', value: 'closed'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({required String label, required String value}) {
-    final selected = _status == value;
-    return ChoiceChip(
-      selected: selected,
-      label: Text(label),
-      onSelected: (_) {
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _status == value;
+    return InkWell(
+      onTap: () {
         setState(() => _status = value);
         _load(refresh: true);
       },
-      selectedColor: AppColors.primary.withValues(alpha: 0.16),
-      labelStyle: TextStyle(
-        color: selected ? AppColors.primary : AppColors.textSecondary,
-        fontWeight: FontWeight.w800,
-      ),
-      side: BorderSide(
-        color: selected ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF475569),
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }
-}
 
-class _Message extends StatelessWidget {
-  const _Message({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyOrError({
+    required IconData icon,
+    required String title,
+    required String message,
+    required bool isError,
+    required VoidCallback onRetry,
+  }) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
-            fontWeight: FontWeight.w800,
-          ),
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: isError
+                    ? const Color(0xFFFEE2E2)
+                    : const Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isError ? const Color(0xFFEF4444) : AppColors.primary,
+                size: 34,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Làm mới'),
+            ),
+          ],
         ),
       ),
     );

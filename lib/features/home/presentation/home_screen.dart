@@ -28,6 +28,7 @@ import '../../profile/presentation/profile_screen.dart';
 import '../../qr_scan/data/qr_scan_service.dart';
 import '../../qr_scan/presentation/qr_scan_screen.dart';
 import '../../student_services/data/student_services_service.dart';
+import '../../student_services/presentation/other_services_screen.dart';
 import '../../student_services/presentation/student_service_screens.dart';
 import 'student_stats_screen.dart';
 
@@ -273,75 +274,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     setState(() => _currentNavIndex = 4);
   }
 
+  void _openOtherServices() {
+    _pushScreen(OtherServicesScreen(service: _studentServicesService));
+  }
+
   void _showAllServicesBottomSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Text(
-                'Dịch vụ & Tiện ích khác',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-            const SizedBox(height: 6),
-            _MoreServiceTile(
-              icon: Icons.query_stats_outlined,
-              title: 'Thống kê cá nhân',
-              onTap: _openStudentStats,
-            ),
-            _MoreServiceTile(
-              icon: Icons.event_note_outlined,
-              title: 'Hoạt động đã đăng ký',
-              onTap: _openRegisteredActivities,
-            ),
-            _MoreServiceTile(
-              icon: Icons.workspace_premium_outlined,
-              title: 'Danh hiệu',
-              onTap: _openAppellations,
-            ),
-            _MoreServiceTile(
-              icon: Icons.report_problem_outlined,
-              title: 'Khiếu nại',
-              onTap: _openComplaints,
-            ),
-            _MoreServiceTile(
-              icon: Icons.assignment_turned_in_outlined,
-              title: 'Giấy xin phép',
-              onTap: _openPermissionRequests,
-            ),
-            _MoreServiceTile(
-              icon: Icons.folder_copy_outlined,
-              title: 'Tài liệu hồ sơ',
-              onTap: _openDocuments,
-            ),
-            _MoreServiceTile(
-              icon: Icons.badge_outlined,
-              title: 'CV sinh viên',
-              onTap: _openCv,
-            ),
-            _MoreServiceTile(
-              icon: Icons.lightbulb_outline,
-              title: 'Gợi ý hoạt động',
-              onTap: _openActivitySuggestions,
-            ),
-            _MoreServiceTile(
-              icon: Icons.draw_outlined,
-              title: 'Chữ ký số',
-              onTap: _openSignatureRequests,
-            ),
-          ],
-        ),
-      ),
-    );
+    _openOtherServices();
   }
 
   Widget _buildCircularHeaderButton({
@@ -689,6 +627,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             onCv: _openCv,
                             onActivitySuggestions: _openActivitySuggestions,
                             onSignatureRequests: _openSignatureRequests,
+                            onOtherServices: _openOtherServices,
                           ),
                           const SizedBox(height: 24),
                         ],
@@ -1518,6 +1457,7 @@ class _QuickAction3DGrid extends StatelessWidget {
     required this.onCv,
     required this.onActivitySuggestions,
     required this.onSignatureRequests,
+    required this.onOtherServices,
   });
 
   final bool isWide;
@@ -1537,77 +1477,7 @@ class _QuickAction3DGrid extends StatelessWidget {
   final VoidCallback onCv;
   final VoidCallback onActivitySuggestions;
   final VoidCallback onSignatureRequests;
-
-  void _showMoreServices(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Text(
-                'Dịch vụ & Tiện ích khác',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-            const SizedBox(height: 6),
-            _MoreServiceTile(
-              icon: Icons.query_stats_outlined,
-              title: 'Thống kê cá nhân',
-              onTap: onStats,
-            ),
-            _MoreServiceTile(
-              icon: Icons.event_note_outlined,
-              title: 'Hoạt động đã đăng ký',
-              onTap: onRegisteredActivities,
-            ),
-            _MoreServiceTile(
-              icon: Icons.workspace_premium_outlined,
-              title: 'Danh hiệu',
-              onTap: onAppellations,
-            ),
-            _MoreServiceTile(
-              icon: Icons.report_problem_outlined,
-              title: 'Khiếu nại',
-              onTap: onComplaints,
-            ),
-            _MoreServiceTile(
-              icon: Icons.assignment_turned_in_outlined,
-              title: 'Giấy xin phép',
-              onTap: onPermissionRequests,
-            ),
-            _MoreServiceTile(
-              icon: Icons.folder_copy_outlined,
-              title: 'Tài liệu hồ sơ',
-              onTap: onDocuments,
-            ),
-            _MoreServiceTile(
-              icon: Icons.badge_outlined,
-              title: 'CV sinh viên',
-              onTap: onCv,
-            ),
-            _MoreServiceTile(
-              icon: Icons.lightbulb_outline,
-              title: 'Gợi ý hoạt động',
-              onTap: onActivitySuggestions,
-            ),
-            _MoreServiceTile(
-              icon: Icons.draw_outlined,
-              title: 'Chữ ký số',
-              onTap: onSignatureRequests,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final VoidCallback onOtherServices;
 
   @override
   Widget build(BuildContext context) {
@@ -1672,10 +1542,10 @@ class _QuickAction3DGrid extends StatelessWidget {
         ),
         _FeatureCard3D(
           title: 'Dịch vụ khác',
-          subtitle: 'Tiện ích mở rộng',
+          subtitle: 'Hồ sơ & Tiện ích',
           icon: Icons.grid_view_rounded,
           color: const Color(0xFFF59E0B),
-          onTap: () => _showMoreServices(context),
+          onTap: onOtherServices,
         ),
       ],
     );
@@ -1915,42 +1785,6 @@ class _DashboardSkeleton extends StatelessWidget {
       child: const Center(
         child: CircularProgressIndicator(strokeWidth: 2.4),
       ),
-    );
-  }
-}
-
-class _MoreServiceTile extends StatelessWidget {
-  const _MoreServiceTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: AppColors.primary, size: 20),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
-      onTap: () {
-        Navigator.of(context).pop();
-        onTap();
-      },
     );
   }
 }

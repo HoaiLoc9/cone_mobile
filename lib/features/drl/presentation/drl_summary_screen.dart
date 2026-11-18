@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
-import '../../activities/presentation/activity_helpers.dart';
 import '../data/drl_models.dart';
 import '../data/drl_service.dart';
 import 'drl_detail_screen.dart';
 import 'drl_score_format.dart';
+import 'drl_self_assessment_screen.dart';
 
 class DrlSummaryScreen extends StatefulWidget {
   const DrlSummaryScreen({super.key, required this.service});
@@ -49,14 +49,23 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
   }
 
   Future<void> _openDetail(String semesterId) async {
-    if (semesterId.isEmpty) {
-      return;
-    }
+    if (semesterId.isEmpty) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DrlDetailScreen(service: widget.service, semesterId: semesterId),
       ),
     );
+    _load();
+  }
+
+  Future<void> _openSelfAssessment(String semesterId) async {
+    if (semesterId.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DrlSelfAssessmentScreen(service: widget.service, semesterId: semesterId),
+      ),
+    );
+    _load();
   }
 
   @override
@@ -64,12 +73,25 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
     final summary = _summary;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: AppColors.background,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
-          'Điểm rèn luyện',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          'Bảng điểm Rèn luyện',
+          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 18),
+        ),
+        actions: [
+          IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF475569)),
+            tooltip: 'Làm mới',
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE2E8F0), height: 1),
         ),
       ),
       body: SafeArea(
@@ -78,30 +100,42 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null
-                  ? _Message(message: _errorMessage!, isError: true)
+                  ? _buildMessage(message: _errorMessage!, isError: true)
                   : summary == null
-                      ? const _Message(message: 'Chưa có dữ liệu điểm rèn luyện.', isError: false)
+                      ? _buildMessage(message: 'Chưa có dữ liệu điểm rèn luyện.', isError: false)
                       : ListView(
-                          padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
                           children: [
-                            _TotalCard(summary: summary),
-                            const SizedBox(height: 22),
-                            const Text(
-                              'Theo học kỳ',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                              ),
+                            // 1. Thẻ Hero Điểm Tổng Kết
+                            _buildHeroTotalCard(summary: summary),
+                            const SizedBox(height: 24),
+
+                            // 2. Tiêu đề danh sách theo học kỳ
+                            const Row(
+                              children: [
+                                Icon(Icons.history_edu_rounded, color: AppColors.primary, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Bảng điểm theo học kỳ',
+                                  style: TextStyle(
+                                    color: Color(0xFF0F172A),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
+
+                            // 3. Danh sách thẻ từng học kỳ
                             if (summary.semesterSummaries.isNotEmpty)
                               ...summary.semesterSummaries.map(
                                 (item) => Padding(
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: _SemesterScoreCard(
+                                  child: _buildSemesterCard(
                                     item: item,
                                     onTap: () => _openDetail(item.semesterId),
+                                    onSelfAssess: () => _openSelfAssessment(item.semesterId),
                                   ),
                                 ),
                               )
@@ -109,7 +143,7 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
                               ...summary.semesters.map(
                                 (semester) => Padding(
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: _EmptySemesterCard(
+                                  child: _buildEmptySemesterCard(
                                     semester: semester,
                                     onTap: () => _openDetail(semester.id),
                                   ),
@@ -121,154 +155,300 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
       ),
     );
   }
-}
 
-class _TotalCard extends StatelessWidget {
-  const _TotalCard({required this.summary});
+  Widget _buildHeroTotalCard({required DrlSummary summary}) {
+    final score = summary.totalPoints;
+    final (rankLabel, rankColor) = _getRankBadge(score);
 
-  final DrlSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.darkBlue, AppColors.primary],
+          colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF2563EB)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.22),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.35),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.analytics_rounded, color: Colors.white, size: 44),
-          const SizedBox(height: 20),
-          Text(
-            formatScore(summary.totalPoints),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 44,
-              fontWeight: FontWeight.w900,
-              height: 1,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified_rounded, color: Colors.cyanAccent, size: 14),
+                    SizedBox(width: 5),
+                    Text(
+                      'TỔNG KẾT RÈN LUYỆN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: rankColor.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: rankColor.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  rankLabel,
+                  style: TextStyle(
+                    color: rankColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                formatScore(score),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 46,
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                '/100 điểm',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Tổng điểm rèn luyện từ dữ liệu hoạt động/điểm danh',
+            'Hệ thống quản lý điểm rèn luyện Trường Cao đẳng Kinh tế Đối ngoại',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.84),
-              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _SemesterScoreCard extends StatelessWidget {
-  const _SemesterScoreCard({required this.item, required this.onTap});
+  Widget _buildSemesterCard({
+    required DrlSemesterSummary item,
+    required VoidCallback onTap,
+    required VoidCallback onSelfAssess,
+  }) {
+    final score = item.totalPoints;
+    final (rankLabel, rankColor) = _getRankBadge(score);
+    final progress = (score / 100).clamp(0.0, 1.0);
 
-  final DrlSemesterSummary item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.darkBlue.withValues(alpha: 0.07),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ScoreBubble(score: item.totalPoints),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       item.semesterName,
                       style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${item.activityCount} hoạt động có dữ liệu điểm',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: rankColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      rankLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: rankColor,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+              const SizedBox(height: 12),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Hộp điểm số
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: rankColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(
+                        score.toStringAsFixed(score % 1 == 0 ? 0 : 1),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: rankColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${item.activityCount} hoạt động đã ghi nhận điểm',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 7,
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            valueColor: AlwaysStoppedAnimation<Color>(rankColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFCBD5E1)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              const SizedBox(height: 10),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: onSelfAssess,
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_note_rounded, size: 18, color: AppColors.primary),
+                          SizedBox(width: 4),
+                          Text(
+                            'Tự đánh giá DRL',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Row(
+                    children: [
+                      Text(
+                        'Xem chi tiết',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      SizedBox(width: 2),
+                      Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF64748B)),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _EmptySemesterCard extends StatelessWidget {
-  const _EmptySemesterCard({required this.semester, required this.onTap});
-
-  final DrlSemester semester;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptySemesterCard({
+    required DrlSemester semester,
+    required VoidCallback onTap,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
-        child: Ink(
+        child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.textSecondary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.school_outlined, color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,85 +456,60 @@ class _EmptySemesterCard extends StatelessWidget {
                     Text(
                       semester.name,
                       style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${compactDate(semester.start)} - ${compactDate(semester.stop)}',
-                      style: const TextStyle(color: AppColors.textSecondary),
+                    const Text(
+                      'Chưa có dữ liệu rèn luyện',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                     ),
                   ],
                 ),
               ),
-              const Text(
-                'Xem',
-                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
-              ),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _ScoreBubble extends StatelessWidget {
-  const _ScoreBubble({required this.score});
-
-  final double score;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 58,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Center(
-        child: Text(
-          formatScore(score),
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-          ),
+  Widget _buildMessage({required String message, required bool isError}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isError ? Icons.error_outline_rounded : Icons.info_outline_rounded,
+              color: isError ? const Color(0xFFEF4444) : AppColors.primary,
+              size: 44,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isError ? const Color(0xFFEF4444) : const Color(0xFF64748B),
+                fontWeight: FontWeight.w700,
+                fontSize: 13.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-class _Message extends StatelessWidget {
-  const _Message({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(28),
-      children: [
-        const SizedBox(height: 140),
-        Icon(
-          isError ? Icons.error_outline : Icons.inbox_outlined,
-          color: isError ? AppColors.danger : AppColors.textSecondary,
-          size: 46,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
+  (String, Color) _getRankBadge(double score) {
+    if (score >= 90) return ('XUẤT SẮC 🏅', const Color(0xFF10B981));
+    if (score >= 80) return ('TỐT ⭐', const Color(0xFF38BDF8));
+    if (score >= 65) return ('KHÁ', const Color(0xFFFBBF24));
+    if (score >= 50) return ('TRUNG BÌNH', const Color(0xFFF97316));
+    return ('YẾU', const Color(0xFFEF4444));
   }
 }

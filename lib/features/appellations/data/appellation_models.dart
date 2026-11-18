@@ -67,6 +67,8 @@ class AppellationItem {
   final AppellationFormSchema? formSchema;
   final AppellationRegistration? myRegistration;
 
+  bool get isRegistered => myRegistration != null;
+
   factory AppellationItem.fromJson(Map<String, dynamic> json) {
     return AppellationItem(
       id: json['id']?.toString() ?? '',
