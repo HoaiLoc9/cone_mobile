@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
