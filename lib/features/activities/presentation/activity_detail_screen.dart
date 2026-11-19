@@ -492,15 +492,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  const Row(
                                     children: [
-                                      const Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
-                                      const SizedBox(width: 12),
+                                      Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
+                                      SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            const Text(
+                                            Text(
                                               'Yêu cầu bổ sung check-out bị từ chối',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w800,
@@ -508,17 +508,14 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                                 fontSize: 13.5,
                                               ),
                                             ),
-                                            if (_missingCheckoutRequest?.adminFeedback != null &&
-                                                _missingCheckoutRequest!.adminFeedback!.isNotEmpty) ...[
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                'Lý do: ${_missingCheckoutRequest!.adminFeedback}',
-                                                style: const TextStyle(
-                                                  color: Color(0xFFB91C1C),
-                                                  fontSize: 12,
-                                                ),
+                                            SizedBox(height: 2),
+                                            Text(
+                                              'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
+                                              style: TextStyle(
+                                                color: Color(0xFFB91C1C),
+                                                fontSize: 12,
                                               ),
-                                            ],
+                                            ),
                                           ],
                                         ),
                                       ),
