@@ -94,53 +94,50 @@ class OtherServicesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Nhóm 1: THỦ TỤC & HÀNH CHÍNH
-            _buildSectionHeader('THỦ TỤC & HÀNH CHÍNH', Icons.assignment_outlined),
+            // Thanh trượt ngang dịch vụ (kiểu Messenger)
+            _buildSectionHeader('DỊCH VỤ & TIỆN ÍCH', Icons.apps_rounded),
             const SizedBox(height: 12),
-            _buildServiceItem(
-              icon: Icons.assignment_turned_in_rounded,
-              iconColor: const Color(0xFF2563EB),
-              title: 'Giấy xin phép',
-              subtitle: 'Xin vắng hoạt động, bù hoạt động, xin miễn rèn luyện',
-              badge: 'HÀNH CHÍNH',
-              onTap: () => _push(context, PermissionRequestsScreen(service: service)),
-            ),
-            const SizedBox(height: 12),
-            _buildServiceItem(
-              icon: Icons.draw_rounded,
-              iconColor: const Color(0xFF1D4ED8),
-              title: 'Chữ ký số',
-              subtitle: 'Ký số văn bản điện tử, biên bản cam kết rèn luyện',
-              onTap: () => _push(context, SignatureRequestsScreen(service: service)),
-            ),
-            const SizedBox(height: 12),
-            _buildServiceItem(
-              icon: Icons.verified_user_rounded,
-              iconColor: const Color(0xFF0284C7),
-              title: 'Kiểm tra hồ sơ sinh viên',
-              subtitle: 'Xem mức độ hoàn thiện thông tin cá nhân & lý lịch',
-              onTap: () => _push(context, ProfileStatusScreen(service: service)),
-            ),
-            const SizedBox(height: 26),
-
-            // Nhóm 2: HỒ SƠ & TÀI LIỆU RÈN LUYỆN
-            _buildSectionHeader('HỒ SƠ & TÀI LIỆU', Icons.folder_open_rounded),
-            const SizedBox(height: 12),
-            _buildServiceItem(
-              icon: Icons.folder_copy_rounded,
-              iconColor: const Color(0xFF0369A1),
-              title: 'Tài liệu & Quy chế',
-              subtitle: 'Biểu mẫu rèn luyện, quyết định, quy chế sinh viên COFER',
-              onTap: () => _push(context, DocumentsScreen(service: service)),
-            ),
-            const SizedBox(height: 12),
-            _buildServiceItem(
-              icon: Icons.badge_rounded,
-              iconColor: const Color(0xFF1E40AF),
-              title: 'CV sinh viên & Năng lực',
-              subtitle: 'Tạo và xuất hồ sơ năng lực thành tích rèn luyện ngoại khóa',
-              badge: 'CV PRO',
-              onTap: () => _push(context, CvScreen(service: service)),
+            SizedBox(
+              height: 118,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                clipBehavior: Clip.none,
+                children: [
+                  _buildCircleService(
+                    icon: Icons.assignment_turned_in_rounded,
+                    color: const Color(0xFF2563EB),
+                    label: 'Giấy xin phép',
+                    badge: 'Mới',
+                    onTap: () => _push(context, PermissionRequestsScreen(service: service)),
+                  ),
+                  _buildCircleService(
+                    icon: Icons.draw_rounded,
+                    color: const Color(0xFF7C3AED),
+                    label: 'Chữ ký số',
+                    onTap: () => _push(context, SignatureRequestsScreen(service: service)),
+                  ),
+                  _buildCircleService(
+                    icon: Icons.verified_user_rounded,
+                    color: const Color(0xFF0891B2),
+                    label: 'Kiểm tra hồ sơ',
+                    onTap: () => _push(context, ProfileStatusScreen(service: service)),
+                  ),
+                  _buildCircleService(
+                    icon: Icons.folder_copy_rounded,
+                    color: const Color(0xFFEA580C),
+                    label: 'Tài liệu & Quy chế',
+                    onTap: () => _push(context, DocumentsScreen(service: service)),
+                  ),
+                  _buildCircleService(
+                    icon: Icons.badge_rounded,
+                    color: const Color(0xFF059669),
+                    label: 'CV sinh viên',
+                    badge: 'PRO',
+                    onTap: () => _push(context, CvScreen(service: service)),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 26),
 
@@ -150,9 +147,9 @@ class OtherServicesScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: AppColors.adaptiveCard,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.adaptiveBorder),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.03),
@@ -173,7 +170,7 @@ class OtherServicesScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.adaptiveTextPrimary,
                         ),
                       ),
                     ],
@@ -253,115 +250,100 @@ class OtherServicesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceItem({
+  Widget _buildCircleService({
     required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
+    required Color color,
+    required String label,
     String? badge,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
+    return Padding(
+      padding: const EdgeInsets.only(right: 14),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          width: 78,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [color.withValues(alpha: 0.85), color],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: AppColors.isDark ? 0.35 : 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
                         ),
-                        if (badge != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: iconColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              badge,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                    child: Icon(icon, color: Colors.white, size: 28),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      top: -4,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.adaptiveBackground, width: 2),
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
                     ),
-                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adaptiveTextPrimary,
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
             ],
           ),
         ),
       ),
     );
   }
-
   Widget _buildContactRow(IconData icon, String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
+        Icon(icon, size: 16, color: AppColors.adaptiveTextSecondary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               fontSize: 12.5,
-              color: AppColors.textPrimary,
+              color: AppColors.adaptiveTextPrimary,
               fontWeight: FontWeight.w600,
               height: 1.35,
             ),
@@ -374,9 +356,9 @@ class OtherServicesScreen extends StatelessWidget {
   Widget _buildFaqTile({required String question, required String answer}) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
       child: Theme(
         data: ThemeData().copyWith(dividerColor: Colors.transparent),
@@ -388,7 +370,7 @@ class OtherServicesScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AppColors.adaptiveTextPrimary,
             ),
           ),
           children: [
@@ -396,7 +378,7 @@ class OtherServicesScreen extends StatelessWidget {
               answer,
               style: TextStyle(
                 fontSize: 12.5,
-                color: AppColors.textSecondary,
+                color: AppColors.adaptiveTextSecondary,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
               ),
