@@ -86,7 +86,8 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
   @override
   Widget build(BuildContext context) {
     final data = _data;
-    final eligibleCount = data?.eligible.length ?? 0;
+    final activeEligible = (data?.eligible ?? const []).where((item) => !item.isExpired).toList();
+    final eligibleCount = activeEligible.length;
     final requestCount = data?.requests.length ?? 0;
 
     return Scaffold(
@@ -184,14 +185,14 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
                           children: [
                             _buildInfoGuideCard(),
                             const SizedBox(height: 16),
-                            if ((data?.eligible ?? const []).isEmpty)
+                            if (activeEligible.isEmpty)
                               _buildEmptyTab(
                                 icon: Icons.check_circle_outline_rounded,
                                 title: 'Không có hoạt động cần bổ sung',
-                                message: 'Tuyệt vời! Bạn không bị thiếu lượt quét mã check-in hoặc check-out ở hoạt động nào.',
+                                message: 'Tuyệt vời! Bạn không có hoạt động nào trong hạn 3 ngày cần bổ sung check-out.',
                               )
                             else
-                              ...(data?.eligible ?? const []).map(
+                              ...activeEligible.map(
                                 (item) => Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _buildEligibleItemCard(item: item, onSubmit: () => _openSubmit(item)),
@@ -257,12 +258,12 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Quy định nộp minh chứng',
+                  'Quy định nộp minh chứng (Hạn 3 ngày)',
                   style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Khi tham gia hoạt động nhưng máy lỗi không quét được check-in/out, bạn hãy chụp ảnh tại sự kiện để gửi xét duyệt cộng điểm bù.',
+                  'Khi tham gia hoạt động nhưng không quét được check-out, sinh viên phải gửi yêu cầu bổ sung kèm ảnh minh chứng trong vòng tối đa 3 ngày kể từ khi kết thúc để được xem xét cộng điểm rèn luyện.',
                   style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.35),
                 ),
               ],
@@ -340,6 +341,25 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               ),
             ],
           ),
+          if (item.deadline != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.timer_outlined, size: 14, color: Color(0xFFD97706)),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    'Hạn chót bổ sung: trước ${formatDateTime(item.deadline)} (trong vòng 3 ngày)',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFD97706),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,

@@ -491,15 +491,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Row(
+                                Row(
                                   children: [
-                                    Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
-                                    SizedBox(width: 12),
+                                    const Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
+                                          const Text(
                                             'Yêu cầu bổ sung check-out bị từ chối',
                                             style: TextStyle(
                                               fontWeight: FontWeight.w800,
@@ -507,10 +507,12 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                               fontSize: 13.5,
                                             ),
                                           ),
-                                          SizedBox(height: 2),
+                                          const SizedBox(height: 2),
                                           Text(
-                                            'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
-                                            style: TextStyle(
+                                            activity.isMissingCheckoutExpired
+                                                ? 'Minh chứng chưa đạt và đã quá thời hạn 3 ngày để nộp lại.'
+                                                : 'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
+                                            style: const TextStyle(
                                               color: Color(0xFFB91C1C),
                                               fontSize: 12,
                                             ),
@@ -520,23 +522,95 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                PrimaryButton(
-                                  label: 'Nộp lại bổ sung check out',
-                                  icon: Icons.refresh_rounded,
-                                  backgroundColor: const Color(0xFFD97706),
-                                  onPressed: () => _openMissingCheckoutForm(activity),
-                                ),
+                                if (!activity.isMissingCheckoutExpired) ...[
+                                  const SizedBox(height: 12),
+                                  PrimaryButton(
+                                    label: 'Nộp lại bổ sung check out',
+                                    icon: Icons.refresh_rounded,
+                                    backgroundColor: const Color(0xFFD97706),
+                                    onPressed: () => _openMissingCheckoutForm(activity),
+                                  ),
+                                  if (activity.missingCheckoutDeadline != null) ...[
+                                    const SizedBox(height: 8),
+                                    Center(
+                                      child: Text(
+                                        'Hạn chót bổ sung: trước ${formatDateTime(activity.missingCheckoutDeadline)}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFFD97706),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ],
                             ),
                           ),
                         ] else if (_isEligibleForMissingCheckout) ...[
-                          PrimaryButton(
-                            label: 'Bổ sung check out',
-                            icon: Icons.assignment_turned_in_rounded,
-                            backgroundColor: const Color(0xFFD97706),
-                            onPressed: () => _openMissingCheckoutForm(activity),
-                          ),
+                          if (activity.isMissingCheckoutExpired) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFFECACA)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.timer_off_outlined, color: Color(0xFFDC2626), size: 24),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Đã quá hạn bổ sung check-out',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF991B1B),
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Thời hạn nộp bổ sung check-out tối đa là 3 ngày kể từ khi hoạt động kết thúc.',
+                                          style: TextStyle(
+                                            color: Color(0xFFB91C1C),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            Column(
+                              children: [
+                                PrimaryButton(
+                                  label: 'Bổ sung check out',
+                                  icon: Icons.assignment_turned_in_rounded,
+                                  backgroundColor: const Color(0xFFD97706),
+                                  onPressed: () => _openMissingCheckoutForm(activity),
+                                ),
+                                if (activity.missingCheckoutDeadline != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Hạn chót bổ sung: trước ${formatDateTime(activity.missingCheckoutDeadline)} (tối đa 3 ngày)',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFD97706),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
                         ] else if (activity.isRegistered) ...[
                           Container(
                             width: double.infinity,

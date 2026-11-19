@@ -58,6 +58,14 @@ class _MissingCheckoutSheetState extends State<MissingCheckoutSheet> {
   bool _isSubmitting = false;
   String? _errorMessage;
 
+  bool get _isExpired {
+    if (widget.timeStop == null) return false;
+    final deadline = widget.timeStop!.add(const Duration(days: 3));
+    return DateTime.now().isAfter(deadline);
+  }
+
+  DateTime? get _deadline => widget.timeStop?.add(const Duration(days: 3));
+
   @override
   void dispose() {
     _reasonController.dispose();
@@ -89,6 +97,11 @@ class _MissingCheckoutSheetState extends State<MissingCheckoutSheet> {
   }
 
   Future<void> _submit() async {
+    if (_isExpired) {
+      setState(() => _errorMessage = 'Đã quá thời hạn 3 ngày để bổ sung check-out cho hoạt động này.');
+      return;
+    }
+
     final reason = _reasonController.text.trim();
     if (reason.length < 10) {
       setState(() => _errorMessage = 'Vui lòng nhập lý do cụ thể (tối thiểu 10 ký tự).');
@@ -275,6 +288,31 @@ class _MissingCheckoutSheetState extends State<MissingCheckoutSheet> {
                           ],
                         ),
                       ],
+                      if (_deadline != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              _isExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
+                              size: 14,
+                              color: _isExpired ? const Color(0xFFDC2626) : const Color(0xFFD97706),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                _isExpired
+                                    ? 'Đã hết hạn nộp (hạn chót: ${formatDateTime(_deadline)})'
+                                    : 'Hạn chót bổ sung: trước ${formatDateTime(_deadline)} (trong vòng 3 ngày)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _isExpired ? const Color(0xFFDC2626) : const Color(0xFFD97706),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -398,11 +436,13 @@ class _MissingCheckoutSheetState extends State<MissingCheckoutSheet> {
                 ],
                 const SizedBox(height: 22),
                 PrimaryButton(
-                  label: 'Gửi yêu cầu cho Quản trị viên duyệt',
-                  icon: Icons.send_rounded,
-                  backgroundColor: const Color(0xFFD97706),
+                  label: _isExpired
+                      ? 'Đã hết hạn bổ sung check-out'
+                      : 'Gửi yêu cầu cho Quản trị viên duyệt',
+                  icon: _isExpired ? Icons.timer_off_outlined : Icons.send_rounded,
+                  backgroundColor: _isExpired ? const Color(0xFF94A3B8) : const Color(0xFFD97706),
                   isLoading: _isSubmitting,
-                  onPressed: _submit,
+                  onPressed: _isExpired ? null : _submit,
                 ),
               ],
             ),

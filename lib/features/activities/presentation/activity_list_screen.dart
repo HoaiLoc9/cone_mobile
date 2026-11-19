@@ -269,14 +269,21 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final activity = _items[index];
+                      final isMissingEligible = _eligibleActivityIds.contains(activity.id) ||
+                          _missingRequests[activity.id]?.status == 'rejected';
                       final isMissing = activity.isEnded &&
                           activity.isRegistered &&
-                          (_eligibleActivityIds.contains(activity.id) ||
-                              _missingRequests[activity.id]?.status == 'rejected');
+                          !activity.isMissingCheckoutExpired &&
+                          isMissingEligible;
+                      final isMissingExpired = activity.isEnded &&
+                          activity.isRegistered &&
+                          activity.isMissingCheckoutExpired &&
+                          isMissingEligible;
                       return ActivityCard(
                         activity: activity,
                         onTap: () => _openDetail(activity),
                         isMissingCheckout: isMissing,
+                        isMissingExpired: isMissingExpired,
                         onMissingCheckout: isMissing
                             ? () => _openMissingCheckout(activity)
                             : null,

@@ -350,6 +350,7 @@ class _RegisteredActivitiesScreenState
     final isMissingCheckout = _eligibleActivityIds.contains(item.id);
     final isAttended = _isItemAttended(item);
     final isEnded = item.isEnded;
+    final isExpired = item.isMissingCheckoutExpired;
 
     final Color statusColor;
     final String statusText;
@@ -365,13 +366,29 @@ class _RegisteredActivitiesScreenState
         statusText = 'ĐÃ KẾT THÚC • ĐANG CHỜ DUYỆT';
         statusIcon = Icons.hourglass_top_rounded;
       } else if (isRejectedReview) {
-        statusColor = const Color(0xFFEF4444);
-        statusText = 'ĐÃ KẾT THÚC • BỊ TỪ CHỐI DUYỆT';
-        statusIcon = Icons.cancel_rounded;
+        if (isExpired) {
+          statusColor = const Color(0xFF64748B);
+          statusText = 'ĐÃ KẾT THÚC • QUÁ HẠN BỔ SUNG';
+          statusIcon = Icons.timer_off_outlined;
+        } else {
+          statusColor = const Color(0xFFEF4444);
+          statusText = 'ĐÃ KẾT THÚC • BỊ TỪ CHỐI DUYỆT';
+          statusIcon = Icons.cancel_rounded;
+        }
+      } else if (isMissingCheckout) {
+        if (isExpired) {
+          statusColor = const Color(0xFF64748B);
+          statusText = 'ĐÃ KẾT THÚC • QUÁ HẠN BỔ SUNG';
+          statusIcon = Icons.timer_off_outlined;
+        } else {
+          statusColor = const Color(0xFFD97706);
+          statusText = 'ĐÃ KẾT THÚC • THIẾU CHECK-OUT';
+          statusIcon = Icons.warning_amber_rounded;
+        }
       } else {
-        statusColor = const Color(0xFFD97706);
-        statusText = 'ĐÃ KẾT THÚC • THIẾU CHECK-OUT';
-        statusIcon = Icons.warning_amber_rounded;
+        statusColor = const Color(0xFF64748B);
+        statusText = 'ĐÃ KẾT THÚC';
+        statusIcon = Icons.event_busy_rounded;
       }
     } else {
       statusColor = const Color(0xFF2563EB);
@@ -517,7 +534,7 @@ class _RegisteredActivitiesScreenState
                       ],
                     ),
                   ),
-                ] else if (isRejectedReview) ...[
+                ] else if (isRejectedReview && !isExpired) ...[
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.tonalIcon(
@@ -535,7 +552,7 @@ class _RegisteredActivitiesScreenState
                       ),
                     ),
                   ),
-                ] else if (isMissingCheckout) ...[
+                ] else if (isMissingCheckout && !isExpired) ...[
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.tonalIcon(

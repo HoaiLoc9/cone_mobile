@@ -52,6 +52,16 @@ class MissingAttendanceEligible {
       missingTypeLabel: json['missing_type_label']?.toString() ?? '',
     );
   }
+
+  /// Hạn chót bổ sung là 3 ngày sau khi sự kiện kết thúc
+  DateTime? get deadline => timeStop?.add(const Duration(days: 3));
+
+  /// Đã quá hạn 3 ngày
+  bool get isExpired {
+    final dl = deadline;
+    if (dl == null) return false;
+    return DateTime.now().isAfter(dl);
+  }
 }
 
 class MissingAttendanceRequest {

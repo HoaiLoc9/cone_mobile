@@ -10,12 +10,14 @@ class ActivityCard extends StatelessWidget {
     required this.activity,
     required this.onTap,
     this.isMissingCheckout = false,
+    this.isMissingExpired = false,
     this.onMissingCheckout,
   });
 
   final ActivityItem activity;
   final VoidCallback onTap;
   final bool isMissingCheckout;
+  final bool isMissingExpired;
   final VoidCallback? onMissingCheckout;
 
   @override
@@ -32,6 +34,9 @@ class ActivityCard extends StatelessWidget {
         if (isMissingCheckout) {
           statusColor = const Color(0xFFD97706);
           statusText = 'ĐÃ KẾT THÚC • THIẾU CHECK-OUT';
+        } else if (isMissingExpired) {
+          statusColor = const Color(0xFF64748B);
+          statusText = 'ĐÃ KẾT THÚC • QUÁ HẠN BỔ SUNG';
         } else {
           statusColor = const Color(0xFF10B981);
           statusText = 'ĐÃ HOÀN THÀNH';

@@ -58,6 +58,17 @@ class ActivityItem {
     return false;
   }
 
+  /// Hạn chót bổ sung check-out là 3 ngày sau khi sự kiện kết thúc
+  DateTime? get missingCheckoutDeadline =>
+      timeStop?.add(const Duration(days: 3));
+
+  /// Kiểm tra xem đã quá hạn 3 ngày để bổ sung check-out hay chưa
+  bool get isMissingCheckoutExpired {
+    final deadline = missingCheckoutDeadline;
+    if (deadline == null) return false;
+    return DateTime.now().isAfter(deadline);
+  }
+
   factory ActivityItem.fromJson(Map<String, dynamic> json) {
     final collabRaw = json['collaborator'];
     return ActivityItem(
