@@ -305,8 +305,8 @@ class _ActivityScoreCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   row.activityName,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),
@@ -318,7 +318,7 @@ class _ActivityScoreCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '${formatDateTime(row.timeStart)} → ${formatDateTime(row.timeStop)}',
-            style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+            style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -332,7 +332,7 @@ class _ActivityScoreCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               row.attendanceNote,
-              style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary, height: 1.4),
             ),
           ],
         ],
@@ -375,14 +375,14 @@ class _CriteriaSectionCard extends StatelessWidget {
         childrenPadding: const EdgeInsets.only(top: 8),
         title: Text(
           'Mục ${section.section}',
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.adaptiveTextPrimary,
             fontWeight: FontWeight.w900,
           ),
         ),
         subtitle: Text(
           'SV ${formatScore(section.capped)} • Lớp ${formatScore(section.classCapped)} • CV ${formatScore(section.advisorCapped)}',
-          style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+          style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w700),
         ),
         children: section.criteria.map((criterion) => _CriterionTile(criterion: criterion)).toList(),
       ),
@@ -401,7 +401,7 @@ class _CriterionTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.adaptiveBackground,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -409,8 +409,8 @@ class _CriterionTile extends StatelessWidget {
         children: [
           Text(
             criterion.label.isEmpty ? criterion.key : criterion.label,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: AppColors.adaptiveTextPrimary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -418,7 +418,7 @@ class _CriterionTile extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               criterion.note,
-              style: const TextStyle(color: AppColors.textSecondary, height: 1.35),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary, height: 1.35),
             ),
           ],
           const SizedBox(height: 10),
@@ -429,7 +429,7 @@ class _CriterionTile extends StatelessWidget {
               _MiniBadge(label: 'SV: ${_scoreOrDash(criterion.effectiveScore)}', color: AppColors.primary),
               _MiniBadge(label: 'Lớp: ${_scoreOrDash(criterion.classScore)}', color: const Color(0xFF7C3AED)),
               _MiniBadge(label: 'CV: ${_scoreOrDash(criterion.advisorScore)}', color: const Color(0xFF059669)),
-              _MiniBadge(label: 'Max: ${formatScore(criterion.maxDisplay)}', color: AppColors.textSecondary),
+              _MiniBadge(label: 'Max: ${formatScore(criterion.maxDisplay)}', color: AppColors.adaptiveTextSecondary),
               if (criterion.requiresEvidence)
                 _MiniBadge(
                   label: criterion.hasEvidence ? 'Có minh chứng' : 'Cần minh chứng',
@@ -441,7 +441,7 @@ class _CriterionTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               criterion.sourceNote!,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 12),
             ),
           ],
         ],
@@ -468,12 +468,12 @@ class _ScoreLine extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w800),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w800),
             ),
           ),
           Text(
             formatScore(value),
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
+            style: TextStyle(color: AppColors.adaptiveTextPrimary, fontWeight: FontWeight.w900),
           ),
           if (note.trim().isNotEmpty) ...[
             const SizedBox(width: 8),
@@ -544,7 +544,7 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -570,7 +570,7 @@ class _EmptyCard extends StatelessWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w800),
+        style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -591,7 +591,7 @@ class _Message extends StatelessWidget {
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
+            color: isError ? AppColors.danger : AppColors.adaptiveTextSecondary,
             fontWeight: FontWeight.w800,
           ),
         ),

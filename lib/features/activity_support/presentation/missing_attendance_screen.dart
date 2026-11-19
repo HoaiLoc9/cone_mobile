@@ -63,6 +63,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
   Future<void> _openSubmit(MissingAttendanceEligible item) async {
     final ok = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _SubmitSheet(service: widget.service, item: item),
@@ -269,9 +270,9 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -316,7 +317,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
           const SizedBox(height: 10),
           Text(
             item.name,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.adaptiveTextPrimary),
           ),
           const SizedBox(height: 6),
           Row(
@@ -325,7 +326,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               const SizedBox(width: 5),
               Text(
                 '${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -358,9 +359,9 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -399,14 +400,14 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               ),
               Text(
                 item.missingTypeLabel,
-                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 11.5, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             item.activityName,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.adaptiveTextPrimary),
           ),
           if (item.reason.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -609,7 +610,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: AppColors.adaptiveCard,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SafeArea(
@@ -623,7 +624,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: AppColors.adaptiveBorder,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -631,7 +632,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
               const SizedBox(height: 16),
               Text(
                 'Nộp minh chứng điểm danh',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary),
               ),
               const SizedBox(height: 4),
               Text(
@@ -647,7 +648,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
               TextField(
                 controller: _reasonController,
                 maxLines: 3,
-                style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 14, color: AppColors.adaptiveTextPrimary),
                 decoration: InputDecoration(
                   hintText: 'VD: Máy quét mã báo lỗi, điện thoại hết pin lúc check-out...',
                   filled: true,
@@ -655,7 +656,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: AppColors.adaptiveBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),

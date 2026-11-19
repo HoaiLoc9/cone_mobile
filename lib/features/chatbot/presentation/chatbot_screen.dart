@@ -96,7 +96,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: AppColors.adaptiveCard,
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.darkBlue.withValues(alpha: 0.08),
@@ -152,7 +152,7 @@ class _Bubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.primary : AppColors.card,
+          color: isUser ? AppColors.primary : AppColors.adaptiveCard,
           borderRadius: BorderRadius.circular(18).copyWith(
             bottomRight: isUser ? const Radius.circular(4) : null,
             bottomLeft: isUser ? null : const Radius.circular(4),
@@ -168,7 +168,7 @@ class _Bubble extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            color: isUser ? Colors.white : AppColors.textPrimary,
+            color: isUser ? Colors.white : AppColors.adaptiveTextPrimary,
             height: 1.35,
             fontWeight: FontWeight.w700,
           ),

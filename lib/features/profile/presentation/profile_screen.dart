@@ -228,11 +228,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            content: const Text(
+            content: Text(
               'Thông tin cá nhân của sinh viên cần được GVCN hoặc Ban cán sự kiểm tra và phê duyệt trước khi cập nhật chính thức.\n\nBạn có muốn gửi yêu cầu thay đổi thông tin này không?',
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: AppColors.adaptiveTextSecondary,
                 height: 1.45,
               ),
             ),
@@ -441,9 +441,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Vui lòng nhập mật khẩu đăng nhập để hoàn tất liên kết Face ID / Vân tay cho các lần đăng nhập tiếp theo:',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, color: AppColors.adaptiveTextSecondary),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -668,9 +668,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text('Đăng xuất tài khoản', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
           ],
         ),
-        content: const Text(
+        content: Text(
           'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại trên thiết bị này?',
-          style: TextStyle(fontSize: 14, height: 1.45, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 14, height: 1.45, color: AppColors.adaptiveTextSecondary),
         ),
         actions: [
           TextButton(

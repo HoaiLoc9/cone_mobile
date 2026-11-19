@@ -355,9 +355,9 @@ class _DynamicForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Biểu mẫu đăng ký',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
+            style: TextStyle(color: AppColors.adaptiveTextPrimary, fontSize: 18, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 14),
           ...schema.fields.map(
@@ -491,7 +491,7 @@ class _EvidenceField extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.adaptiveBackground,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -511,11 +511,11 @@ class _EvidenceField extends StatelessWidget {
           else ...[
             Text(
               field.required ? '${field.label} *' : field.label,
-              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
+              style: TextStyle(color: AppColors.adaptiveTextPrimary, fontWeight: FontWeight.w900),
             ),
             if (field.help.isNotEmpty) ...[
               const SizedBox(height: 5),
-              Text(field.help, style: const TextStyle(color: AppColors.textSecondary, height: 1.35)),
+              Text(field.help, style: TextStyle(color: AppColors.adaptiveTextSecondary, height: 1.35)),
             ],
           ],
           const SizedBox(height: 8),
@@ -533,7 +533,7 @@ class _EvidenceField extends StatelessWidget {
             ],
           ),
           if (existingFiles.isEmpty && uploads.isEmpty)
-            const Text('Chưa có file.', style: TextStyle(color: AppColors.textSecondary)),
+            Text('Chưa có file.', style: TextStyle(color: AppColors.adaptiveTextSecondary)),
           ...existingFiles.map(
             (file) => _FileChip(
               label: file.name.isEmpty ? file.path : file.name,
@@ -567,14 +567,14 @@ class _LegacyForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Hồ sơ đăng ký',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
+            style: TextStyle(color: AppColors.adaptiveTextPrimary, fontSize: 18, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Danh hiệu này chưa có form điện tử. Bạn có thể nộp bản khai và minh chứng như trên web.',
-            style: TextStyle(color: AppColors.textSecondary, height: 1.35),
+            style: TextStyle(color: AppColors.adaptiveTextSecondary, height: 1.35),
           ),
           const SizedBox(height: 14),
           _LegacyFileRow(
@@ -618,7 +618,7 @@ class _LegacyFileRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.adaptiveBackground,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -633,7 +633,7 @@ class _LegacyFileRow extends StatelessWidget {
                   upload?.name ?? current?.name ?? 'Chưa chọn file',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: AppColors.adaptiveTextSecondary),
                 ),
               ],
             ),
@@ -684,7 +684,7 @@ class _FileChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: removed ? AppColors.danger : AppColors.textPrimary,
+                color: removed ? AppColors.danger : AppColors.adaptiveTextPrimary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -749,7 +749,7 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -779,7 +779,7 @@ class _Message extends StatelessWidget {
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
+            color: isError ? AppColors.danger : AppColors.adaptiveTextSecondary,
             fontWeight: FontWeight.w800,
           ),
         ),

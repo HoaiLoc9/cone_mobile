@@ -1100,8 +1100,8 @@ class ProfileStatusScreen extends StatelessWidget {
                       status.note.isEmpty
                           ? 'Chưa có ghi chú từ admin.'
                           : status.note,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: AppColors.adaptiveTextSecondary,
                         height: 1.45,
                       ),
                     ),
@@ -1394,7 +1394,7 @@ class _SignatureRequestDetailScreenState
                         height: 220,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.adaptiveBorder),
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
@@ -1927,7 +1927,7 @@ class _ServiceScaffold extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
               child: Text(
                 subtitle,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppColors.adaptiveTextSecondary),
               ),
             ),
             Expanded(child: child),
@@ -2008,8 +2008,8 @@ class _InfoCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextSecondary,
                 height: 1.4,
               ),
             ),

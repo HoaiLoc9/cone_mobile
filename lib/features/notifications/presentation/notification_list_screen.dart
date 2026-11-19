@@ -229,6 +229,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       shape: const RoundedRectangleBorder(
@@ -278,8 +279,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                         const SizedBox(height: 4),
                         Text(
                           compactDate(item.createdAt),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: AppColors.adaptiveTextSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -302,16 +303,16 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: AppColors.adaptiveCard,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.adaptiveBorder),
                 ),
                 child: Text(
                   item.message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     height: 1.5,
-                    color: AppColors.textPrimary,
+                    color: AppColors.adaptiveTextPrimary,
                   ),
                 ),
               ),
@@ -359,8 +360,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: AppColors.adaptiveTextSecondary,
+                    side: BorderSide(color: AppColors.adaptiveBorder),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -684,7 +685,7 @@ class _FilterPill extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+                color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
               ),
               const SizedBox(width: 6),
               Text(
@@ -692,7 +693,7 @@ class _FilterPill extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  color: isSelected ? Colors.white : AppColors.adaptiveTextPrimary,
                 ),
               ),
               if (badgeCount != null) ...[
@@ -1038,7 +1039,7 @@ class _NotificationCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.5,
                               fontWeight: isUnread ? FontWeight.w900 : FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.adaptiveTextPrimary,
                             ),
                           ),
                         ),
@@ -1060,9 +1061,9 @@ class _NotificationCard extends StatelessWidget {
                       item.message,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                         height: 1.35,
                       ),
                     ),
@@ -1135,19 +1136,19 @@ class _EmptyStateView extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+                color: AppColors.adaptiveTextPrimary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
-                color: AppColors.textSecondary,
+                color: AppColors.adaptiveTextSecondary,
                 height: 1.4,
               ),
             ),

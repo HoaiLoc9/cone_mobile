@@ -1027,9 +1027,9 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.adaptiveBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -1065,7 +1065,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                  color: AppColors.adaptiveTextPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1140,9 +1140,9 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.adaptiveBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -1177,7 +1177,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.adaptiveTextPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -1253,9 +1253,9 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1265,17 +1265,17 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: AppColors.adaptiveTextPrimary,
             ),
           ),
           const SizedBox(height: 12),
           _buildRankRow('Xuất sắc', '90 - 100 điểm', const Color(0xFF10B981)),
-          Divider(height: 14, color: AppColors.border),
+          Divider(height: 14, color: AppColors.adaptiveBorder),
           _buildRankRow('Tốt', '80 - 89 điểm', const Color(0xFF2563EB)),
-          Divider(height: 14, color: AppColors.border),
+          Divider(height: 14, color: AppColors.adaptiveBorder),
           _buildRankRow('Khá', '65 - 79 điểm', const Color(0xFF0284C7)),
-          Divider(height: 14, color: AppColors.border),
-          _buildRankRow('Trung bình', '50 - 64 điểm', AppColors.textSecondary),
+          Divider(height: 14, color: AppColors.adaptiveBorder),
+          _buildRankRow('Trung bình', '50 - 64 điểm', AppColors.adaptiveTextSecondary),
         ],
       ),
     );

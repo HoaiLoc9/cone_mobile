@@ -235,7 +235,7 @@ class _ScanHint extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
@@ -253,11 +253,11 @@ class _ScanHint extends StatelessWidget {
             size: 34,
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Đưa mã QR điểm danh vào khung quét',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.adaptiveTextPrimary,
               fontWeight: FontWeight.w900,
               fontSize: 16,
             ),
@@ -268,7 +268,7 @@ class _ScanHint extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: message == null
-                  ? AppColors.textSecondary
+                  ? AppColors.adaptiveTextSecondary
                   : AppColors.danger,
               fontWeight: FontWeight.w700,
             ),
@@ -376,7 +376,7 @@ class _ResultCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -486,8 +486,8 @@ class _RowInfo extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextSecondary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -496,8 +496,8 @@ class _RowInfo extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextPrimary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -516,7 +516,7 @@ class _ScannerError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.textPrimary,
+      color: AppColors.adaptiveTextPrimary,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

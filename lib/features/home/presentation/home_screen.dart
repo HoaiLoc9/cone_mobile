@@ -28,7 +28,6 @@ import '../../profile/presentation/profile_screen.dart';
 import '../../qr_scan/data/qr_scan_service.dart';
 import '../../qr_scan/presentation/qr_scan_screen.dart';
 import '../../student_services/data/student_services_service.dart';
-import '../../student_services/presentation/other_services_screen.dart';
 import '../../student_services/presentation/student_service_screens.dart';
 import 'student_stats_screen.dart';
 
@@ -180,20 +179,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _openActivities() {
-    setState(() => _currentNavIndex = 1);
-  }
-
   void _openRegisteredActivities() {
     _pushScreen(
       RegisteredActivitiesScreen(
         service: ActivityService(token: _session.token),
       ),
     );
-  }
-
-  void _openStudentStats() {
-    setState(() => _currentNavIndex = 2);
   }
 
   void _openQrScan() {
@@ -274,14 +265,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     setState(() => _currentNavIndex = 4);
   }
 
-  void _openOtherServices() {
-    _pushScreen(OtherServicesScreen(service: _studentServicesService));
-  }
-
-  void _showAllServicesBottomSheet() {
-    _openOtherServices();
-  }
-
   Widget _buildCircularHeaderButton({
     required IconData icon,
     required String tooltip,
@@ -299,9 +282,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: AppColors.adaptiveCard,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 1.0),
+              border: Border.all(color: AppColors.adaptiveBorder, width: 1.0),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -313,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(icon, size: 20, color: AppColors.textPrimary),
+                Icon(icon, size: 20, color: AppColors.adaptiveTextPrimary),
                 if (hasBadge)
                   Positioned(
                     top: 8,
@@ -461,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary,
+                              color: AppColors.adaptiveTextPrimary,
                             ),
                           ),
                         ),
@@ -477,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                       ),
                     ),
                   ],
@@ -570,67 +553,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             onTap: _openActivitySuggestions,
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Tiện ích hệ thống',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.adaptiveTextPrimary,
-                                ),
-                              ),
-                              InkWell(
-                                onTap: _showAllServicesBottomSheet,
-                                borderRadius: BorderRadius.circular(8),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 2,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        'Tất cả tiện ích',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF2563EB),
-                                        ),
-                                      ),
-                                      SizedBox(width: 2),
-                                      Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 16,
-                                        color: Color(0xFF2563EB),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'Tiện ích hệ thống',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.adaptiveTextPrimary,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           _QuickAction3DGrid(
                             isWide: isWide,
-                            onActivities: _openActivities,
                             onRegisteredActivities: _openRegisteredActivities,
-                            onStats: _openStudentStats,
                             onDrl: _openDrl,
                             onEvidence: _openEvidence,
                             onAppellations: _openAppellations,
-                            onQr: _openQrScan,
-                            onNotifications: _openNotifications,
-                            onChatbot: _openChatbot,
                             onComplaints: _openComplaints,
                             onPermissionRequests: _openPermissionRequests,
                             onDocuments: _openDocuments,
                             onProfileStatus: _openProfileStatus,
                             onCv: _openCv,
-                            onActivitySuggestions: _openActivitySuggestions,
                             onSignatureRequests: _openSignatureRequests,
-                            onOtherServices: _openOtherServices,
                           ),
                           const SizedBox(height: 24),
                         ],
@@ -1119,12 +1062,12 @@ class _Dashboard3DGrid extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.card, AppColors.cardSubtle],
+                colors: [AppColors.adaptiveCard, AppColors.cardSubtle],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border, width: 1.0),
+              border: Border.all(color: AppColors.adaptiveBorder, width: 1.0),
               boxShadow: [
                 BoxShadow(
                   color: gradeColor.withValues(alpha: 0.14),
@@ -1163,10 +1106,10 @@ class _Dashboard3DGrid extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           semesterName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
+                            color: AppColors.adaptiveTextPrimary,
                           ),
                         ),
                       ],
@@ -1212,7 +1155,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                       height: 94,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.card,
+                        color: AppColors.adaptiveCard,
                         boxShadow: [
                           BoxShadow(
                             color: gradeColor.withValues(alpha: 0.18),
@@ -1248,12 +1191,12 @@ class _Dashboard3DGrid extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
+                              Text(
                                 '/100',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.adaptiveTextSecondary,
                                 ),
                               ),
                             ],
@@ -1276,7 +1219,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: AppColors.cardSubtle,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: AppColors.adaptiveBorder),
                             ),
                             child: Row(
                               children: [
@@ -1297,11 +1240,11 @@ class _Dashboard3DGrid extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Hoạt động kỳ này',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.adaptiveTextSecondary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -1309,10 +1252,10 @@ class _Dashboard3DGrid extends StatelessWidget {
                                         '$activityCount hoạt động đã tham gia',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textPrimary,
+                                          color: AppColors.adaptiveTextPrimary,
                                         ),
                                       ),
                                     ],
@@ -1331,7 +1274,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: AppColors.cardSubtle,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: AppColors.adaptiveBorder),
                             ),
                             child: Row(
                               children: [
@@ -1352,11 +1295,11 @@ class _Dashboard3DGrid extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Mục tiêu xếp loại',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.adaptiveTextSecondary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -1366,10 +1309,10 @@ class _Dashboard3DGrid extends StatelessWidget {
                                             : 'Cần thêm ${(80 - score).clamp(0, 100).toInt()}đ để đạt Tốt',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textPrimary,
+                                          color: AppColors.adaptiveTextPrimary,
                                         ),
                                       ),
                                     ],
@@ -1384,10 +1327,10 @@ class _Dashboard3DGrid extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Divider(height: 1, thickness: 0.8, color: AppColors.border),
+                Divider(height: 1, thickness: 0.8, color: AppColors.adaptiveBorder),
                 const SizedBox(height: 12),
                 // Footer thanh bấm vào xem chi tiết
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
@@ -1403,7 +1346,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
+                            color: AppColors.adaptiveTextSecondary,
                           ),
                         ),
                       ],
@@ -1444,50 +1387,36 @@ class _Dashboard3DGrid extends StatelessWidget {
 class _QuickAction3DGrid extends StatelessWidget {
   const _QuickAction3DGrid({
     required this.isWide,
-    required this.onActivities,
     required this.onRegisteredActivities,
-    required this.onStats,
     required this.onDrl,
     required this.onEvidence,
     required this.onAppellations,
-    required this.onQr,
-    required this.onNotifications,
-    required this.onChatbot,
     required this.onComplaints,
     required this.onPermissionRequests,
     required this.onDocuments,
     required this.onProfileStatus,
     required this.onCv,
-    required this.onActivitySuggestions,
     required this.onSignatureRequests,
-    required this.onOtherServices,
   });
 
   final bool isWide;
-  final VoidCallback onActivities;
   final VoidCallback onRegisteredActivities;
-  final VoidCallback onStats;
   final VoidCallback onDrl;
   final VoidCallback onEvidence;
   final VoidCallback onAppellations;
-  final VoidCallback onQr;
-  final VoidCallback onNotifications;
-  final VoidCallback onChatbot;
   final VoidCallback onComplaints;
   final VoidCallback onPermissionRequests;
   final VoidCallback onDocuments;
   final VoidCallback onProfileStatus;
   final VoidCallback onCv;
-  final VoidCallback onActivitySuggestions;
   final VoidCallback onSignatureRequests;
-  final VoidCallback onOtherServices;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 4 nút chức năng quan trọng nhất (tông màu xanh COne đồng bộ)
+        // 4 nút chức năng quan trọng (không trùng Bottom Bar, đồng bộ tông xanh COne)
         GridView.count(
           crossAxisCount: isWide ? 4 : 2,
           shrinkWrap: true,
@@ -1497,13 +1426,6 @@ class _QuickAction3DGrid extends StatelessWidget {
           childAspectRatio: isWide ? 2.5 : 2.05,
           children: [
             _FeatureCard3D(
-              title: 'Hoạt động',
-              subtitle: 'Tham gia & quản lý',
-              icon: Icons.event_available_rounded,
-              color: AppColors.primary,
-              onTap: onActivities,
-            ),
-            _FeatureCard3D(
               title: 'Bảng điểm ĐRL',
               subtitle: 'Xem kết quả rèn luyện',
               icon: Icons.bar_chart_rounded,
@@ -1511,19 +1433,26 @@ class _QuickAction3DGrid extends StatelessWidget {
               onTap: onDrl,
             ),
             _FeatureCard3D(
-              title: 'Thống kê',
-              subtitle: 'Số liệu & báo cáo',
-              icon: Icons.insights_rounded,
-              color: AppColors.primary,
-              badge: 'MỚI',
-              onTap: onStats,
-            ),
-            _FeatureCard3D(
               title: 'Minh chứng',
               subtitle: 'Tải lên & quản lý',
               icon: Icons.upload_file_rounded,
               color: AppColors.primary,
               onTap: onEvidence,
+            ),
+            _FeatureCard3D(
+              title: 'Đã đăng ký',
+              subtitle: 'Lịch hoạt động của bạn',
+              icon: Icons.event_note_rounded,
+              color: AppColors.primary,
+              onTap: onRegisteredActivities,
+            ),
+            _FeatureCard3D(
+              title: 'Danh hiệu',
+              subtitle: 'Thành tích của bạn',
+              icon: Icons.workspace_premium_rounded,
+              color: AppColors.primary,
+              badge: 'TOP',
+              onTap: onAppellations,
             ),
           ],
         ),
@@ -1559,17 +1488,6 @@ class _QuickAction3DGrid extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
             clipBehavior: Clip.none,
             children: [
-              _CircleServiceBubble(
-                icon: Icons.event_note_rounded,
-                label: 'Đã đăng ký',
-                onTap: onRegisteredActivities,
-              ),
-              _CircleServiceBubble(
-                icon: Icons.workspace_premium_rounded,
-                label: 'Danh hiệu',
-                badge: 'TOP',
-                onTap: onAppellations,
-              ),
               _CircleServiceBubble(
                 icon: Icons.warning_amber_rounded,
                 label: 'Khiếu nại',
@@ -1863,9 +1781,9 @@ class _DashboardFallback extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border, width: 1.0),
+        border: Border.all(color: AppColors.adaptiveBorder, width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
@@ -1899,7 +1817,7 @@ class _DashboardFallback extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: AppColors.adaptiveTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1908,7 +1826,7 @@ class _DashboardFallback extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.adaptiveTextSecondary,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1920,7 +1838,7 @@ class _DashboardFallback extends StatelessWidget {
             onPressed: onRetry,
             icon: Icon(
               Icons.refresh_rounded,
-              color: AppColors.textSecondary,
+              color: AppColors.adaptiveTextSecondary,
               size: 22,
             ),
           ),
@@ -1940,9 +1858,9 @@ class _DashboardSkeleton extends StatelessWidget {
     return Container(
       height: 90,
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
       child: const Center(
         child: CircularProgressIndicator(strokeWidth: 2.4),

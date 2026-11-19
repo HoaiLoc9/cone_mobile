@@ -227,9 +227,9 @@ class _RegisteredActivitiesScreenState
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.adaptiveBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -262,16 +262,16 @@ class _RegisteredActivitiesScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.card,
+          color: isSelected ? AppColors.primary : AppColors.adaptiveCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.adaptiveBorder,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -295,12 +295,12 @@ class _RegisteredActivitiesScreenState
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isAttended
                   ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                  : AppColors.border,
+                  : AppColors.adaptiveBorder,
             ),
             boxShadow: [
               BoxShadow(
@@ -378,7 +378,7 @@ class _RegisteredActivitiesScreenState
                   Expanded(
                     child: Text(
                       '${formatDateTime(item.timeStart)} - ${formatDateTime(item.timeStop)}',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -391,13 +391,13 @@ class _RegisteredActivitiesScreenState
                   Expanded(
                     child: Text(
                       item.location.isEmpty ? 'Chưa cập nhật địa điểm' : item.location,
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              Divider(height: 1, color: AppColors.border),
+              Divider(height: 1, color: AppColors.adaptiveBorder),
               const SizedBox(height: 8),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.end,

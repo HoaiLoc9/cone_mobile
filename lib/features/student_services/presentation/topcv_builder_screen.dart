@@ -2944,6 +2944,7 @@ class _TopCvEditorScreenState extends State<TopCvEditorScreen>
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) {

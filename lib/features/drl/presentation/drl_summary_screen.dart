@@ -341,9 +341,9 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.adaptiveBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -502,9 +502,9 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.adaptiveBorder),
           ),
           child: Row(
             children: [

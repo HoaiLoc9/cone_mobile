@@ -113,9 +113,9 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
               // Ô tìm kiếm danh hiệu
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: AppColors.adaptiveCard,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.adaptiveBorder),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
@@ -265,16 +265,16 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.card,
+          color: isSelected ? AppColors.primary : AppColors.adaptiveCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.adaptiveBorder,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? Colors.white : AppColors.adaptiveTextSecondary,
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
           ),
@@ -308,12 +308,12 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isRegistered
                   ? const Color(0xFF10B981).withValues(alpha: 0.35)
-                  : AppColors.border,
+                  : AppColors.adaptiveBorder,
             ),
             boxShadow: [
               BoxShadow(
@@ -406,7 +406,7 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
                             Expanded(
                               child: Text(
                                 'Thời hạn: ${compactDate(item.timeStart)} - ${compactDate(item.timeStop)}',
-                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -423,11 +423,11 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
                   item.note,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.35),
+                  style: TextStyle(fontSize: 12.5, color: AppColors.adaptiveTextSecondary, height: 1.35),
                 ),
               ],
               const SizedBox(height: 12),
-              Divider(height: 1, color: AppColors.border),
+              Divider(height: 1, color: AppColors.adaptiveBorder),
               const SizedBox(height: 10),
 
               Row(

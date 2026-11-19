@@ -141,6 +141,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -522,10 +523,10 @@ class _DescriptionSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Mô tả',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.adaptiveTextPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w900,
             ),
@@ -535,8 +536,8 @@ class _DescriptionSection extends StatelessWidget {
             activity.description.trim().isEmpty
                 ? 'Chưa có mô tả chi tiết.'
                 : activity.description.trim(),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: AppColors.adaptiveTextSecondary,
               height: 1.5,
               fontWeight: FontWeight.w600,
             ),
@@ -569,8 +570,8 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextSecondary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -579,8 +580,8 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               value.isEmpty ? '-' : value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: AppColors.adaptiveTextPrimary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -602,7 +603,7 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

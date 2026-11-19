@@ -322,11 +322,11 @@ class _SectionCard extends StatelessWidget {
         childrenPadding: const EdgeInsets.only(top: 8),
         title: Text(
           'Mục ${section.section}',
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
+          style: TextStyle(color: AppColors.adaptiveTextPrimary, fontWeight: FontWeight.w900),
         ),
         subtitle: Text(
           'Tạm tính: ${formatScore(section.capped)} điểm',
-          style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+          style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w700),
         ),
         children: section.criteria
             .map(
@@ -374,7 +374,7 @@ class _CriterionEditor extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.adaptiveBackground,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -382,18 +382,18 @@ class _CriterionEditor extends StatelessWidget {
         children: [
           Text(
             criterion.label.isEmpty ? criterion.key : criterion.label,
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
+            style: TextStyle(color: AppColors.adaptiveTextPrimary, fontWeight: FontWeight.w900),
           ),
           if (criterion.note.trim().isNotEmpty) ...[
             const SizedBox(height: 5),
-            Text(criterion.note, style: const TextStyle(color: AppColors.textSecondary, height: 1.35)),
+            Text(criterion.note, style: TextStyle(color: AppColors.adaptiveTextSecondary, height: 1.35)),
           ],
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MiniBadge(label: 'Max ${formatScore(criterion.maxDisplay)}', color: AppColors.textSecondary),
+              _MiniBadge(label: 'Max ${formatScore(criterion.maxDisplay)}', color: AppColors.adaptiveTextSecondary),
               if (!criterion.studentMayFill)
                 _MiniBadge(label: 'Tự động: ${_scoreOrDash(criterion.effectiveScore)}', color: AppColors.primary),
               if (criterion.requiresEvidence) _MiniBadge(label: 'Cần minh chứng', color: AppColors.danger),
@@ -414,7 +414,7 @@ class _CriterionEditor extends StatelessWidget {
           else
             Text(
               'Điểm sinh viên: ${_scoreOrDash(criterion.effectiveScore)}',
-              style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w800),
+              style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w800),
             ),
           if (showEvidence) ...[
             const SizedBox(height: 12),
@@ -459,10 +459,10 @@ class _EvidenceList extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Minh chứng',
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900),
+                style: TextStyle(color: AppColors.adaptiveTextPrimary, fontWeight: FontWeight.w900),
               ),
             ),
             if (mayEdit && criterion.studentMayFill)
@@ -474,9 +474,9 @@ class _EvidenceList extends StatelessWidget {
           ],
         ),
         if (criterion.evidenceStored.isEmpty && uploads.isEmpty)
-          const Text(
+          Text(
             'Chưa có minh chứng.',
-            style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+            style: TextStyle(color: AppColors.adaptiveTextSecondary, fontWeight: FontWeight.w700),
           ),
         ...criterion.evidenceStored.map(
           (file) => _EvidenceChip(
@@ -525,7 +525,7 @@ class _EvidenceChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: isRemoved ? AppColors.danger : AppColors.textPrimary,
+                color: isRemoved ? AppColors.danger : AppColors.adaptiveTextPrimary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -592,7 +592,7 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.adaptiveCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -622,7 +622,7 @@ class _Message extends StatelessWidget {
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isError ? AppColors.danger : AppColors.textSecondary,
+            color: isError ? AppColors.danger : AppColors.adaptiveTextSecondary,
             fontWeight: FontWeight.w800,
           ),
         ),
