@@ -695,6 +695,199 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _showSupportSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 30),
+        decoration: BoxDecoration(
+          color: AppColors.adaptiveCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: AppColors.adaptiveBorder),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: AppColors.adaptiveBorder,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.support_agent_rounded, color: AppColors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Phòng Công tác Sinh viên (CTSV)',
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.adaptiveTextPrimary,
+                          ),
+                        ),
+                        Text(
+                          'Liên hệ hỗ trợ học vụ & điểm rèn luyện',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.adaptiveTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              const _SupportContactRow(
+                icon: Icons.location_on_outlined,
+                text: 'Cơ sở 1: 287 Phan Đình Phùng, P.15, Q. Phú Nhuận, TP.HCM',
+              ),
+              const SizedBox(height: 10),
+              const _SupportContactRow(
+                icon: Icons.location_on_outlined,
+                text: 'Cơ sở 2: 12 Nguyễn Văn Bảo, P.4, Q. Gò Vấp, TP.HCM',
+              ),
+              const SizedBox(height: 10),
+              const _SupportContactRow(
+                icon: Icons.phone_in_talk_outlined,
+                text: 'Hotline: (028) 3844 6320 • (028) 3845 7440',
+              ),
+              const SizedBox(height: 10),
+              const _SupportContactRow(
+                icon: Icons.mail_outline_rounded,
+                text: 'Email: ctsv@cofer.edu.vn • ctsv.cofer@gmail.com',
+              ),
+              const SizedBox(height: 10),
+              const _SupportContactRow(
+                icon: Icons.access_time_rounded,
+                text: 'Giờ làm việc: Thứ 2 - Thứ 6 (7h30 - 11h30 | 13h00 - 17h00)',
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFaqSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 26),
+        decoration: BoxDecoration(
+          color: AppColors.adaptiveCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: AppColors.adaptiveBorder),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: AppColors.adaptiveBorder,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.help_outline_rounded, color: AppColors.primary, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Hỏi đáp thường gặp (FAQ)',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const _ProfileFaqTile(
+                  question: 'Khi nào hệ thống chốt Điểm rèn luyện học kỳ?',
+                  answer:
+                      'Hệ thống mở cổng tự đánh giá từ tuần 14 đến tuần 16 của học kỳ. Sau đó GVCN và Khoa sẽ duyệt điểm trong vòng 2 tuần trước khi có quyết định công nhận điểm chính thức từ Hiệu trưởng.',
+                ),
+                const SizedBox(height: 10),
+                const _ProfileFaqTile(
+                  question: 'Nếu tham gia hoạt động nhưng chưa được điểm danh thì sao?',
+                  answer:
+                      'Bạn hãy vào mục "Minh chứng" trên Trang chủ, tìm hoạt động đó và bấm "Gửi minh chứng" kèm ảnh chụp tại sự kiện để Ban tổ chức kiểm tra và cộng điểm bù.',
+                ),
+                const SizedBox(height: 10),
+                const _ProfileFaqTile(
+                  question: 'Tiêu chuẩn xếp loại điểm rèn luyện như thế nào?',
+                  answer:
+                      '• Xuất sắc: 90 - 100 điểm\n• Tốt: 80 - 89 điểm\n• Khá: 65 - 79 điểm\n• Trung bình: 50 - 64 điểm\n• Yếu: 35 - 49 điểm\n• Kém: dưới 35 điểm.',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _user;
@@ -703,23 +896,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         backgroundColor: AppColors.adaptiveAppBarBg,
-        surfaceTintColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Tài khoản & Cá nhân',
+          'Tài khoản',
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 22,
+            letterSpacing: -0.3,
             color: AppColors.adaptiveTextPrimary,
           ),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Đăng xuất',
-            onPressed: _confirmAndLogout,
-            icon: const Icon(Icons.logout_rounded, color: AppColors.danger),
-          ),
+          if (user != null)
+            IconButton(
+              tooltip: 'Thẻ sinh viên số & QR',
+              onPressed: () => DigitalStudentIdCardModal.show(context, user),
+              icon: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: const Icon(Icons.qr_code_rounded, color: AppColors.primary, size: 19),
+              ),
+            ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(
@@ -1055,10 +1258,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   secondary: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                      color: AppColors.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF059669), size: 22),
+                                    child: const Icon(Icons.fingerprint_rounded, color: AppColors.primary, size: 22),
                                   ),
                                   title: Text(
                                     'Vân tay & Face ID',
@@ -1082,10 +1285,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   secondary: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                                      color: AppColors.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(Icons.security_rounded, color: Color(0xFF6366F1), size: 22),
+                                    child: const Icon(Icons.security_rounded, color: AppColors.primary, size: 22),
                                   ),
                                   title: Text(
                                     'Khóa ứng dụng (App Lock)',
@@ -1108,9 +1311,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             const SizedBox(height: 18),
 
-                            // 4. NHÓM 3: TÙY CHỌN ỨNG DỤNG
+                            // 4. NHÓM 3: CÀI ĐẶT & HỖ TRỢ (GỌN GÀNG ĐỒNG BỘ MÀU)
                             _SectionGroup(
-                              title: 'Trải nghiệm ứng dụng',
+                              title: 'Cài đặt & Hỗ trợ',
                               icon: Icons.tune_rounded,
                               children: [
                                 SwitchListTile.adaptive(
@@ -1118,14 +1321,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   secondary: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: ThemeService.instance.isDarkMode
-                                          ? const Color(0xFF818CF8).withValues(alpha: 0.15)
-                                          : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                      color: AppColors.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       ThemeService.instance.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                                      color: ThemeService.instance.isDarkMode ? const Color(0xFF6366F1) : const Color(0xFFD97706),
+                                      color: AppColors.primary,
                                       size: 20,
                                     ),
                                   ),
@@ -1148,71 +1349,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     if (mounted) setState(() {});
                                   },
                                 ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 18),
-
-                            // 4B. NHÓM 4: HỖ TRỢ SINH VIÊN (PHÒNG CTSV)
-                            _SectionGroup(
-                              title: 'Hỗ trợ sinh viên (Phòng CTSV)',
-                              icon: Icons.support_agent_rounded,
-                              children: const [
-                                _SupportContactRow(
-                                  icon: Icons.location_on_outlined,
-                                  text: 'Cơ sở 1: 287 Phan Đình Phùng, P.15, Q. Phú Nhuận, TP.HCM',
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
+                                _ProfileActionRow(
+                                  icon: Icons.support_agent_rounded,
+                                  title: 'Hỗ trợ sinh viên (Phòng CTSV)',
+                                  subtitle: 'Địa chỉ cơ sở, hotline, email & giờ làm việc',
+                                  onTap: _showSupportSheet,
                                 ),
-                                SizedBox(height: 9),
-                                _SupportContactRow(
-                                  icon: Icons.location_on_outlined,
-                                  text: 'Cơ sở 2: 12 Nguyễn Văn Bảo, P.4, Q. Gò Vấp, TP.HCM',
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
+                                _ProfileActionRow(
+                                  icon: Icons.help_outline_rounded,
+                                  title: 'Hỏi đáp thường gặp (FAQ)',
+                                  subtitle: 'Quy chế chốt điểm, minh chứng & xếp loại ĐRL',
+                                  onTap: _showFaqSheet,
                                 ),
-                                SizedBox(height: 9),
-                                _SupportContactRow(
-                                  icon: Icons.phone_in_talk_outlined,
-                                  text: 'Hotline: (028) 3844 6320 • (028) 3845 7440',
-                                ),
-                                SizedBox(height: 9),
-                                _SupportContactRow(
-                                  icon: Icons.mail_outline_rounded,
-                                  text: 'Email: ctsv@cofer.edu.vn • ctsv.cofer@gmail.com',
-                                ),
-                                SizedBox(height: 9),
-                                _SupportContactRow(
-                                  icon: Icons.access_time_rounded,
-                                  text: 'Giờ làm việc: Thứ 2 - Thứ 6 (7h30 - 11h30 | 13h00 - 17h00)',
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
+                                _ProfileActionRow(
+                                  icon: Icons.sync_rounded,
+                                  title: 'Phiên bản ứng dụng',
+                                  subtitle: 'COne Mobile v1.0.4 • Kiểm tra bản cập nhật',
+                                  onTap: _checkUpdate,
                                 ),
                               ],
                             ),
 
-                            const SizedBox(height: 18),
-
-                            // 4C. NHÓM 5: HỎI ĐÁP THƯỜNG GẶP (FAQ)
-                            const _SectionGroup(
-                              title: 'Hỏi đáp thường gặp (FAQ)',
-                              icon: Icons.help_outline_rounded,
-                              children: [
-                                _ProfileFaqTile(
-                                  question: 'Khi nào hệ thống chốt Điểm rèn luyện học kỳ?',
-                                  answer:
-                                      'Hệ thống mở cổng tự đánh giá từ tuần 14 đến tuần 16 của học kỳ. Sau đó GVCN và Khoa sẽ duyệt điểm trong vòng 2 tuần trước khi có quyết định công nhận điểm chính thức từ Hiệu trưởng.',
-                                ),
-                                SizedBox(height: 8),
-                                _ProfileFaqTile(
-                                  question: 'Nếu tham gia hoạt động nhưng chưa được điểm danh thì sao?',
-                                  answer:
-                                      'Bạn hãy vào mục "Minh chứng" trên Trang chủ, tìm hoạt động đó và bấm "Gửi minh chứng" kèm ảnh chụp tại sự kiện để Ban tổ chức kiểm tra và cộng điểm bù.',
-                                ),
-                                SizedBox(height: 8),
-                                _ProfileFaqTile(
-                                  question: 'Tiêu chuẩn xếp loại điểm rèn luyện như thế nào?',
-                                  answer:
-                                      '• Xuất sắc: 90 - 100 điểm\n• Tốt: 80 - 89 điểm\n• Khá: 65 - 79 điểm\n• Trung bình: 50 - 64 điểm\n• Yếu: 35 - 49 điểm\n• Kém: dưới 35 điểm.',
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 22),
 
                             // 5. NÚT ĐĂNG XUẤT THIẾT KẾ MỀM MẠI
                             SizedBox(
@@ -1241,69 +1402,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             const SizedBox(height: 24),
 
-                            // 6. THÔNG TIN PHIÊN BẢN ỨNG DỤNG & KIỂM TRA CẬP NHẬT
+                            // 6. CHÚ THÍCH NHỎ CUỐI TRANG
                             Center(
-                              child: Column(
-                                children: [
-                                  InkWell(
-                                    onTap: _checkUpdate,
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.adaptiveCardSubtle,
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: AppColors.adaptiveBorder),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFF10B981),
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'COne Mobile v1.0.4 • Build 2026.11',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.adaptiveTextSecondary,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.adaptiveTextSecondary),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextButton.icon(
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                      minimumSize: Size.zero,
-                                    ),
-                                    onPressed: _checkUpdate,
-                                    icon: const Icon(Icons.sync_rounded, size: 15, color: AppColors.primary),
-                                    label: const Text(
-                                      'Kiểm tra bản cập nhật mới',
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Hệ thống Quản lý Điểm rèn luyện Sinh viên',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                'COne Mobile v1.0.4 • Hệ thống Quản lý Điểm rèn luyện',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.7),
+                                ),
                               ),
                             ),
                           ],
@@ -1332,14 +1439,14 @@ class _HeroStudentCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.25),
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.28),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -1530,19 +1637,9 @@ class _HeroStudentCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
+                  color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1819,6 +1916,74 @@ class _ProfileFaqTile extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileActionRow extends StatelessWidget {
+  const _ProfileActionRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14.5,
+                        color: AppColors.adaptiveTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.adaptiveTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ],
+          ),
         ),
       ),
     );
