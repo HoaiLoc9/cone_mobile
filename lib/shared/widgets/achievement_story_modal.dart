@@ -1,8 +1,9 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -150,27 +151,33 @@ class _AchievementStoryModalState extends State<AchievementStoryModal> {
     try {
       await Clipboard.setData(ClipboardData(text: _shareText));
       final pngBytes = await _captureStoryPng();
-      final pdfBytes = await _buildStoryPdfBytes(pngBytes);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đã sao chép caption Story và chuẩn bị thẻ thành tích chia sẻ lên $platformName!',
-          ),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
       final safeCode = widget.studentCode.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
-      await Printing.sharePdf(
-        bytes: pdfBytes,
-        filename: 'COne_Story_${safeCode}_${platformName.toLowerCase()}.pdf',
-        subject: 'Thành tích Điểm Rèn Luyện COne - ${widget.studentName}',
-        body: _shareText,
-      );
+
+      if (pngBytes != null) {
+        // Mở thẳng bảng chia sẻ của hệ điều hành (Zalo, Facebook, Instagram, Messenger...)
+        await SharePlus.instance.share(
+          ShareParams(
+            text: _shareText,
+            subject: 'Thành tích Điểm Rèn Luyện COne - ${widget.studentName}',
+            files: [
+              XFile.fromData(
+                pngBytes,
+                mimeType: 'image/png',
+                name: 'COne_Story_$safeCode.png',
+              ),
+            ],
+            fileNameOverrides: ['COne_Story_$safeCode.png'],
+          ),
+        );
+      } else {
+        final pdfBytes = await _buildStoryPdfBytes(null);
+        await Printing.sharePdf(
+          bytes: pdfBytes,
+          filename: 'COne_Story_$safeCode.pdf',
+          subject: 'Thành tích Điểm Rèn Luyện COne - ${widget.studentName}',
+          body: _shareText,
+        );
+      }
     } catch (_) {
       if (mounted) {
         _showSocialShareFallbackSheet(platformName);
@@ -631,7 +638,7 @@ class _AchievementStoryModalState extends State<AchievementStoryModal> {
                             )
                           : const Icon(Icons.share_rounded, size: 17),
                       label: const Text(
-                        'Chia sẻ MXH',
+                        'Chia sẻ ngay',
                         style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
                       ),
                     ),

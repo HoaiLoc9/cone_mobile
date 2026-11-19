@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
@@ -253,19 +254,27 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               ),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(ctx);
-                await Clipboard.setData(ClipboardData(text: googleCalUrl));
-                if (!ctx.mounted) return;
                 Navigator.of(ctx).pop();
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã sao chép link Google Calendar! Hãy dán vào trình duyệt để tạo lịch.'),
-                    backgroundColor: Color(0xFF2563EB),
-                  ),
-                );
+                var opened = false;
+                try {
+                  opened = await launchUrl(
+                    Uri.parse(googleCalUrl),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } catch (_) {}
+                if (!opened) {
+                  await Clipboard.setData(ClipboardData(text: googleCalUrl));
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Không mở được Google Calendar, đã sao chép link vào bộ nhớ tạm.'),
+                      backgroundColor: Color(0xFF2563EB),
+                    ),
+                  );
+                }
               },
-              icon: const Icon(Icons.link_rounded),
+              icon: const Icon(Icons.open_in_new_rounded),
               label: const Text(
-                'Mở Google Calendar / Sao chép link',
+                'Mở Google Calendar',
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
