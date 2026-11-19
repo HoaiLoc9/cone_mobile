@@ -18,6 +18,11 @@ class BiometricAuthService {
   static const String _biometricRoleKey = 'cone_bio_saved_role';
   static const String _appLockEnabledKey = 'cone_app_lock_enabled';
 
+  bool _isAuthenticating = false;
+
+  /// Cho biết hộp thoại xác thực sinh trắc học của hệ điều hành có đang hiển thị hay không
+  bool get isAuthenticating => _isAuthenticating;
+
   /// Kiểm tra thiết bị có hỗ trợ phần cứng sinh trắc học không (Android, iOS Native & iOS Safari PWA/Web)
   Future<bool> isBiometricsAvailable() async {
     if (kIsWeb) {
@@ -156,10 +161,12 @@ class BiometricAuthService {
   Future<bool> authenticate({
     String reason = 'Xác thực vân tay hoặc Face ID để tiếp tục',
   }) async {
-    if (kIsWeb) {
-      return await BiometricHelper.authenticate(reason);
-    }
+    if (_isAuthenticating) return false;
+    _isAuthenticating = true;
     try {
+      if (kIsWeb) {
+        return await BiometricHelper.authenticate(reason);
+      }
       final available = await isBiometricsAvailable();
       if (!available) return false;
 
@@ -170,6 +177,11 @@ class BiometricAuthService {
     } catch (e) {
       debugPrint('[Biometric] Lỗi xác thực: $e');
       return false;
+    } finally {
+      // Giữ cờ true thêm 600ms để đảm bảo các sự kiện lifecycle resume
+      // phát sinh khi đóng hộp thoại native được bỏ qua hoàn toàn.
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      _isAuthenticating = false;
     }
   }
 }

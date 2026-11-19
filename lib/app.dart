@@ -32,6 +32,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
   bool _isCheckingSession = true;
   bool _isAppLocked = false;
   bool _isAuthenticatingLock = false;
+  bool _wasBackgrounded = false;
+  DateTime? _lastUnlockedAt;
 
   @override
   void initState() {
@@ -57,23 +59,49 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkAppLockOnResume();
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      // Ứng dụng thực sự bị đẩy xuống nền (người dùng nhấn Home, đổi app, tắt màn hình).
+      // Bỏ qua nếu đang hiển thị hộp thoại xác thực sinh trắc học của hệ điều hành.
+      if (!BiometricAuthService.instance.isAuthenticating) {
+        _wasBackgrounded = true;
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      // Chỉ kiểm tra khóa app khi người dùng thực sự quay lại từ background
+      if (_wasBackgrounded) {
+        _wasBackgrounded = false;
+        _handleAppResumeFromBackground();
+      }
     }
   }
 
-  Future<void> _checkAppLockOnResume() async {
-    if (_session == null || _isAuthenticatingLock) return;
+  Future<void> _handleAppResumeFromBackground() async {
+    if (_session == null) return;
     try {
       final isLockEnabled = await BiometricAuthService.instance.isAppLockEnabled();
       if (!isLockEnabled) return;
 
-      if (mounted) setState(() => _isAppLocked = true);
-      _isAuthenticatingLock = true;
+      // Tránh lặp: Nếu vừa mới mở khóa thành công trong 2 giây thì bỏ qua
+      if (_lastUnlockedAt != null &&
+          DateTime.now().difference(_lastUnlockedAt!) < const Duration(seconds: 2)) {
+        return;
+      }
+
+      if (mounted) {
+        setState(() => _isAppLocked = true);
+      }
+      _unlockAppWithBiometric();
+    } catch (_) {}
+  }
+
+  Future<void> _unlockAppWithBiometric() async {
+    if (_session == null || _isAuthenticatingLock) return;
+    _isAuthenticatingLock = true;
+    try {
       final authenticated = await BiometricAuthService.instance.authenticate(
         reason: 'Xác thực sinh trắc học để mở khóa ứng dụng COne',
       );
       if (authenticated && mounted) {
+        _lastUnlockedAt = DateTime.now();
         setState(() => _isAppLocked = false);
       }
     } catch (_) {
@@ -104,6 +132,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
       setState(() {
         _session = null;
         _adminSession = null;
+        _isAppLocked = false;
+        _wasBackgrounded = false;
       });
 
       _messengerKey.currentState?.showSnackBar(
@@ -136,6 +166,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
         setState(() {
           _session = savedSession;
           _isCheckingSession = false;
+          _isAppLocked = false;
+          _wasBackgrounded = false;
         });
         return;
       }
@@ -144,6 +176,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
         setState(() {
           _adminSession = savedAdmin;
           _isCheckingSession = false;
+          _isAppLocked = false;
+          _wasBackgrounded = false;
         });
         return;
       }
@@ -157,6 +191,9 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
     setState(() {
       _session = session;
       _adminSession = null;
+      _isAppLocked = false;
+      _wasBackgrounded = false;
+      _lastUnlockedAt = DateTime.now();
     });
   }
 
@@ -164,6 +201,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
     setState(() {
       _adminSession = session;
       _session = null;
+      _isAppLocked = false;
+      _wasBackgrounded = false;
     });
   }
 
@@ -172,7 +211,11 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
       await _authService.clearSavedSession();
     } catch (_) {}
     if (mounted) {
-      setState(() => _session = null);
+      setState(() {
+        _session = null;
+        _isAppLocked = false;
+        _wasBackgrounded = false;
+      });
     }
     _authService.logout().catchError((_) {});
   }
@@ -182,7 +225,11 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
       await _adminService.clearSavedSession();
     } catch (_) {}
     if (mounted) {
-      setState(() => _adminSession = null);
+      setState(() {
+        _adminSession = null;
+        _isAppLocked = false;
+        _wasBackgrounded = false;
+      });
     }
     _adminService.logout().catchError((_) {});
   }
@@ -223,9 +270,25 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: _checkAppLockOnResume,
+                onPressed: _unlockAppWithBiometric,
                 icon: const Icon(Icons.fingerprint_rounded, size: 22),
                 label: const Text('Mở khóa ngay', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () async {
+                  setState(() => _isAppLocked = false);
+                  await _handleLogout();
+                },
+                icon: const Icon(Icons.logout_rounded, color: Color(0xFF94A3B8), size: 18),
+                label: const Text(
+                  'Đăng xuất tài khoản',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
+                ),
               ),
             ],
           ),
