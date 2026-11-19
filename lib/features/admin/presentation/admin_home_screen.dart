@@ -1,9 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../shared/widgets/cone_card.dart';
-import '../../../shared/widgets/feature_card.dart';
-import '../../../shared/widgets/section_header.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 import 'admin_account_screen.dart';
@@ -11,7 +9,6 @@ import 'admin_activities_screen.dart';
 import 'admin_appellation_registrations_screen.dart';
 import 'admin_business_list_screen.dart';
 import 'admin_drl_assessments_screen.dart';
-import 'admin_service_modules_screen.dart';
 import 'admin_students_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -48,21 +45,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  void _openAppellations() {
-    setState(() => _selectedIndex = 1);
-  }
-
-  void _openDrl() {
-    setState(() => _selectedIndex = 2);
-  }
-
-  void _openStudents() {
-    _push(AdminStudentsScreen(service: _service));
-  }
-
-  void _openActivities() {
-    _push(AdminActivitiesScreen(service: _service));
-  }
+  void _openAppellations() => setState(() => _selectedIndex = 1);
+  void _openDrl() => setState(() => _selectedIndex = 2);
+  void _openStudents() => _push(AdminStudentsScreen(service: _service));
+  void _openActivities() => _push(AdminActivitiesScreen(service: _service));
 
   void _openBusinessList({
     required String title,
@@ -81,136 +67,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  void _openServiceModules() {
-    _push(
-      AdminServiceModulesScreen(
-        title: 'Nghiệp vụ CTSV/QTC1',
-        subtitle:
-            'Hệ thống quản lý hoạt động và điểm rèn luyện đồng bộ dữ liệu thời gian thực.',
-        modules: [
-          AdminServiceModule(
-            name: 'Quản lý khiếu nại',
-            description: 'Danh sách, phản hồi và cập nhật trạng thái đơn.',
-            icon: Icons.report_problem_outlined,
-            api: '/mobile/admin/complaints',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Quản lý khiếu nại',
-              path: '/mobile/admin/complaints',
-              icon: Icons.report_problem_outlined,
-              action: AdminBusinessAction.resolveComplaint,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Quản lý giấy xin phép',
-            description: 'Duyệt hoặc từ chối giấy vắng, bù, miễn hoạt động.',
-            icon: Icons.assignment_turned_in_outlined,
-            api: '/mobile/admin/permission-requests',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Quản lý giấy xin phép',
-              path: '/mobile/admin/permission-requests',
-              icon: Icons.assignment_turned_in_outlined,
-              action: AdminBusinessAction.approveRejectPermission,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Tài liệu/hồ sơ sinh viên',
-            description: 'Xem, duyệt hoặc từ chối tài liệu và minh chứng.',
-            icon: Icons.folder_copy_outlined,
-            api: '/mobile/admin/documents',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Tài liệu sinh viên',
-              path: '/mobile/admin/documents',
-              icon: Icons.folder_copy_outlined,
-              action: AdminBusinessAction.approveRejectDocument,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Trạng thái hồ sơ',
-            description: 'Cập nhật trạng thái hồ sơ cá nhân và ghi chú xử lý.',
-            icon: Icons.assignment_ind_outlined,
-            api: '/mobile/admin/profile-statuses',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Trạng thái hồ sơ',
-              path: '/mobile/admin/profile-statuses',
-              icon: Icons.assignment_ind_outlined,
-              action: AdminBusinessAction.updateProfileStatus,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Thông báo',
-            description: 'Xem và gửi thông báo app cho sinh viên.',
-            icon: Icons.notifications_active_outlined,
-            api: '/mobile/admin/notifications',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Thông báo quản trị',
-              path: '/mobile/admin/notifications',
-              icon: Icons.notifications_active_outlined,
-              action: AdminBusinessAction.sendNotification,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Tỷ lệ tham gia',
-            description: 'Xem thống kê participation theo phạm vi tài khoản.',
-            icon: Icons.query_stats_outlined,
-            api: '/mobile/admin/participation-rate',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Tỷ lệ tham gia',
-              path: '/mobile/admin/participation-rate',
-              icon: Icons.query_stats_outlined,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Audit log',
-            description: 'Xem lịch sử thao tác hệ thống.',
-            icon: Icons.security_outlined,
-            api: '/mobile/admin/audit-logs',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Audit log',
-              path: '/mobile/admin/audit-logs',
-              icon: Icons.security_outlined,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Backup hệ thống',
-            description: 'Xem backup; tạo backup chỉ dành cho tài khoản level 0.',
-            icon: Icons.backup_outlined,
-            api: '/mobile/admin/backups',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Backup hệ thống',
-              path: '/mobile/admin/backups',
-              icon: Icons.backup_outlined,
-              action: AdminBusinessAction.createBackup,
-            ),
-          ),
-          const AdminServiceModule(
-            name: 'QR code điểm danh',
-            description:
-                'Backend cần API chọn hoạt động/tạo QR/cập nhật hạn QR đầy đủ cho mobile.',
-            icon: Icons.qr_code_2_outlined,
-            api: '/mobile/admin/activities/{id}/qr-codes',
-            ready: false,
-          ),
-          const AdminServiceModule(
-            name: 'Cán bộ lớp',
-            description:
-                'Backend cần API danh sách lớp và CRUD cán bộ lớp để mobile thao tác trọn vẹn.',
-            icon: Icons.groups_2_outlined,
-            api: '/mobile/admin/class-officers',
-            ready: false,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTabNavigator(int index, Widget child) {
     return Navigator(
       key: _navigatorKeys[index],
@@ -218,22 +74,65 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 11) return 'Chào buổi sáng';
+    if (h < 14) return 'Chào buổi trưa';
+    if (h < 18) return 'Chào buổi chiều';
+    return 'Chào buổi tối';
+  }
+
   Widget _buildOverviewTab() {
     final admin = widget.session.admin;
+    final displayName = admin.name.isEmpty ? 'Phòng CTSV' : admin.name;
+
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: Text('CTSV: ${admin.name.isEmpty ? admin.email : admin.name}'),
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _greeting(),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppColors.adaptiveTextPrimary,
+              ),
+            ),
+            Text(
+              'COne • Cổng Quản trị CTSV',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            tooltip: 'Tải lại',
+            tooltip: 'Làm mới',
             onPressed: _reload,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: AppColors.adaptiveCard,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.adaptiveBorder),
+              ),
+              child: Icon(
+                Icons.refresh_rounded,
+                size: 18,
+                color: AppColors.adaptiveTextPrimary,
+              ),
+            ),
           ),
-          IconButton(
-            tooltip: 'Đăng xuất',
-            onPressed: widget.onLogout,
-            icon: const Icon(Icons.logout_rounded),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(
@@ -245,9 +144,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               return SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
-                  isWide ? 32 : 18,
-                  12,
-                  isWide ? 32 : 18,
+                  isWide ? 28 : 16,
+                  10,
+                  isWide ? 28 : 16,
                   28,
                 ),
                 child: Center(
@@ -256,18 +155,20 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _AdminCard(admin: admin),
-                        const SizedBox(height: 22),
+                        // 1. Thẻ Quản trị viên (COne Blue)
+                        _AdminHeroCard(
+                          name: displayName,
+                          email: admin.email,
+                          roleLabel: '${admin.roleName} • ${admin.roleCode.toUpperCase()}',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 2. Chỉ số tổng quan + Chức năng
                         FutureBuilder<AdminDashboard>(
                           future: _future,
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(30),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
+                              return const ShimmerListLoading(itemCount: 3);
                             }
                             if (snapshot.hasError) {
                               return _ErrorCard(
@@ -279,54 +180,172 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _StatsGrid(dashboard: dashboard, isWide: isWide),
-                                const SizedBox(height: 26),
-                                const SectionHeader(title: 'Quản trị nhanh'),
-                                const SizedBox(height: 14),
+                                // Thẻ 4 chỉ số KPI gọn 1 khối (bấm được vào từng mục)
+                                _CompactAdminKpiCard(
+                                  dashboard: dashboard,
+                                  onStudents: _openStudents,
+                                  onActivities: _openActivities,
+                                  onAppellations: _openAppellations,
+                                  onDrl: _openDrl,
+                                ),
+                                const SizedBox(height: 20),
+
+                                // 4 chức năng quản trị chính (2x2 đồng bộ màu xanh COne)
+                                Text(
+                                  'Quản trị chính',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.adaptiveTextPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
                                 GridView.count(
-                                  crossAxisCount: isWide ? 3 : 2,
+                                  crossAxisCount: isWide ? 4 : 2,
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
-                                  mainAxisSpacing: 14,
-                                  crossAxisSpacing: 14,
-                                  childAspectRatio: isWide ? 1.2 : .98,
+                                  mainAxisSpacing: 10,
+                                  crossAxisSpacing: 10,
+                                  childAspectRatio: isWide ? 2.4 : 2.05,
                                   children: [
-                                    FeatureCard(
-                                      title: 'Hồ sơ danh hiệu',
-                                      subtitle: 'Xem đăng ký',
-                                      icon: Icons.workspace_premium_outlined,
-                                      color: AppColors.warning,
-                                      onTap: _openAppellations,
-                                    ),
-                                    FeatureCard(
-                                      title: 'Duyệt DRL',
-                                      subtitle: 'Phiếu rèn luyện',
-                                      icon: Icons.fact_check_outlined,
-                                      color: AppColors.success,
+                                    _AdminActionCard(
+                                      title: 'Duyệt ĐRL',
+                                      subtitle: '${dashboard.pendingDrlAssessments} phiếu chờ',
+                                      icon: Icons.fact_check_rounded,
                                       onTap: _openDrl,
                                     ),
-                                    FeatureCard(
-                                      title: 'Sinh viên khoa',
-                                      subtitle: 'Danh sách theo phạm vi',
-                                      icon: Icons.groups_2_outlined,
-                                      color: AppColors.primary,
+                                    _AdminActionCard(
+                                      title: 'Danh hiệu',
+                                      subtitle: '${dashboard.pendingAppellations} hồ sơ chờ',
+                                      icon: Icons.workspace_premium_rounded,
+                                      onTap: _openAppellations,
+                                    ),
+                                    _AdminActionCard(
+                                      title: 'Sinh viên',
+                                      subtitle: '${dashboard.totalStudents} sinh viên',
+                                      icon: Icons.groups_rounded,
                                       onTap: _openStudents,
                                     ),
-                                    FeatureCard(
+                                    _AdminActionCard(
                                       title: 'Hoạt động',
-                                      subtitle: 'Danh sách hoạt động',
-                                      icon: Icons.event_available_outlined,
-                                      color: AppColors.purple,
+                                      subtitle: '${dashboard.totalActivities} hoạt động',
+                                      icon: Icons.event_available_rounded,
                                       onTap: _openActivities,
                                     ),
-                                    FeatureCard(
-                                      title: 'Nghiệp vụ CTSV',
-                                      subtitle: 'Đơn từ, hồ sơ, thống kê',
-                                      icon: Icons.admin_panel_settings_outlined,
-                                      color: AppColors.darkBlue,
-                                      onTap: _openServiceModules,
+                                  ],
+                                ),
+                                const SizedBox(height: 22),
+
+                                // Thanh trượt ngang hình tròn kiểu Messenger — Nghiệp vụ CTSV
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Nghiệp vụ CTSV',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.adaptiveTextPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Trượt ngang →',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.adaptiveTextSecondary,
+                                      ),
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 104,
+                                  child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      _AdminCircleAction(
+                                        icon: Icons.report_problem_outlined,
+                                        label: 'Khiếu nại',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Quản lý khiếu nại',
+                                          path: '/mobile/admin/complaints',
+                                          icon: Icons.report_problem_outlined,
+                                          action: AdminBusinessAction.resolveComplaint,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.assignment_turned_in_outlined,
+                                        label: 'Giấy xin phép',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Quản lý giấy xin phép',
+                                          path: '/mobile/admin/permission-requests',
+                                          icon: Icons.assignment_turned_in_outlined,
+                                          action: AdminBusinessAction.approveRejectPermission,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.folder_copy_outlined,
+                                        label: 'Tài liệu SV',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Tài liệu sinh viên',
+                                          path: '/mobile/admin/documents',
+                                          icon: Icons.folder_copy_outlined,
+                                          action: AdminBusinessAction.approveRejectDocument,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.assignment_ind_outlined,
+                                        label: 'Hồ sơ SV',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Trạng thái hồ sơ',
+                                          path: '/mobile/admin/profile-statuses',
+                                          icon: Icons.assignment_ind_outlined,
+                                          action: AdminBusinessAction.updateProfileStatus,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.notifications_active_outlined,
+                                        label: 'Gửi thông báo',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Thông báo quản trị',
+                                          path: '/mobile/admin/notifications',
+                                          icon: Icons.notifications_active_outlined,
+                                          action: AdminBusinessAction.sendNotification,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.query_stats_outlined,
+                                        label: 'Tỷ lệ tham gia',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Tỷ lệ tham gia',
+                                          path: '/mobile/admin/participation-rate',
+                                          icon: Icons.query_stats_outlined,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.security_outlined,
+                                        label: 'Audit log',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Audit log',
+                                          path: '/mobile/admin/audit-logs',
+                                          icon: Icons.security_outlined,
+                                        ),
+                                      ),
+                                      _AdminCircleAction(
+                                        icon: Icons.backup_outlined,
+                                        label: 'Backup',
+                                        onTap: () => _openBusinessList(
+                                          title: 'Backup hệ thống',
+                                          path: '/mobile/admin/backups',
+                                          icon: Icons.backup_outlined,
+                                          action: AdminBusinessAction.createBackup,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             );
@@ -347,6 +366,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       body: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
@@ -383,50 +403,65 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
+      bottomNavigationBar: _AdminBottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
           if (_selectedIndex == index) {
             _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
           } else {
             setState(() => _selectedIndex = index);
           }
         },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Tổng quan'),
-          NavigationDestination(icon: Icon(Icons.emoji_events_outlined), label: 'Danh hiệu'),
-          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), label: 'DRL'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Tài khoản'),
-        ],
       ),
     );
   }
 }
 
-class _AdminCard extends StatelessWidget {
-  const _AdminCard({required this.admin});
+class _AdminHeroCard extends StatelessWidget {
+  const _AdminHeroCard({
+    required this.name,
+    required this.email,
+    required this.roleLabel,
+  });
 
-  final AdminUser admin;
+  final String name;
+  final String email;
+  final String roleLabel;
 
   @override
   Widget build(BuildContext context) {
-    return COneCard(
-      padding: const EdgeInsets.all(22),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.darkBlue, AppColors.primary],
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.24),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 58,
-            height: 58,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(18),
+              color: Colors.white.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
             ),
-            child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 34),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -434,15 +469,43 @@ class _AdminCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  admin.name.isEmpty ? 'Phòng Công tác Sinh viên' : admin.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900),
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.2,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(admin.email, style: TextStyle(color: Colors.white.withValues(alpha: 0.84))),
-                const SizedBox(height: 8),
+                const SizedBox(height: 2),
                 Text(
-                  '${admin.roleName} • ${admin.roleCode.toUpperCase()}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    fontSize: 12.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    roleLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -453,49 +516,301 @@ class _AdminCard extends StatelessWidget {
   }
 }
 
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.dashboard, required this.isWide});
+class _CompactAdminKpiCard extends StatelessWidget {
+  const _CompactAdminKpiCard({
+    required this.dashboard,
+    required this.onStudents,
+    required this.onActivities,
+    required this.onAppellations,
+    required this.onDrl,
+  });
 
   final AdminDashboard dashboard;
-  final bool isWide;
+  final VoidCallback onStudents;
+  final VoidCallback onActivities;
+  final VoidCallback onAppellations;
+  final VoidCallback onDrl;
 
   @override
   Widget build(BuildContext context) {
-    final stats = [
-      ('Sinh viên', dashboard.totalStudents, Icons.groups_2_outlined, AppColors.primary),
-      ('Hoạt động', dashboard.totalActivities, Icons.event_available_outlined, AppColors.purple),
-      ('Chờ danh hiệu', dashboard.pendingAppellations, Icons.workspace_premium_outlined, AppColors.warning),
-      ('Chờ duyệt DRL', dashboard.pendingDrlAssessments, Icons.fact_check_outlined, AppColors.success),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: stats.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isWide ? 4 : 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: isWide ? 1.45 : 1.25,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        return COneCard(
-          padding: const EdgeInsets.all(16),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell('${dashboard.totalStudents}', 'Sinh viên', onStudents),
+            VerticalDivider(width: 1, color: AppColors.adaptiveBorder),
+            _kpiCell('${dashboard.totalActivities}', 'Hoạt động', onActivities),
+            VerticalDivider(width: 1, color: AppColors.adaptiveBorder),
+            _kpiCell(
+              '${dashboard.pendingAppellations}',
+              'Chờ DH',
+              onAppellations,
+              highlight: dashboard.pendingAppellations > 0,
+            ),
+            VerticalDivider(width: 1, color: AppColors.adaptiveBorder),
+            _kpiCell(
+              '${dashboard.pendingDrlAssessments}',
+              'Chờ ĐRL',
+              onDrl,
+              highlight: dashboard.pendingDrlAssessments > 0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell(
+    String value,
+    String label,
+    VoidCallback onTap, {
+    bool highlight = false,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(stat.$3, color: stat.$4),
-              Text(stat.$2.toString(), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
               Text(
-                stat.$1,
-                style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: highlight ? AppColors.primary : AppColors.adaptiveTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.adaptiveTextSecondary,
+                ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminActionCard extends StatelessWidget {
+  const _AdminActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.adaptiveCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.adaptiveBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.adaptiveTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.adaptiveTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminCircleAction extends StatelessWidget {
+  const _AdminCircleAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark;
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          width: 72,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark
+                      ? AppColors.primary.withValues(alpha: 0.16)
+                      : const Color(0xFFEFF6FF),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.primary.withValues(alpha: 0.45)
+                        : const Color(0xFFBFDBFE),
+                    width: 1.3,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: isDark ? const Color(0xFF60A5FA) : AppColors.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminBottomNavBar extends StatelessWidget {
+  const _AdminBottomNavBar({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        border: Border(
+          top: BorderSide(color: AppColors.adaptiveBorder, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _item(0, Icons.dashboard_rounded, 'Tổng quan'),
+              _item(1, Icons.workspace_premium_rounded, 'Danh hiệu'),
+              _item(2, Icons.fact_check_rounded, 'Duyệt ĐRL'),
+              _item(3, Icons.person_rounded, 'Tài khoản'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _item(int index, IconData icon, String label) {
+    final active = currentIndex == index;
+    final color = active ? AppColors.primary : AppColors.adaptiveTextSecondary;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onTap(index),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -510,21 +825,34 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.danger.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Không tải được dữ liệu admin', style: TextStyle(fontWeight: FontWeight.w900)),
+          Text(
+            'Không tải được dữ liệu quản trị',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.adaptiveTextPrimary,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text(message, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.adaptiveTextSecondary,
+            ),
+          ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, size: 17),
             label: const Text('Thử lại'),
           ),
         ],

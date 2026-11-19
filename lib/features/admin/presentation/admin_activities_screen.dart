@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../shared/widgets/app_state_view.dart';
-import '../../../shared/widgets/cone_card.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 
@@ -34,29 +34,48 @@ class _AdminActivitiesScreenState extends State<AdminActivitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: const Text('Hoạt động CTSV'),
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Quản lý hoạt động',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            color: AppColors.adaptiveTextPrimary,
+          ),
+        ),
         actions: [
-          IconButton(onPressed: _reload, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: _reload,
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
+          ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
+        ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _reload(),
+              style: TextStyle(color: AppColors.adaptiveTextPrimary, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Tìm tên hoạt động',
-                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'Tìm tên hoạt động...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
                 suffixIcon: IconButton(
                   onPressed: () {
                     _searchController.clear();
                     _reload();
                   },
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(Icons.close_rounded, size: 18),
                 ),
               ),
             ),
@@ -66,7 +85,9 @@ class _AdminActivitiesScreenState extends State<AdminActivitiesScreen> {
               future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const SingleChildScrollView(
+                    child: ShimmerListLoading(itemCount: 5),
+                  );
                 }
                 if (snapshot.hasError) {
                   return AppStateView(
@@ -90,9 +111,9 @@ class _AdminActivitiesScreenState extends State<AdminActivitiesScreen> {
                 return RefreshIndicator(
                   onRefresh: () async => _reload(),
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                     itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) =>
                         _ActivityCard(activity: items[index]),
                   ),
@@ -113,25 +134,33 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return COneCard(
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.adaptiveBorder),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: .11),
-                  borderRadius: BorderRadius.circular(17),
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
-                  Icons.event_available_outlined,
-                  color: AppColors.purple,
+                  Icons.event_available_rounded,
+                  color: AppColors.primary,
+                  size: 20,
                 ),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,35 +169,41 @@ class _ActivityCard extends StatelessWidget {
                       activity.name.isEmpty ? 'Hoạt động' : activity.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.adaptiveTextPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      activity.semester.isEmpty
-                          ? activity.department
-                          : activity.semester,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
+                    if (activity.semester.isNotEmpty || activity.department.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        activity.semester.isEmpty
+                            ? activity.department
+                            : activity.semester,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.adaptiveTextSecondary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
-              _InfoChip(label: _statusLabel(activity.status)),
-              if (activity.timeStart.isNotEmpty)
-                _InfoChip(label: 'Bắt đầu: ${activity.timeStart}'),
+              _StatusBadge(label: _statusLabel(activity.status)),
               if (activity.points != null)
-                _InfoChip(label: '${activity.points!.toStringAsFixed(1)} điểm'),
+                _InfoChip(label: '+${activity.points!.toStringAsFixed(activity.points! % 1 == 0 ? 0 : 1)} điểm'),
               if (activity.maxRegistrations > 0)
                 _InfoChip(label: 'Tối đa ${activity.maxRegistrations} SV'),
+              if (activity.timeStart.isNotEmpty)
+                _InfoChip(label: activity.timeStart),
             ],
           ),
         ],
@@ -187,6 +222,31 @@ class _ActivityCard extends StatelessWidget {
   }
 }
 
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoChip extends StatelessWidget {
   const _InfoChip({required this.label});
 
@@ -195,17 +255,18 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.adaptiveCardSubtle,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
+        style: TextStyle(
+          color: AppColors.adaptiveTextSecondary,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

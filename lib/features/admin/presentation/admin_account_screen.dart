@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../shared/widgets/cone_card.dart';
+import '../../../core/services/theme_service.dart';
 import '../data/admin_models.dart';
 
-class AdminAccountScreen extends StatelessWidget {
+class AdminAccountScreen extends StatefulWidget {
   const AdminAccountScreen({
     super.key,
     required this.session,
@@ -15,69 +15,268 @@ class AdminAccountScreen extends StatelessWidget {
   final Future<void> Function() onLogout;
 
   @override
+  State<AdminAccountScreen> createState() => _AdminAccountScreenState();
+}
+
+class _AdminAccountScreenState extends State<AdminAccountScreen> {
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.adaptiveCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Đăng xuất tài khoản?',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: AppColors.adaptiveTextPrimary,
+          ),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi cổng quản trị COne không?',
+          style: TextStyle(color: AppColors.adaptiveTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await widget.onLogout();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final admin = session.admin;
+    final admin = widget.session.admin;
+    final displayName = admin.name.isEmpty ? 'Tài khoản quản trị' : admin.name;
+
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: const Text(
-          'Tài khoản quản trị',
-          style: TextStyle(fontWeight: FontWeight.w900),
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Tài khoản',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            letterSpacing: -0.3,
+            color: AppColors.adaptiveTextPrimary,
+          ),
         ),
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
-            _HeaderCard(admin: admin),
-            const SizedBox(height: 16),
-            COneCard(
-              child: Column(
+            // 1. Thẻ định danh quản trị
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                ),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E3A8A).withValues(alpha: 0.25),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
                 children: [
-                  _InfoRow(
-                    icon: Icons.badge_outlined,
-                    label: 'Họ tên',
-                    value: admin.name.isEmpty ? 'Chưa cập nhật' : admin.name,
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: const Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
-                  _InfoRow(
-                    icon: Icons.mail_outline_rounded,
-                    label: 'Email',
-                    value: admin.email,
-                  ),
-                  _InfoRow(
-                    icon: Icons.phone_outlined,
-                    label: 'Số điện thoại',
-                    value: admin.phone.isEmpty ? 'Chưa cập nhật' : admin.phone,
-                  ),
-                  _InfoRow(
-                    icon: Icons.admin_panel_settings_outlined,
-                    label: 'Vai trò',
-                    value: '${admin.roleName} (${admin.roleCode})',
-                  ),
-                  _InfoRow(
-                    icon: Icons.layers_outlined,
-                    label: 'Level',
-                    value: admin.level.toString(),
-                  ),
-                  _InfoRow(
-                    icon: Icons.apartment_outlined,
-                    label: 'Khoa/đơn vị',
-                    value: admin.departmentId.isEmpty
-                        ? 'Toàn trường / chưa gán'
-                        : admin.departmentId,
-                    showDivider: false,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          admin.email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.84),
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${admin.roleName} • Level ${admin.level}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
             const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await onLogout();
-              },
-              icon: const Icon(Icons.logout_rounded),
-              label: const Text('Đăng xuất'),
+
+            // 2. Thông tin chi tiết
+            _AdminSectionCard(
+              title: 'Thông tin quản trị',
+              icon: Icons.badge_outlined,
+              children: [
+                _InfoRow(label: 'Họ tên', value: displayName),
+                _InfoRow(label: 'Email', value: admin.email),
+                _InfoRow(
+                  label: 'Số điện thoại',
+                  value: admin.phone.isEmpty ? 'Chưa cập nhật' : admin.phone,
+                ),
+                _InfoRow(
+                  label: 'Vai trò',
+                  value: '${admin.roleName} (${admin.roleCode.toUpperCase()})',
+                ),
+                _InfoRow(
+                  label: 'Khoa / Đơn vị',
+                  value: admin.departmentId.isEmpty
+                      ? 'Toàn trường'
+                      : admin.departmentId,
+                  showDivider: false,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // 3. Giao diện
+            _AdminSectionCard(
+              title: 'Giao diện ứng dụng',
+              icon: Icons.tune_rounded,
+              children: [
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      ThemeService.instance.isDarkMode
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Giao diện Tối (Dark Mode)',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: AppColors.adaptiveTextPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    ThemeService.instance.isDarkMode
+                        ? 'Đang bật nền tối'
+                        : 'Đang bật nền sáng',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.adaptiveTextSecondary,
+                    ),
+                  ),
+                  value: ThemeService.instance.isDarkMode,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (_) async {
+                    await ThemeService.instance.toggleTheme();
+                    if (mounted) setState(() {});
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+
+            // 4. Nút đăng xuất
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  side: BorderSide(
+                    color: AppColors.isDark
+                        ? const Color(0xFF7F1D1D)
+                        : const Color(0xFFFECACA),
+                    width: 1.2,
+                  ),
+                  backgroundColor: AppColors.isDark
+                      ? const Color(0xFF450A0A).withValues(alpha: 0.3)
+                      : const Color(0xFFFEF2F2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: _confirmLogout,
+                icon: const Icon(Icons.logout_rounded, size: 19),
+                label: const Text(
+                  'Đăng xuất tài khoản',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Center(
+              child: Text(
+                'COne Admin v1.0.4 • Hệ thống Quản lý Điểm rèn luyện',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.7),
+                ),
+              ),
             ),
           ],
         ),
@@ -86,68 +285,45 @@ class AdminAccountScreen extends StatelessWidget {
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.admin});
+class _AdminSectionCard extends StatelessWidget {
+  const _AdminSectionCard({
+    required this.title,
+    required this.icon,
+    required this.children,
+  });
 
-  final AdminUser admin;
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return COneCard(
-      padding: const EdgeInsets.all(22),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.darkBlue, AppColors.primary],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .18),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(
-              Icons.admin_panel_settings_rounded,
-              color: Colors.white,
-              size: 34,
-            ),
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  admin.name.isEmpty ? 'Tài khoản quản trị' : admin.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  admin.email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white.withValues(alpha: .84)),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  admin.roleName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 12),
+          ...children,
         ],
       ),
     );
@@ -156,13 +332,11 @@ class _HeaderCard extends StatelessWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
-    required this.icon,
     required this.label,
     required this.value,
     this.showDivider = true,
   });
 
-  final IconData icon;
   final String label;
   final String value;
   final bool showDivider;
@@ -172,35 +346,35 @@ class _InfoRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 11),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.primary),
-              const SizedBox(width: 12),
+              SizedBox(
+                width: 110,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: AppColors.adaptiveTextSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      value,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                  ],
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.adaptiveTextPrimary,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        if (showDivider) const Divider(height: 1),
+        if (showDivider) Divider(height: 1, color: AppColors.adaptiveBorder),
       ],
     );
   }

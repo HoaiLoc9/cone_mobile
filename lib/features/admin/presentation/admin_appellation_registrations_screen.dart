@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 
@@ -26,23 +27,37 @@ class _AdminAppellationRegistrationsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
           'Hồ sơ danh hiệu',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            color: AppColors.adaptiveTextPrimary,
+          ),
         ),
         actions: [
           IconButton(
             onPressed: _reload,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
+        ),
       ),
       body: FutureBuilder<List<AdminAppellationRegistration>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(
+              child: ShimmerListLoading(itemCount: 5),
+            );
           }
           if (snapshot.hasError) {
             return _StateMessage(
@@ -60,13 +75,11 @@ class _AdminAppellationRegistrationsScreenState
           return RefreshIndicator(
             onRefresh: () async => _reload(),
             child: ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
               itemCount: items.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return _RegistrationCard(item: item);
-              },
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) =>
+                  _RegistrationCard(item: items[index]),
             ),
           );
         },
@@ -83,63 +96,90 @@ class _RegistrationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkBlue.withValues(alpha: 0.07),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.adaptiveBorder),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            item.appellationName.isEmpty ? 'Danh hiệu' : item.appellationName,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.workspace_premium_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${item.studentCode} • ${item.studentName}',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _Chip(label: item.statusLabel, color: AppColors.primary),
-              if (item.createdAt.isNotEmpty)
-                _Chip(label: item.createdAt, color: const Color(0xFF059669)),
-            ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.appellationName.isEmpty
+                      ? 'Danh hiệu'
+                      : item.appellationName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                    color: AppColors.adaptiveTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${item.studentCode} • ${item.studentName}',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.adaptiveTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item.statusLabel,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (item.createdAt.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          item.createdAt,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.adaptiveTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -159,9 +199,26 @@ class _StateMessage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message, textAlign: TextAlign.center),
+            Icon(
+              Icons.workspace_premium_outlined,
+              size: 40,
+              color: AppColors.adaptiveTextSecondary,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.adaptiveTextSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
-            OutlinedButton(onPressed: onRetry, child: const Text('Tải lại')),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 17),
+              label: const Text('Tải lại'),
+            ),
           ],
         ),
       ),

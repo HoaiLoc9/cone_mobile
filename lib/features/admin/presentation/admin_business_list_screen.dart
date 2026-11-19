@@ -105,6 +105,7 @@ class _AdminBusinessListScreenState extends State<AdminBusinessListScreen> {
   Future<void> _createNotification() async {
     final result = await showModalBottomSheet<_NotificationDraft>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) => const _NotificationSheet(),
     );

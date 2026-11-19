@@ -1,11 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../shared/widgets/feature_card.dart';
+import '../../../core/services/theme_service.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 import 'admin_business_list_screen.dart';
-import 'admin_service_modules_screen.dart';
 import 'gvcn_drl_assessments_screen.dart';
 
 class GvcnHomeScreen extends StatefulWidget {
@@ -53,83 +53,106 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
     );
   }
 
-  void _openClassServices() {
-    _push(
-      AdminServiceModulesScreen(
-        title: 'Nghiệp vụ GVCN',
-        subtitle:
-            'Dữ liệu điểm rèn luyện được đồng bộ theo lớp chủ nhiệm.',
-        modules: [
-          AdminServiceModule(
-            name: 'Duyệt giấy xin phép',
-            description:
-                'Xem, duyệt hoặc từ chối giấy xin phép của sinh viên trong lớp.',
-            icon: Icons.assignment_turned_in_outlined,
-            api: '/mobile/admin/gvcn/permission-requests',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Giấy xin phép lớp',
-              path: '/mobile/admin/gvcn/permission-requests',
-              icon: Icons.assignment_turned_in_outlined,
-              action: AdminBusinessAction.gvcnApproveRejectPermission,
-            ),
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 11) return 'Chào buổi sáng';
+    if (h < 14) return 'Chào buổi trưa';
+    if (h < 18) return 'Chào buổi chiều';
+    return 'Chào buổi tối';
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.adaptiveCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Đăng xuất tài khoản?',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: AppColors.adaptiveTextPrimary,
           ),
-          AdminServiceModule(
-            name: 'Minh chứng/tài liệu',
-            description: 'Xem tài liệu sinh viên thuộc lớp chủ nhiệm.',
-            icon: Icons.folder_copy_outlined,
-            api: '/mobile/admin/gvcn/documents',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Tài liệu lớp chủ nhiệm',
-              path: '/mobile/admin/gvcn/documents',
-              icon: Icons.folder_copy_outlined,
-            ),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi cổng GVCN không?',
+          style: TextStyle(color: AppColors.adaptiveTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Hủy'),
           ),
-          AdminServiceModule(
-            name: 'Trạng thái hồ sơ',
-            description: 'Theo dõi trạng thái hồ sơ sinh viên trong lớp.',
-            icon: Icons.assignment_ind_outlined,
-            api: '/mobile/admin/gvcn/profile-statuses',
-            ready: true,
-            onTap: () => _openBusinessList(
-              title: 'Trạng thái hồ sơ lớp',
-              path: '/mobile/admin/gvcn/profile-statuses',
-              icon: Icons.assignment_ind_outlined,
-            ),
-          ),
-          AdminServiceModule(
-            name: 'Duyệt DRL',
-            description: 'Màn nhập/lưu cột GVCN, duyệt và gỡ duyệt phiếu DRL.',
-            icon: Icons.fact_check_outlined,
-            api: '/mobile/admin/gvcn/drl-assessments',
-            ready: true,
-            onTap: _openDrl,
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Đăng xuất'),
           ),
         ],
       ),
     );
+    if (confirmed == true && mounted) {
+      await widget.onLogout();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final admin = widget.session.admin;
+    final displayName = admin.name.isEmpty ? 'Giáo viên chủ nhiệm' : admin.name;
+
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: Text(
-          'GVCN: ${admin.name.isEmpty ? admin.email : admin.name}',
-          style: const TextStyle(fontWeight: FontWeight.w900),
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _greeting(),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppColors.adaptiveTextPrimary,
+              ),
+            ),
+            Text(
+              'COne • Cổng Giáo viên chủ nhiệm',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            tooltip: 'Tải lại',
+            tooltip: 'Chế độ sáng / tối',
+            onPressed: () async {
+              await ThemeService.instance.toggleTheme();
+              if (mounted) setState(() {});
+            },
+            icon: Icon(
+              ThemeService.instance.isDarkMode
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+              color: AppColors.adaptiveTextPrimary,
+              size: 20,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Làm mới',
             onPressed: _reload,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextPrimary, size: 20),
           ),
           IconButton(
             tooltip: 'Đăng xuất',
-            onPressed: widget.onLogout,
-            icon: const Icon(Icons.logout_rounded),
+            onPressed: _confirmLogout,
+            icon: const Icon(Icons.logout_rounded, color: AppColors.danger, size: 20),
           ),
         ],
       ),
@@ -140,7 +163,9 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
             future: _future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const SingleChildScrollView(
+                  child: ShimmerListLoading(itemCount: 4),
+                );
               }
               if (snapshot.hasError) {
                 return _StateMessage(
@@ -153,55 +178,210 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth >= 720;
                   return ListView(
-                    padding: EdgeInsets.all(isWide ? 28 : 18),
+                    padding: EdgeInsets.fromLTRB(
+                      isWide ? 28 : 16,
+                      10,
+                      isWide ? 28 : 16,
+                      28,
+                    ),
                     children: [
-                      _HeaderCard(admin: admin),
-                      const SizedBox(height: 18),
-                      _StatsGrid(dashboard: dashboard, isWide: isWide),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Quản lý lớp',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
+                      // 1. Thẻ GVCN (COne Blue)
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1E3A8A).withValues(alpha: 0.24),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+                              ),
+                              child: const Icon(Icons.school_rounded, color: Colors.white, size: 28),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17.5,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    admin.email,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.82),
+                                      fontSize: 12.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.16),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      admin.roleName.isEmpty ? 'Giáo viên chủ nhiệm' : admin.roleName,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
+
+                      // 2. Thẻ chỉ số lớp gọn 1 khối
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.adaptiveCard,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.adaptiveBorder),
+                        ),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              _kpiCell('${dashboard.totalStudents}', 'Sinh viên', () => _openDrl()),
+                              VerticalDivider(width: 1, color: AppColors.adaptiveBorder),
+                              _kpiCell(
+                                '${dashboard.pendingDrlAssessments}',
+                                'Chưa duyệt',
+                                () => _openDrl(status: 'pending'),
+                                highlight: dashboard.pendingDrlAssessments > 0,
+                              ),
+                              VerticalDivider(width: 1, color: AppColors.adaptiveBorder),
+                              _kpiCell(
+                                '${dashboard.approvedDrlAssessments}',
+                                'Đã duyệt',
+                                () => _openDrl(status: 'approved'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 3. Quản lý ĐRL lớp
+                      Text(
+                        'Quản lý điểm rèn luyện',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       GridView.count(
                         crossAxisCount: isWide ? 3 : 2,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
-                        childAspectRatio: isWide ? 1.45 : 1.05,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: isWide ? 2.4 : 2.05,
                         children: [
-                          FeatureCard(
-                            title: 'Phiếu chưa duyệt',
+                          _GvcnCard(
+                            title: 'Chưa duyệt',
+                            subtitle: '${dashboard.pendingDrlAssessments} phiếu',
                             icon: Icons.pending_actions_rounded,
-                            color: const Color(0xFFF59E0B),
                             onTap: () => _openDrl(status: 'pending'),
                           ),
-                          FeatureCard(
-                            title: 'Phiếu đã duyệt',
-                            icon: Icons.verified_outlined,
-                            color: const Color(0xFF059669),
+                          _GvcnCard(
+                            title: 'Đã duyệt',
+                            subtitle: '${dashboard.approvedDrlAssessments} phiếu',
+                            icon: Icons.verified_rounded,
                             onTap: () => _openDrl(status: 'approved'),
                           ),
-                          FeatureCard(
-                            title: 'Tất cả phiếu DRL',
-                            icon: Icons.fact_check_outlined,
-                            color: AppColors.primary,
+                          _GvcnCard(
+                            title: 'Tất cả phiếu',
+                            subtitle: 'Nhập điểm & duyệt',
+                            icon: Icons.fact_check_rounded,
                             onTap: _openDrl,
                           ),
-                          FeatureCard(
-                            title: 'Giấy phép & hồ sơ',
-                            subtitle: 'Lọc theo lớp chủ nhiệm',
-                            icon: Icons.folder_shared_outlined,
-                            color: AppColors.darkBlue,
-                            onTap: _openClassServices,
+                          _GvcnCard(
+                            title: 'Giấy xin phép',
+                            subtitle: 'Duyệt đơn lớp',
+                            icon: Icons.assignment_turned_in_rounded,
+                            onTap: () => _openBusinessList(
+                              title: 'Giấy xin phép lớp',
+                              path: '/mobile/admin/gvcn/permission-requests',
+                              icon: Icons.assignment_turned_in_outlined,
+                              action: AdminBusinessAction.gvcnApproveRejectPermission,
+                            ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 4. Nghiệp vụ lớp khác (thanh trượt tròn kiểu Messenger)
+                      Text(
+                        'Hồ sơ & Minh chứng lớp',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 104,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          clipBehavior: Clip.none,
+                          children: [
+                            _circleItem(
+                              Icons.folder_copy_outlined,
+                              'Tài liệu lớp',
+                              () => _openBusinessList(
+                                title: 'Tài liệu lớp chủ nhiệm',
+                                path: '/mobile/admin/gvcn/documents',
+                                icon: Icons.folder_copy_outlined,
+                              ),
+                            ),
+                            _circleItem(
+                              Icons.assignment_ind_outlined,
+                              'Hồ sơ SV',
+                              () => _openBusinessList(
+                                title: 'Trạng thái hồ sơ lớp',
+                                path: '/mobile/admin/gvcn/profile-statuses',
+                                icon: Icons.assignment_ind_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   );
@@ -213,138 +393,176 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
       ),
     );
   }
-}
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.admin});
-
-  final AdminUser admin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.darkBlue, AppColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _kpiCell(
+    String value,
+    String label,
+    VoidCallback onTap, {
+    bool highlight = false,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  color: highlight ? AppColors.primary : AppColors.adaptiveTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.adaptiveTextSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.22),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(Icons.school_rounded, color: Colors.white),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  admin.name.isEmpty ? 'Giáo viên chủ nhiệm' : admin.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
+    );
+  }
+
+  Widget _circleItem(IconData icon, String label, VoidCallback onTap) {
+    final isDark = AppColors.isDark;
+    return Padding(
+      padding: const EdgeInsets.only(right: 14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          width: 74,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark
+                      ? AppColors.primary.withValues(alpha: 0.16)
+                      : const Color(0xFFEFF6FF),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.primary.withValues(alpha: 0.45)
+                        : const Color(0xFFBFDBFE),
+                    width: 1.3,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  admin.email,
-                  style: TextStyle(color: Colors.white.withValues(alpha: .84)),
+                child: Icon(
+                  icon,
+                  color: isDark ? const Color(0xFF60A5FA) : AppColors.primary,
+                  size: 24,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Lớp phụ trách: ${admin.classId.isEmpty ? 'chưa gán' : admin.classId}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adaptiveTextPrimary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.dashboard, required this.isWide});
+class _GvcnCard extends StatelessWidget {
+  const _GvcnCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
 
-  final AdminDashboard dashboard;
-  final bool isWide;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final stats = [
-      ('Sinh viên', dashboard.totalStudents, Icons.groups_2_outlined),
-      ('Chờ duyệt', dashboard.pendingDrlAssessments, Icons.pending_outlined),
-      ('Đã duyệt', dashboard.approvedDrlAssessments, Icons.verified_outlined),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: stats.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isWide ? 3 : 1,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: isWide ? 1.9 : 3.4,
-      ),
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        return Container(
-          padding: const EdgeInsets.all(18),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.darkBlue.withValues(alpha: .07),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            color: AppColors.adaptiveCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.adaptiveBorder),
           ),
           child: Row(
             children: [
-              Icon(stat.$3, color: AppColors.primary, size: 30),
-              const SizedBox(width: 14),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  stat.$1,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.adaptiveTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.adaptiveTextSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                stat.$2.toString(),
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.adaptiveTextSecondary,
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -363,9 +581,17 @@ class _StateMessage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message, textAlign: TextAlign.center),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.adaptiveTextSecondary),
+            ),
             const SizedBox(height: 12),
-            OutlinedButton(onPressed: onRetry, child: const Text('Thử lại')),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 17),
+              label: const Text('Thử lại'),
+            ),
           ],
         ),
       ),

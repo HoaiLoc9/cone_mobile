@@ -1,8 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../shared/widgets/cone_card.dart';
-import '../../../shared/widgets/section_header.dart';
 
 class AdminServiceModulesScreen extends StatelessWidget {
   const AdminServiceModulesScreen({
@@ -18,82 +16,128 @@ class AdminServiceModulesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeModules = modules.where((m) => m.ready).toList();
+
     return Scaffold(
+      backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+        backgroundColor: AppColors.adaptiveAppBarBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            color: AppColors.adaptiveTextPrimary,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.adaptiveBorder, height: 1),
+        ),
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
-            SectionHeader(title: title, subtitle: subtitle),
-            const SizedBox(height: 14),
-            for (final module in modules)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: COneCard(
-                  onTap: module.onTap,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: module.ready
-                              ? AppColors.success.withValues(alpha: .12)
-                              : AppColors.warning.withValues(alpha: .12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          module.icon,
-                          color: module.ready
-                              ? AppColors.success
-                              : AppColors.warning,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              module.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              module.description,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                height: 1.35,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                _Chip(
-                                  label: module.ready
-                                      ? 'Đã có API mobile'
-                                      : 'Thiếu API mobile',
-                                  ready: module.ready,
-                                ),
-                                if (module.api.isNotEmpty)
-                                  _Chip(label: module.api, ready: module.ready),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+            if (subtitle.isNotEmpty) ...[
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.adaptiveTextSecondary,
+                  height: 1.4,
                 ),
               ),
+              const SizedBox(height: 14),
+            ],
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.adaptiveCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.adaptiveBorder),
+              ),
+              child: Column(
+                children: List.generate(activeModules.length, (index) {
+                  final module = activeModules[index];
+                  return Column(
+                    children: [
+                      InkWell(
+                        onTap: module.onTap,
+                        borderRadius: BorderRadius.vertical(
+                          top: index == 0 ? const Radius.circular(20) : Radius.zero,
+                          bottom: index == activeModules.length - 1
+                              ? const Radius.circular(20)
+                              : Radius.zero,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  module.icon,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      module.name,
+                                      style: TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.adaptiveTextPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      module.description,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.adaptiveTextSecondary,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 20,
+                                color: AppColors.adaptiveTextSecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (index < activeModules.length - 1)
+                        Divider(
+                          height: 1,
+                          indent: 68,
+                          endIndent: 14,
+                          color: AppColors.adaptiveBorder,
+                        ),
+                    ],
+                  );
+                }),
+              ),
+            ),
           ],
         ),
       ),
@@ -117,32 +161,4 @@ class AdminServiceModule {
   final String api;
   final bool ready;
   final VoidCallback? onTap;
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.ready});
-
-  final String label;
-  final bool ready;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: ready
-            ? AppColors.primarySoft
-            : AppColors.warning.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: ready ? AppColors.primary : AppColors.warning,
-          fontWeight: FontWeight.w900,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
 }
