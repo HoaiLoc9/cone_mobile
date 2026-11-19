@@ -34,6 +34,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   bool _isSubmitting = false;
   String? _errorMessage;
   MissingAttendanceRequest? _missingCheckoutRequest;
+  bool _isEligibleForMissingCheckout = false;
 
   @override
   void initState() {
@@ -63,14 +64,16 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   }
 
   Future<void> _checkMissingSupport(ActivityItem activity) async {
-    if (!activity.isRegistered || !activity.isEnded) return;
+    if (!activity.isEnded) return;
     try {
       final supportService = ActivitySupportService(token: widget.service.token);
       final data = await supportService.fetchMissingAttendance();
       if (!mounted) return;
       final existing = data.requests.where((r) => r.activityId == activity.id).firstOrNull;
+      final isEligible = data.eligible.any((e) => e.id == activity.id);
       setState(() {
         _missingCheckoutRequest = existing;
+        _isEligibleForMissingCheckout = isEligible;
       });
     } catch (_) {}
   }
@@ -398,7 +401,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                       _DescriptionSection(activity: activity),
                       const SizedBox(height: 24),
                       if (activity.isEnded) ...[
-                        if (activity.isRegistered) ...[
+                        if (activity.isRegistered || _isEligibleForMissingCheckout || _missingCheckoutRequest != null) ...[
                           if (_missingCheckoutRequest?.status == 'pending') ...[
                             Container(
                               width: double.infinity,
@@ -473,6 +476,60 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                         ),
                                       ],
                                     ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (_missingCheckoutRequest?.status == 'rejected') ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFFECACA)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Yêu cầu bổ sung check-out bị từ chối',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                color: Color(0xFF991B1B),
+                                                fontSize: 13.5,
+                                              ),
+                                            ),
+                                            if (_missingCheckoutRequest?.adminFeedback != null &&
+                                                _missingCheckoutRequest!.adminFeedback!.isNotEmpty) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Lý do: ${_missingCheckoutRequest!.adminFeedback}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFFB91C1C),
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  PrimaryButton(
+                                    label: 'Nộp lại bổ sung check out',
+                                    icon: Icons.refresh_rounded,
+                                    backgroundColor: const Color(0xFFD97706),
+                                    onPressed: () => _openMissingCheckoutForm(activity),
                                   ),
                                 ],
                               ),

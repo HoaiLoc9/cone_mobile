@@ -6,6 +6,7 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activities/presentation/activity_helpers.dart';
+import '../../activities/presentation/missing_checkout_sheet.dart';
 import '../data/activity_support_models.dart';
 import '../data/activity_support_service.dart';
 
@@ -61,14 +62,23 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
   }
 
   Future<void> _openSubmit(MissingAttendanceEligible item) async {
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _SubmitSheet(service: widget.service, item: item),
+    final ok = await MissingCheckoutSheet.show(
+      context,
+      service: widget.service,
+      activityId: item.id,
+      activityName: item.name,
+      timeStop: item.timeStop,
+      location: item.location,
     );
     if (ok == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã gửi yêu cầu bổ sung check-out thành công! Quản trị viên sẽ xem xét duyệt.'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
       _load();
     }
   }
@@ -335,13 +345,13 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: const Color(0xFFD97706),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
               onPressed: onSubmit,
-              icon: const Icon(Icons.upload_file_rounded, size: 18),
-              label: const Text('Nộp ảnh minh chứng', style: TextStyle(fontWeight: FontWeight.w700)),
+              icon: const Icon(Icons.assignment_turned_in_rounded, size: 18),
+              label: const Text('Bổ sung check out', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
             ),
           ),
         ],

@@ -5,10 +5,16 @@ import '../data/activity_model.dart';
 import 'activity_helpers.dart';
 
 class ActivityCard extends StatelessWidget {
-  const ActivityCard({super.key, required this.activity, required this.onTap});
+  const ActivityCard({
+    super.key,
+    required this.activity,
+    required this.onTap,
+    this.onMissingCheckout,
+  });
 
   final ActivityItem activity;
   final VoidCallback onTap;
+  final VoidCallback? onMissingCheckout;
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +26,13 @@ class ActivityCard extends StatelessWidget {
     final String statusText;
 
     if (isEnded) {
-      statusColor = const Color(0xFF64748B);
-      statusText = 'ĐÃ KẾT THÚC';
+      if (isRegistered) {
+        statusColor = const Color(0xFFD97706);
+        statusText = 'ĐÃ KẾT THÚC • ĐÃ ĐĂNG KÝ';
+      } else {
+        statusColor = const Color(0xFF64748B);
+        statusText = 'ĐÃ KẾT THÚC';
+      }
     } else if (isRegistered) {
       statusColor = const Color(0xFF10B981);
       statusText = 'ĐÃ ĐĂNG KÝ';
@@ -221,6 +232,26 @@ class ActivityCard extends StatelessWidget {
                       progress >= 1.0
                           ? const Color(0xFFEF4444)
                           : (isRegistered ? const Color(0xFF10B981) : AppColors.primary),
+                    ),
+                  ),
+                ),
+              ],
+              if (isEnded && isRegistered) ...[
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEF3C7),
+                      foregroundColor: const Color(0xFFB45309),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                    ),
+                    onPressed: onMissingCheckout ?? onTap,
+                    icon: const Icon(Icons.assignment_turned_in_rounded, size: 16),
+                    label: const Text(
+                      'Bổ sung check out',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                     ),
                   ),
                 ),

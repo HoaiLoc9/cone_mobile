@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../activity_support/data/activity_support_service.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
 import 'activity_card.dart';
 import 'activity_detail_screen.dart';
+import 'missing_checkout_sheet.dart';
 
 class ActivityListScreen extends StatefulWidget {
   const ActivityListScreen({super.key, required this.service});
@@ -93,6 +95,27 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
       if (index >= 0) {
         setState(() => _items[index] = updated);
       }
+    }
+  }
+
+  Future<void> _openMissingCheckout(ActivityItem activity) async {
+    final supportService = ActivitySupportService(token: widget.service.token);
+    final submitted = await MissingCheckoutSheet.show(
+      context,
+      service: supportService,
+      activityId: activity.id,
+      activityName: activity.name,
+      timeStop: activity.timeStop,
+      location: activity.location,
+    );
+    if (submitted == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi yêu cầu bổ sung check-out thành công! Quản trị viên sẽ xem xét duyệt.'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+      _load(refresh: true);
     }
   }
 
@@ -233,6 +256,9 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                       return ActivityCard(
                         activity: activity,
                         onTap: () => _openDetail(activity),
+                        onMissingCheckout: (activity.isEnded && activity.isRegistered)
+                            ? () => _openMissingCheckout(activity)
+                            : null,
                       );
                     },
                   ),
