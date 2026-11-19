@@ -1032,12 +1032,15 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Icon(Icons.verified_rounded, size: 14, color: Color(0xFF2563EB)),
               SizedBox(width: 6),
-              Text(
-                'Trường Cao đẳng Kinh tế Đối ngoại',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF475569),
+              Flexible(
+                child: Text(
+                  'Trường Cao đẳng Kinh tế Đối ngoại',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF475569),
+                  ),
                 ),
               ),
             ],
@@ -1076,29 +1079,32 @@ class _LoginScreenState extends State<LoginScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Đăng nhập',
-                    style: TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.4,
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Đăng nhập',
+                      style: TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 3),
-                  Text(
-                    'Chào mừng bạn quay trở lại! 👋',
-                    style: TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    SizedBox(height: 3),
+                    Text(
+                      'Chào mừng bạn quay trở lại! 👋',
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -1162,15 +1168,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'Ghi nhớ đăng nhập',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF334155),
+              const Expanded(
+                child: Text(
+                  'Ghi nhớ đăng nhập',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF334155),
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: isLoading ? null : _showForgotPasswordHelp,
                 style: TextButton.styleFrom(

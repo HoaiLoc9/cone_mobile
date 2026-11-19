@@ -51,7 +51,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     try {
       final activity = await widget.service.fetchActivity(widget.activityId);
       setState(() => _activity = activity);
-      _checkMissingSupport(activity);
+      await _checkMissingSupport(activity);
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
@@ -401,144 +401,181 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                       _DescriptionSection(activity: activity),
                       const SizedBox(height: 24),
                       if (activity.isEnded) ...[
-                        if (activity.isRegistered || _isEligibleForMissingCheckout || _missingCheckoutRequest != null) ...[
-                          if (_missingCheckoutRequest?.status == 'pending') ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF3C7),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFFDE68A)),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 24),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Yêu cầu bổ sung check-out đang chờ duyệt',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            color: Color(0xFF92400E),
-                                            fontSize: 13.5,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Quản trị viên đang xem xét minh chứng của bạn.',
-                                          style: TextStyle(
-                                            color: Color(0xFFB45309),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        if (_missingCheckoutRequest?.status == 'pending') ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFFDE68A)),
                             ),
-                          ] else if (_missingCheckoutRequest?.status == 'approved') ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF0FDF4),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFBBF7D0)),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 24),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Đã duyệt bổ sung check-out thành công',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            color: Color(0xFF166534),
-                                            fontSize: 13.5,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Điểm rèn luyện của bạn đã được ghi nhận.',
-                                          style: TextStyle(
-                                            color: Color(0xFF15803D),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ] else if (_missingCheckoutRequest?.status == 'rejected') ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF2F2),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFFECACA)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Row(
+                            child: const Row(
+                              children: [
+                                Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 24),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Yêu cầu bổ sung check-out bị từ chối',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                color: Color(0xFF991B1B),
-                                                fontSize: 13.5,
-                                              ),
-                                            ),
-                                            SizedBox(height: 2),
-                                            Text(
-                                              'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
-                                              style: TextStyle(
-                                                color: Color(0xFFB91C1C),
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
+                                      Text(
+                                        'Yêu cầu bổ sung check-out đang chờ duyệt',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF92400E),
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Quản trị viên đang xem xét minh chứng của bạn.',
+                                        style: TextStyle(
+                                          color: Color(0xFFB45309),
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  PrimaryButton(
-                                    label: 'Nộp lại bổ sung check out',
-                                    icon: Icons.refresh_rounded,
-                                    backgroundColor: const Color(0xFFD97706),
-                                    onPressed: () => _openMissingCheckoutForm(activity),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (_missingCheckoutRequest?.status == 'approved') ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 24),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Đã duyệt bổ sung check-out thành công',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF166534),
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Điểm rèn luyện của bạn đã được ghi nhận.',
+                                        style: TextStyle(
+                                          color: Color(0xFF15803D),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ] else ...[
-                            PrimaryButton(
-                              label: 'Bổ sung check out',
-                              icon: Icons.assignment_turned_in_rounded,
-                              backgroundColor: const Color(0xFFD97706),
-                              onPressed: () => _openMissingCheckoutForm(activity),
+                          ),
+                        ] else if (_missingCheckoutRequest?.status == 'rejected') ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFFECACA)),
                             ),
-                          ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 24),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Yêu cầu bổ sung check-out bị từ chối',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF991B1B),
+                                              fontSize: 13.5,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          Text(
+                                            'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
+                                            style: TextStyle(
+                                              color: Color(0xFFB91C1C),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                PrimaryButton(
+                                  label: 'Nộp lại bổ sung check out',
+                                  icon: Icons.refresh_rounded,
+                                  backgroundColor: const Color(0xFFD97706),
+                                  onPressed: () => _openMissingCheckoutForm(activity),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (_isEligibleForMissingCheckout) ...[
+                          PrimaryButton(
+                            label: 'Bổ sung check out',
+                            icon: Icons.assignment_turned_in_rounded,
+                            backgroundColor: const Color(0xFFD97706),
+                            onPressed: () => _openMissingCheckoutForm(activity),
+                          ),
+                        ] else if (activity.isRegistered) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Đã hoàn thành điểm danh',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF166534),
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Bạn đã thực hiện đầy đủ check-in và check-out cho hoạt động này.',
+                                        style: TextStyle(
+                                          color: Color(0xFF15803D),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ] else ...[
                           const PrimaryButton(
                             label: 'Hoạt động đã kết thúc',

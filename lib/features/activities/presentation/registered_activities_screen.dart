@@ -26,6 +26,20 @@ class _RegisteredActivitiesScreenState
 
   String _filter = 'all'; // 'all', 'attended', 'pending'
   Map<String, MissingAttendanceRequest> _missingRequests = {};
+  Set<String> _eligibleActivityIds = {};
+
+  bool _isItemAttended(ActivityItem item) {
+    final req = _missingRequests[item.id];
+    final isApprovedReview = req?.status == 'approved';
+    final isPendingReview = req?.status == 'pending';
+    final isRejectedReview = req?.status == 'rejected';
+    final isMissingCheckout = _eligibleActivityIds.contains(item.id);
+
+    return isApprovedReview ||
+        item.registrationStatusLabel.contains('điểm danh') ||
+        item.registrationStatusLabel.contains('Hoàn thành') ||
+        (item.isEnded && !isMissingCheckout && !isPendingReview && !isRejectedReview);
+  }
 
   @override
   void initState() {
@@ -47,8 +61,10 @@ class _RegisteredActivitiesScreenState
       for (final r in data.requests) {
         map[r.activityId] = r;
       }
+      final eligibleIds = data.eligible.map((e) => e.id).toSet();
       setState(() {
         _missingRequests = map;
+        _eligibleActivityIds = eligibleIds;
       });
     } catch (_) {}
   }
@@ -144,15 +160,15 @@ class _RegisteredActivitiesScreenState
             }
 
             final allItems = snapshot.data ?? [];
-            final attendedCount = allItems.where((i) => i.isRegistered && (i.registrationStatusLabel.contains('điểm danh') || i.registrationStatusLabel.contains('Hoàn thành'))).length;
+            final attendedCount = allItems.where(_isItemAttended).length;
             final pendingCount = allItems.length - attendedCount;
 
             final filteredItems = allItems.where((item) {
               if (_filter == 'attended') {
-                return item.registrationStatusLabel.contains('điểm danh') || item.registrationStatusLabel.contains('Hoàn thành');
+                return _isItemAttended(item);
               }
               if (_filter == 'pending') {
-                return !(item.registrationStatusLabel.contains('điểm danh') || item.registrationStatusLabel.contains('Hoàn thành'));
+                return !_isItemAttended(item);
               }
               return true;
             }).toList();
@@ -330,10 +346,9 @@ class _RegisteredActivitiesScreenState
   Widget _buildRegisteredCard(ActivityItem item) {
     final req = _missingRequests[item.id];
     final isPendingReview = req?.status == 'pending';
-    final isApprovedReview = req?.status == 'approved';
-    final isAttended = isApprovedReview ||
-        item.registrationStatusLabel.contains('điểm danh') ||
-        item.registrationStatusLabel.contains('Hoàn thành');
+    final isRejectedReview = req?.status == 'rejected';
+    final isMissingCheckout = _eligibleActivityIds.contains(item.id);
+    final isAttended = _isItemAttended(item);
     final isEnded = item.isEnded;
 
     final Color statusColor;
@@ -349,9 +364,13 @@ class _RegisteredActivitiesScreenState
         statusColor = const Color(0xFFD97706);
         statusText = 'ĐÃ KẾT THÚC • ĐANG CHỜ DUYỆT';
         statusIcon = Icons.hourglass_top_rounded;
+      } else if (isRejectedReview) {
+        statusColor = const Color(0xFFEF4444);
+        statusText = 'ĐÃ KẾT THÚC • BỊ TỪ CHỐI DUYỆT';
+        statusIcon = Icons.cancel_rounded;
       } else {
         statusColor = const Color(0xFFD97706);
-        statusText = 'ĐÃ KẾT THÚC • CHƯA CHECK-OUT';
+        statusText = 'ĐÃ KẾT THÚC • THIẾU CHECK-OUT';
         statusIcon = Icons.warning_amber_rounded;
       }
     } else {
@@ -498,7 +517,25 @@ class _RegisteredActivitiesScreenState
                       ],
                     ),
                   ),
-                ] else ...[
+                ] else if (isRejectedReview) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFEF2F2),
+                        foregroundColor: const Color(0xFFB91C1C),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                      ),
+                      onPressed: () => _openMissingCheckout(item),
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text(
+                        'Nộp lại bổ sung check out',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ] else if (isMissingCheckout) ...[
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.tonalIcon(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../activity_support/data/activity_support_models.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
@@ -28,6 +29,8 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   String? _errorMessage;
+  Set<String> _eligibleActivityIds = {};
+  Map<String, MissingAttendanceRequest> _missingRequests = {};
 
   @override
   void initState() {
@@ -41,8 +44,21 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
     super.dispose();
   }
 
+  Future<void> _loadMissingSupport() async {
+    try {
+      final supportService = ActivitySupportService(token: widget.service.token);
+      final data = await supportService.fetchMissingAttendance();
+      if (!mounted) return;
+      setState(() {
+        _eligibleActivityIds = data.eligible.map((e) => e.id).toSet();
+        _missingRequests = {for (final r in data.requests) r.activityId: r};
+      });
+    } catch (_) {}
+  }
+
   Future<void> _load({required bool refresh}) async {
     if (refresh) {
+      _loadMissingSupport();
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -253,10 +269,15 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final activity = _items[index];
+                      final isMissing = activity.isEnded &&
+                          activity.isRegistered &&
+                          (_eligibleActivityIds.contains(activity.id) ||
+                              _missingRequests[activity.id]?.status == 'rejected');
                       return ActivityCard(
                         activity: activity,
                         onTap: () => _openDetail(activity),
-                        onMissingCheckout: (activity.isEnded && activity.isRegistered)
+                        isMissingCheckout: isMissing,
+                        onMissingCheckout: isMissing
                             ? () => _openMissingCheckout(activity)
                             : null,
                       );
