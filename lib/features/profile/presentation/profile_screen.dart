@@ -1151,6 +1151,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
 
+                            const SizedBox(height: 18),
+
+                            // 4B. NHÓM 4: HỖ TRỢ SINH VIÊN (PHÒNG CTSV)
+                            _SectionGroup(
+                              title: 'Hỗ trợ sinh viên (Phòng CTSV)',
+                              icon: Icons.support_agent_rounded,
+                              children: const [
+                                _SupportContactRow(
+                                  icon: Icons.location_on_outlined,
+                                  text: 'Cơ sở 1: 287 Phan Đình Phùng, P.15, Q. Phú Nhuận, TP.HCM',
+                                ),
+                                SizedBox(height: 9),
+                                _SupportContactRow(
+                                  icon: Icons.location_on_outlined,
+                                  text: 'Cơ sở 2: 12 Nguyễn Văn Bảo, P.4, Q. Gò Vấp, TP.HCM',
+                                ),
+                                SizedBox(height: 9),
+                                _SupportContactRow(
+                                  icon: Icons.phone_in_talk_outlined,
+                                  text: 'Hotline: (028) 3844 6320 • (028) 3845 7440',
+                                ),
+                                SizedBox(height: 9),
+                                _SupportContactRow(
+                                  icon: Icons.mail_outline_rounded,
+                                  text: 'Email: ctsv@cofer.edu.vn • ctsv.cofer@gmail.com',
+                                ),
+                                SizedBox(height: 9),
+                                _SupportContactRow(
+                                  icon: Icons.access_time_rounded,
+                                  text: 'Giờ làm việc: Thứ 2 - Thứ 6 (7h30 - 11h30 | 13h00 - 17h00)',
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // 4C. NHÓM 5: HỎI ĐÁP THƯỜNG GẶP (FAQ)
+                            const _SectionGroup(
+                              title: 'Hỏi đáp thường gặp (FAQ)',
+                              icon: Icons.help_outline_rounded,
+                              children: [
+                                _ProfileFaqTile(
+                                  question: 'Khi nào hệ thống chốt Điểm rèn luyện học kỳ?',
+                                  answer:
+                                      'Hệ thống mở cổng tự đánh giá từ tuần 14 đến tuần 16 của học kỳ. Sau đó GVCN và Khoa sẽ duyệt điểm trong vòng 2 tuần trước khi có quyết định công nhận điểm chính thức từ Hiệu trưởng.',
+                                ),
+                                SizedBox(height: 8),
+                                _ProfileFaqTile(
+                                  question: 'Nếu tham gia hoạt động nhưng chưa được điểm danh thì sao?',
+                                  answer:
+                                      'Bạn hãy vào mục "Minh chứng" trên Trang chủ, tìm hoạt động đó và bấm "Gửi minh chứng" kèm ảnh chụp tại sự kiện để Ban tổ chức kiểm tra và cộng điểm bù.',
+                                ),
+                                SizedBox(height: 8),
+                                _ProfileFaqTile(
+                                  question: 'Tiêu chuẩn xếp loại điểm rèn luyện như thế nào?',
+                                  answer:
+                                      '• Xuất sắc: 90 - 100 điểm\n• Tốt: 80 - 89 điểm\n• Khá: 65 - 79 điểm\n• Trung bình: 50 - 64 điểm\n• Yếu: 35 - 49 điểm\n• Kém: dưới 35 điểm.',
+                                ),
+                              ],
+                            ),
+
                             const SizedBox(height: 24),
 
                             // 5. NÚT ĐĂNG XUẤT THIẾT KẾ MỀM MẠI
@@ -1677,6 +1738,87 @@ class _EmptyMessage extends StatelessWidget {
             color: isError ? AppColors.danger : AppColors.adaptiveTextSecondary,
             fontWeight: FontWeight.w800,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SupportContactRow extends StatelessWidget {
+  const _SupportContactRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(icon, size: 16, color: AppColors.primary),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.adaptiveTextPrimary,
+              fontWeight: FontWeight.w600,
+              height: 1.38,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileFaqTile extends StatelessWidget {
+  const _ProfileFaqTile({required this.question, required this.answer});
+
+  final String question;
+  final String answer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCardSubtle,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.adaptiveBorder),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          iconColor: AppColors.primary,
+          collapsedIconColor: AppColors.adaptiveTextSecondary,
+          title: Text(
+            question,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.adaptiveTextPrimary,
+            ),
+          ),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                answer,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.adaptiveTextSecondary,
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

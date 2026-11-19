@@ -578,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.adaptiveTextPrimary,
                                 ),
                               ),
                               InkWell(
@@ -1484,73 +1484,232 @@ class _QuickAction3DGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: isWide ? 4 : 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: isWide ? 2.5 : 2.05,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FeatureCard3D(
-          title: 'Hoạt động',
-          subtitle: 'Tham gia & quản lý',
-          icon: Icons.event_available_rounded,
-          color: const Color(0xFF2563EB),
-          onTap: onActivities,
+        // 4 nút chức năng quan trọng nhất (tông màu xanh COne đồng bộ)
+        GridView.count(
+          crossAxisCount: isWide ? 4 : 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: isWide ? 2.5 : 2.05,
+          children: [
+            _FeatureCard3D(
+              title: 'Hoạt động',
+              subtitle: 'Tham gia & quản lý',
+              icon: Icons.event_available_rounded,
+              color: AppColors.primary,
+              onTap: onActivities,
+            ),
+            _FeatureCard3D(
+              title: 'Bảng điểm ĐRL',
+              subtitle: 'Xem kết quả rèn luyện',
+              icon: Icons.bar_chart_rounded,
+              color: AppColors.primary,
+              onTap: onDrl,
+            ),
+            _FeatureCard3D(
+              title: 'Thống kê',
+              subtitle: 'Số liệu & báo cáo',
+              icon: Icons.insights_rounded,
+              color: AppColors.primary,
+              badge: 'MỚI',
+              onTap: onStats,
+            ),
+            _FeatureCard3D(
+              title: 'Minh chứng',
+              subtitle: 'Tải lên & quản lý',
+              icon: Icons.upload_file_rounded,
+              color: AppColors.primary,
+              onTap: onEvidence,
+            ),
+          ],
         ),
-        _FeatureCard3D(
-          title: 'Bảng điểm ĐRL',
-          subtitle: 'Xem kết quả rèn luyện',
-          icon: Icons.bar_chart_rounded,
-          color: const Color(0xFF1D4ED8),
-          onTap: onDrl,
+        const SizedBox(height: 20),
+
+        // Thanh trượt ngang hình tròn kiểu Messenger (màu sắc đồng bộ)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Dịch vụ & Tiện ích',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppColors.adaptiveTextPrimary,
+              ),
+            ),
+            Text(
+              'Trượt ngang →',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adaptiveTextSecondary,
+              ),
+            ),
+          ],
         ),
-        _FeatureCard3D(
-          title: 'Thống kê',
-          subtitle: 'Số liệu & báo cáo',
-          icon: Icons.insights_rounded,
-          color: const Color(0xFF0284C7),
-          badge: 'MỚI',
-          onTap: onStats,
-        ),
-        _FeatureCard3D(
-          title: 'Minh chứng',
-          subtitle: 'Tải lên & quản lý',
-          icon: Icons.upload_file_rounded,
-          color: const Color(0xFF1E40AF),
-          onTap: onEvidence,
-        ),
-        _FeatureCard3D(
-          title: 'Đã đăng ký',
-          subtitle: 'Danh sách hoạt động',
-          icon: Icons.event_note_rounded,
-          color: const Color(0xFF2563EB),
-          onTap: onRegisteredActivities,
-        ),
-        _FeatureCard3D(
-          title: 'Khiếu nại',
-          subtitle: 'Gửi & theo dõi xử lý',
-          icon: Icons.warning_amber_rounded,
-          color: const Color(0xFF0369A1),
-          onTap: onComplaints,
-        ),
-        _FeatureCard3D(
-          title: 'Danh hiệu',
-          subtitle: 'Thành tích của bạn',
-          icon: Icons.workspace_premium_rounded,
-          color: const Color(0xFF1D4ED8),
-          badge: 'TOP',
-          onTap: onAppellations,
-        ),
-        _FeatureCard3D(
-          title: 'Dịch vụ khác',
-          subtitle: 'Hồ sơ & Tiện ích',
-          icon: Icons.grid_view_rounded,
-          color: const Color(0xFF1E3A8A),
-          onTap: onOtherServices,
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 106,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            clipBehavior: Clip.none,
+            children: [
+              _CircleServiceBubble(
+                icon: Icons.event_note_rounded,
+                label: 'Đã đăng ký',
+                onTap: onRegisteredActivities,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.workspace_premium_rounded,
+                label: 'Danh hiệu',
+                badge: 'TOP',
+                onTap: onAppellations,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.warning_amber_rounded,
+                label: 'Khiếu nại',
+                onTap: onComplaints,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.assignment_turned_in_rounded,
+                label: 'Giấy xin phép',
+                onTap: onPermissionRequests,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.draw_rounded,
+                label: 'Chữ ký số',
+                onTap: onSignatureRequests,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.verified_user_rounded,
+                label: 'Hồ sơ SV',
+                onTap: onProfileStatus,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.folder_copy_rounded,
+                label: 'Tài liệu',
+                onTap: onDocuments,
+              ),
+              _CircleServiceBubble(
+                icon: Icons.badge_rounded,
+                label: 'CV sinh viên',
+                badge: 'PRO',
+                onTap: onCv,
+              ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _CircleServiceBubble extends StatelessWidget {
+  const _CircleServiceBubble({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark;
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          width: 72,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? AppColors.primary.withValues(alpha: 0.16)
+                          : const Color(0xFFEFF6FF),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.primary.withValues(alpha: 0.45)
+                            : const Color(0xFFBFDBFE),
+                        width: 1.4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isDark ? const Color(0xFF60A5FA) : AppColors.primary,
+                      size: 25,
+                    ),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      top: -3,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5.5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.adaptiveBackground,
+                            width: 1.8,
+                          ),
+                        ),
+                        child: Text(
+                          badge!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1582,9 +1741,9 @@ class _FeatureCard3D extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border, width: 1.0),
+            border: Border.all(color: AppColors.adaptiveBorder, width: 1.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
@@ -1627,7 +1786,7 @@ class _FeatureCard3D extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: AppColors.adaptiveTextPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
                             ),
@@ -1663,7 +1822,7 @@ class _FeatureCard3D extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.adaptiveTextSecondary,
                         fontSize: 10.5,
                         fontWeight: FontWeight.w500,
                       ),
