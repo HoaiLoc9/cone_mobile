@@ -69,6 +69,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
       activityName: item.name,
       timeStop: item.timeStop,
       location: item.location,
+      points: item.points,
     );
     if (ok == true) {
       if (mounted) {
@@ -258,12 +259,12 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Quy định nộp minh chứng (Hạn 3 ngày)',
+                  'Quy định điểm & nộp minh chứng (Hạn 3 ngày)',
                   style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Khi tham gia hoạt động nhưng không quét được check-out, sinh viên phải gửi yêu cầu bổ sung kèm ảnh minh chứng trong vòng tối đa 3 ngày kể từ khi kết thúc để được xem xét cộng điểm rèn luyện.',
+                  'Khi tham gia hoạt động nhưng không quét được check-out, sinh viên chỉ được tạm tính 50% điểm rèn luyện của hoạt động đó trước khi được duyệt hoặc bị từ chối. Hãy gửi yêu cầu bổ sung kèm ảnh minh chứng trong vòng tối đa 3 ngày để được duyệt nhận đủ 100% điểm.',
                   style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.35),
                 ),
               ],
@@ -353,6 +354,25 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFFD97706),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (item.points > 0) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.stars_rounded, size: 14, color: Color(0xFFD97706)),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    'Điểm ĐRL: Tạm tính 50% (+${(item.points / 2).toStringAsFixed(item.points % 2 == 0 ? 0 : 1)} ĐRL) • Nhận đủ +${item.points.toStringAsFixed(item.points % 1 == 0 ? 0 : 1)} ĐRL sau khi duyệt',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFB45309),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -483,6 +503,42 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
               ],
             ),
           ],
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  item.status == 'approved'
+                      ? Icons.check_circle_outline_rounded
+                      : (item.status == 'rejected'
+                          ? Icons.cancel_outlined
+                          : Icons.hourglass_empty_rounded),
+                  size: 14,
+                  color: statusColor,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    item.status == 'approved'
+                        ? 'Đã duyệt: Được ghi nhận đủ 100% điểm rèn luyện.'
+                        : (item.status == 'rejected'
+                            ? 'Bị từ chối: Không được ghi nhận điểm rèn luyện (+0 ĐRL).'
+                            : 'Đang chờ duyệt: Trước khi được duyệt hoặc bị từ chối, tạm tính 50% điểm ĐRL.'),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

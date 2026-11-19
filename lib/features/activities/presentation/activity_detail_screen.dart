@@ -87,6 +87,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       activityName: activity.name,
       timeStop: activity.timeStop,
       location: activity.location,
+      points: activity.points,
     );
     if (submitted == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -396,7 +397,11 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                         activity: activity,
                         service: widget.service,
                       ),
-                      _InfoSection(activity: activity),
+                      _InfoSection(
+                        activity: activity,
+                        missingRequest: _missingCheckoutRequest,
+                        isEligibleForMissingCheckout: _isEligibleForMissingCheckout,
+                      ),
                       const SizedBox(height: 18),
                       _DescriptionSection(activity: activity),
                       const SizedBox(height: 24),
@@ -410,15 +415,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: const Color(0xFFFDE68A)),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 24),
-                                SizedBox(width: 12),
+                                const Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 24),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      const Text(
                                         'Yêu cầu bổ sung check-out đang chờ duyệt',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w800,
@@ -426,10 +431,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                           fontSize: 13.5,
                                         ),
                                       ),
-                                      SizedBox(height: 2),
+                                      const SizedBox(height: 2),
                                       Text(
-                                        'Quản trị viên đang xem xét minh chứng của bạn.',
-                                        style: TextStyle(
+                                        'Quản trị viên đang xem xét minh chứng của bạn. Trước khi được duyệt hoặc bị từ chối, hệ thống tạm ghi nhận 50% điểm: +${(activity.points / 2).toStringAsFixed(activity.points % 2 == 0 ? 0 : 1)} ĐRL (sẽ cộng đủ +${activity.points.toStringAsFixed(activity.points % 1 == 0 ? 0 : 1)} ĐRL khi được duyệt).',
+                                        style: const TextStyle(
                                           color: Color(0xFFB45309),
                                           fontSize: 12,
                                         ),
@@ -449,15 +454,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: const Color(0xFFBBF7D0)),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 24),
-                                SizedBox(width: 12),
+                                const Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 24),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      const Text(
                                         'Đã duyệt bổ sung check-out thành công',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w800,
@@ -465,10 +470,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                           fontSize: 13.5,
                                         ),
                                       ),
-                                      SizedBox(height: 2),
+                                      const SizedBox(height: 2),
                                       Text(
-                                        'Điểm rèn luyện của bạn đã được ghi nhận.',
-                                        style: TextStyle(
+                                        'Điểm rèn luyện của bạn đã được ghi nhận đủ 100% (+${activity.points.toStringAsFixed(activity.points % 1 == 0 ? 0 : 1)} ĐRL).',
+                                        style: const TextStyle(
                                           color: Color(0xFF15803D),
                                           fontSize: 12,
                                         ),
@@ -510,8 +515,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                           const SizedBox(height: 2),
                                           Text(
                                             activity.isMissingCheckoutExpired
-                                                ? 'Minh chứng chưa đạt và đã quá thời hạn 3 ngày để nộp lại.'
-                                                : 'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
+                                                ? 'Minh chứng chưa đạt và đã quá thời hạn 3 ngày để nộp lại. Hoạt động này không được cộng điểm ĐRL (+0 ĐRL).'
+                                                : 'Minh chứng không đủ điều kiện hoặc chưa rõ ràng. Yêu cầu bị từ chối nên không được cộng điểm (+0 ĐRL). Bạn có thể gửi lại yêu cầu kèm minh chứng mới.',
                                             style: const TextStyle(
                                               color: Color(0xFFB91C1C),
                                               fontSize: 12,
@@ -608,6 +613,16 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                     ),
                                   ),
                                 ],
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Trước khi được duyệt hoặc bị từ chối: Tạm tính 50% (+${(activity.points / 2).toStringAsFixed(activity.points % 2 == 0 ? 0 : 1)} ĐRL). Hãy gửi bổ sung check-out để nhận đủ 100% điểm.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: Color(0xFFB45309),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -768,12 +783,37 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _InfoSection extends StatelessWidget {
-  const _InfoSection({required this.activity});
+  const _InfoSection({
+    required this.activity,
+    this.missingRequest,
+    this.isEligibleForMissingCheckout = false,
+  });
 
   final ActivityItem activity;
+  final MissingAttendanceRequest? missingRequest;
+  final bool isEligibleForMissingCheckout;
+
+  String _formatPoint(double p) =>
+      p.toStringAsFixed(p.truncateToDouble() == p ? 0 : 1);
 
   @override
   Widget build(BuildContext context) {
+    final String pointsDisplay;
+    if (activity.isEnded && activity.isRegistered) {
+      if (missingRequest?.status == 'approved') {
+        pointsDisplay = '+${_formatPoint(activity.points)} ĐRL (100%)';
+      } else if (missingRequest?.status == 'pending' || isEligibleForMissingCheckout) {
+        pointsDisplay =
+            '+${_formatPoint(activity.points / 2)} / ${_formatPoint(activity.points)} ĐRL (Tạm tính 50%)';
+      } else if (missingRequest?.status == 'rejected') {
+        pointsDisplay = '0 / ${_formatPoint(activity.points)} ĐRL (Bị từ chối)';
+      } else {
+        pointsDisplay = '+${_formatPoint(activity.points)} ĐRL';
+      }
+    } else {
+      pointsDisplay = _formatPoint(activity.points);
+    }
+
     return _Card(
       child: Column(
         children: [
@@ -795,9 +835,7 @@ class _InfoSection extends StatelessWidget {
           _InfoRow(
             icon: Icons.stars_outlined,
             label: 'Điểm DRL',
-            value: activity.points.toStringAsFixed(
-              activity.points.truncateToDouble() == activity.points ? 0 : 1,
-            ),
+            value: pointsDisplay,
           ),
           _InfoRow(
             icon: Icons.groups_outlined,

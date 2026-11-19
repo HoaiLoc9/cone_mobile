@@ -123,6 +123,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
       activityName: activity.name,
       timeStop: activity.timeStop,
       location: activity.location,
+      points: activity.points,
     );
     if (submitted == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

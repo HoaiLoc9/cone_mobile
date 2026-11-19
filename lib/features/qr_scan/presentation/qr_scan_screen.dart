@@ -421,6 +421,14 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isCheckedOut = result.checkOutAt != null;
+    final double awardedPoints = isCheckedOut ? result.points : (result.points / 2);
+    final String awardedPointsStr = awardedPoints > 0
+        ? (awardedPoints.truncateToDouble() == awardedPoints
+            ? awardedPoints.toInt().toString()
+            : awardedPoints.toStringAsFixed(1))
+        : (isCheckedOut ? '5' : '2.5');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -440,13 +448,15 @@ class _ResultCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF10B981), Color(0xFF059669)],
+              gradient: LinearGradient(
+                colors: isCheckedOut
+                    ? const [Color(0xFF10B981), Color(0xFF059669)]
+                    : const [Color(0xFFF59E0B), Color(0xFFD97706)],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                  color: (isCheckedOut ? const Color(0xFF10B981) : const Color(0xFFF59E0B)).withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -455,10 +465,16 @@ class _ResultCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.celebration_rounded, color: Colors.white, size: 18),
+                Icon(
+                  isCheckedOut ? Icons.celebration_rounded : Icons.star_half_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  '+${result.points > 0 ? (result.points.truncateToDouble() == result.points ? result.points.toInt() : result.points) : 5} ĐIỂM RÈN LUYỆN ĐÃ GHI NHẬN!',
+                  isCheckedOut
+                      ? '+$awardedPointsStr ĐIỂM RÈN LUYỆN ĐÃ GHI NHẬN ĐỦ!'
+                      : '+$awardedPointsStr ĐIỂM RÈN LUYỆN (CHECK-IN: 50%)',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -488,9 +504,9 @@ class _ResultCard extends StatelessWidget {
           _RowInfo(
             icon: Icons.stars_outlined,
             label: 'Điểm',
-            value: result.points.toStringAsFixed(
-              result.points.truncateToDouble() == result.points ? 0 : 1,
-            ),
+            value: isCheckedOut
+                ? '${result.points.toStringAsFixed(result.points.truncateToDouble() == result.points ? 0 : 1)} ĐRL (100%)'
+                : '$awardedPointsStr / ${result.points.toStringAsFixed(result.points.truncateToDouble() == result.points ? 0 : 1)} ĐRL (Tạm tính 50%)',
           ),
           _RowInfo(
             icon: Icons.how_to_reg,

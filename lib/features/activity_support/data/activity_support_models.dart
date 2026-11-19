@@ -31,6 +31,7 @@ class MissingAttendanceEligible {
     required this.timeStop,
     required this.missingType,
     required this.missingTypeLabel,
+    this.points = 0.0,
   });
 
   final String id;
@@ -40,6 +41,7 @@ class MissingAttendanceEligible {
   final DateTime? timeStop;
   final String missingType;
   final String missingTypeLabel;
+  final double points;
 
   factory MissingAttendanceEligible.fromJson(Map<String, dynamic> json) {
     return MissingAttendanceEligible(
@@ -50,6 +52,7 @@ class MissingAttendanceEligible {
       timeStop: _parseDate(json['time_stop']),
       missingType: json['missing_type']?.toString() ?? '',
       missingTypeLabel: json['missing_type_label']?.toString() ?? '',
+      points: (json['points'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

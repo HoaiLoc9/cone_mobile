@@ -17,6 +17,7 @@ class MissingCheckoutSheet extends StatefulWidget {
     required this.activityName,
     this.timeStop,
     this.location,
+    this.points,
   });
 
   final ActivitySupportService service;
@@ -24,6 +25,7 @@ class MissingCheckoutSheet extends StatefulWidget {
   final String activityName;
   final DateTime? timeStop;
   final String? location;
+  final double? points;
 
   static Future<bool?> show(
     BuildContext context, {
@@ -32,6 +34,7 @@ class MissingCheckoutSheet extends StatefulWidget {
     required String activityName,
     DateTime? timeStop,
     String? location,
+    double? points,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -44,6 +47,7 @@ class MissingCheckoutSheet extends StatefulWidget {
         activityName: activityName,
         timeStop: timeStop,
         location: location,
+        points: points,
       ),
     );
   }
@@ -311,6 +315,33 @@ class _MissingCheckoutSheetState extends State<MissingCheckoutSheet> {
                               ),
                             ),
                           ],
+                        ),
+                      ],
+                      if (widget.points != null && widget.points! > 0) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFFDE68A)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.stars_rounded, size: 16, color: Color(0xFFD97706)),
+                              const SizedBox(width: 7),
+                              Expanded(
+                                child: Text(
+                                  'Trước khi được duyệt hoặc bị từ chối: Tạm tính 50% (+${(widget.points! / 2).toStringAsFixed(widget.points! % 2 == 0 ? 0 : 1)} ĐRL). Khi được duyệt sẽ cộng đủ +${widget.points!.toStringAsFixed(widget.points! % 1 == 0 ? 0 : 1)} ĐRL.',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF92400E),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ],

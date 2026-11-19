@@ -234,32 +234,42 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withValues(alpha: 0.10),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                '+${item.points.toStringAsFixed(item.points % 1 == 0 ? 0 : 1)}',
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: AppColors.primary,
-                                                ),
+                                        Builder(
+                                          builder: (_) {
+                                            final isAttended = item.registrationStatusLabel.contains('điểm danh') ||
+                                                item.registrationStatusLabel.contains('Hoàn thành');
+                                            final isHalf = item.isEnded && !isAttended;
+                                            final double pts = isHalf ? (item.points / 2) : item.points;
+                                            final Color clr = isHalf ? const Color(0xFFD97706) : AppColors.primary;
+
+                                            return Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: clr.withValues(alpha: 0.10),
+                                                borderRadius: BorderRadius.circular(12),
                                               ),
-                                              const Text(
-                                                'điểm',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppColors.primary,
-                                                ),
+                                              child: Column(
+                                                children: [
+                                                  Text(
+                                                    '+${pts.toStringAsFixed(pts % 1 == 0 ? 0 : 1)}',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: clr,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    isHalf ? 'điểm (50%)' : 'điểm',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: clr,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            );
+                                          },
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(

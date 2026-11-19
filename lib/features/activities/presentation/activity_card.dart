@@ -60,8 +60,10 @@ class ActivityCard extends StatelessWidget {
         ? (activity.registeredCount / activity.maxRegistrations).clamp(0.0, 1.0)
         : 0.0;
 
-    final String pointStr = activity.points.toStringAsFixed(
-        activity.points.truncateToDouble() == activity.points ? 0 : 1);
+    final bool isHalf = isEnded && isRegistered && isMissingCheckout;
+    final double displayPoints = isHalf ? (activity.points / 2) : activity.points;
+    final String pointStr = displayPoints.toStringAsFixed(
+        displayPoints.truncateToDouble() == displayPoints ? 0 : 1);
 
     return Material(
       color: Colors.transparent,
@@ -141,7 +143,7 @@ class ActivityCard extends StatelessWidget {
                         const Icon(Icons.stars_rounded, size: 15, color: Color(0xFFD97706)),
                         const SizedBox(width: 4),
                         Text(
-                          '+$pointStr ĐRL',
+                          isHalf ? '+$pointStr ĐRL (50%)' : '+$pointStr ĐRL',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,

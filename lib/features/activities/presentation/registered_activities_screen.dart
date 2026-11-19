@@ -96,6 +96,7 @@ class _RegisteredActivitiesScreenState
       activityName: item.name,
       timeStop: item.timeStop,
       location: item.location,
+      points: item.points,
     );
     if (submitted == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -396,6 +397,32 @@ class _RegisteredActivitiesScreenState
       statusIcon = Icons.schedule_rounded;
     }
 
+    final bool isHalfPoints = item.isEnded && (isMissingCheckout || isPendingReview);
+    final bool isRejected = item.isEnded && isRejectedReview;
+    final double displayPoints = isHalfPoints
+        ? (item.points / 2)
+        : (isRejected ? 0.0 : item.points);
+    final Color pointsColor = isRejected
+        ? const Color(0xFFDC2626)
+        : (isHalfPoints
+            ? const Color(0xFFB45309)
+            : (isAttended ? const Color(0xFF047857) : const Color(0xFFB45309)));
+    final Color pointsBg = isRejected
+        ? const Color(0xFFFEE2E2)
+        : (isHalfPoints
+            ? const Color(0xFFFEF3C7)
+            : (isAttended ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7)));
+    final Color pointsBorder = isRejected
+        ? const Color(0xFFFECACA)
+        : (isHalfPoints
+            ? const Color(0xFFFCD34D)
+            : (isAttended ? const Color(0xFF6EE7B7) : const Color(0xFFFCD34D)));
+    final String pointsText = isRejected
+        ? '+0 ĐRL'
+        : (isHalfPoints
+            ? '+${_points(displayPoints)} ĐRL (50%)'
+            : '+${_points(displayPoints)} ĐRL');
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -457,16 +484,16 @@ class _RegisteredActivitiesScreenState
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
+                      color: pointsBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFCD34D)),
+                      border: Border.all(color: pointsBorder),
                     ),
                     child: Text(
-                      '+${_points(item.points)} ĐRL',
-                      style: const TextStyle(
+                      pointsText,
+                      style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFFB45309),
+                        color: pointsColor,
                       ),
                     ),
                   ),
