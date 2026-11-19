@@ -514,10 +514,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             slivers: [
               // 1. Thẻ Bật Thông Báo Đẩy Nổi Bật
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: _DeviceNotificationBanner(service: widget.service),
-                ),
+                child: _DeviceNotificationBanner(service: widget.service),
               ),
 
               // 2. Thanh Danh Mục Bộ Lọc Trượt Ngang (Horizontal Filter Pills)
@@ -792,141 +789,104 @@ class _DeviceNotificationBannerState extends State<_DeviceNotificationBanner> {
     }
   }
 
-  Future<void> _sendTestNotification() async {
-    await LocalNotificationService.instance.showNotification(
-      title: 'COne Thử Nghiệm 🔔',
-      body: 'Thông báo đẩy trên iPhone hoạt động rất tốt!',
-    );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã gửi thông báo thử nghiệm tới màn hình!'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isGranted = _permissionStatus == 'granted';
+    if (_permissionStatus == 'granted') {
+      return const SizedBox.shrink();
+    }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isGranted
-              ? [const Color(0xFF0F766E), const Color(0xFF059669)]
-              : [const Color(0xFF1E3A8A), const Color(0xFF2563EB)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: (isGranted ? const Color(0xFF059669) : AppColors.primary).withValues(alpha: 0.28),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      isGranted ? Icons.notifications_active_rounded : Icons.cell_tower_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isGranted ? 'Thông báo đẩy: ĐÃ SẴN SÀNG' : 'Thông báo đẩy lên thiết bị',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 15.5,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isGranted
-                              ? 'Nhận tin báo điểm rèn luyện & điểm danh ngay tức thì.'
-                              : 'Bật nhận thông báo ngay cả khi đã tắt app.',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.88),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  if (isGranted) ...[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
-                          backgroundColor: Colors.white.withValues(alpha: 0.12),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _sendTestNotification,
-                        icon: const Icon(Icons.send_rounded, size: 16),
-                        label: const Text(
-                          'Gửi thử thông báo lên máy',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                        ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.cell_tower_rounded,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                  ] else ...[
+                    const SizedBox(width: 14),
                     Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1E3A8A),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _isRequesting ? null : _requestPermission,
-                        icon: _isRequesting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.touch_app_rounded, size: 18),
-                        label: Text(
-                          _isRequesting ? 'Đang yêu cầu...' : 'Kích hoạt thông báo ngay',
-                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Thông báo đẩy lên thiết bị',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 15.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Bật nhận thông báo ngay cả khi đã tắt app.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.88),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1E3A8A),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _isRequesting ? null : _requestPermission,
+                    icon: _isRequesting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.touch_app_rounded, size: 18),
+                    label: Text(
+                      _isRequesting ? 'Đang yêu cầu...' : 'Kích hoạt thông báo ngay',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
