@@ -752,33 +752,25 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
             return RefreshIndicator(
               onRefresh: () async => _reload(),
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
                 children: [
-                  // 1. Thẻ Hero Điểm Rèn Luyện & Vòng Tròn Radial Gauge
-                  _buildHeroRadialScoreCard(
+                  // 1. Thẻ tổng quan điểm + 3 chỉ số nhanh (gọn, 1 khối duy nhất)
+                  _buildCompactOverviewCard(
+                    data: data,
                     score: score,
                     currentSemesterName: currentSemester?.semesterName,
-                    onTap: currentSemester != null
+                    onScoreTap: currentSemester != null
                         ? () => _openSemesterDetail(currentSemester.semesterId)
                         : _openDrlSummary,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
-                  // 2. Lưới chỉ số thống kê KPI (Ấn vào xem chi tiết đã đăng ký / đã ghi nhận)
-                  _buildKpiGrid(data: data, score: score),
-                  const SizedBox(height: 24),
-
-                  // 3. Tiến độ điểm qua các học kỳ (Ấn vào từng kỳ để xem chi tiết)
+                  // 2. Tiến độ điểm qua các học kỳ (gọn, rõ từng kỳ)
                   _buildSemesterProgressSection(data.summary.semesterSummaries),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
 
-                  // 4. Thang điểm & Tiêu chuẩn xếp loại
-                  _buildRankingStandardCard(),
-                  const SizedBox(height: 20),
-
-                  // 5. Khuyến nghị thông minh từ hệ thống
-                  _buildSmartRecommendationCard(score: score),
-                  const SizedBox(height: 20),
+                  // 3. Thang xếp loại thu gọn 1 dòng
+                  _buildCompactRankingStrip(),
                 ],
               ),
             );
@@ -788,315 +780,202 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     );
   }
 
-  Widget _buildHeroRadialScoreCard({
+  Widget _buildCompactOverviewCard({
+    required _StatsData data,
     required double score,
     String? currentSemesterName,
-    required VoidCallback onTap,
+    required VoidCallback onScoreTap,
   }) {
     final (rankLabel, rankColor) = _getRankInfo(score);
     final progress = (score / 100).clamp(0.0, 1.0);
+    final scoreText = score.toStringAsFixed(score % 1 == 0 ? 0 : 1);
+    final goalText = score >= 90
+        ? 'Đạt mức Xuất sắc'
+        : (score >= 80
+            ? 'Cần thêm ${(90 - score).ceil()}đ đạt Xuất sắc'
+            : 'Cần thêm ${(80 - score).ceil()}đ đạt Tốt');
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF2563EB)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1E3A8A).withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'ĐIỂM RÈN LUYỆN KỲ NÀY',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      currentSemesterName ?? 'Học kỳ hiện tại',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: rankColor.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: rankColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(
-                    rankLabel,
-                    style: TextStyle(
-                      color: rankColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Vòng tròn điểm số Radial Gauge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 110,
-                  height: 110,
-                  child: Stack(
-                    alignment: Alignment.center,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.adaptiveBorder),
+      ),
+      child: Column(
+        children: [
+          // Phần điểm rèn luyện kỳ hiện tại
+          InkWell(
+            onTap: onScoreTap,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        width: 110,
-                        height: 110,
-                        child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 10,
-                          backgroundColor: Colors.white.withValues(alpha: 0.15),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                          strokeCap: StrokeCap.round,
+                      Expanded(
+                        child: Text(
+                          currentSemesterName ?? 'Học kỳ hiện tại',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.adaptiveTextSecondary,
+                          ),
                         ),
                       ),
-                      Column(
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: rankColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          rankLabel,
+                          style: TextStyle(
+                            color: rankColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        scoreText,
+                        style: TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                          letterSpacing: -1,
+                          color: AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 5, bottom: 4),
+                        child: Text(
+                          '/ 100 điểm',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.adaptiveTextSecondary,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            score.toStringAsFixed(score % 1 == 0 ? 0 : 1),
-                            style: const TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 1,
+                            goalText,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.adaptiveTextSecondary,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            '/100 điểm',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: AppColors.adaptiveTextSecondary,
                           ),
                         ],
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 24),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: AppColors.adaptiveCardSubtle,
+                      valueColor: AlwaysStoppedAnimation<Color>(rankColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Divider(height: 1, color: AppColors.adaptiveBorder),
+
+          // Hàng 3 chỉ số gọn (Hoạt động | Học kỳ | Tin mới)
+          IntrinsicHeight(
+            child: Row(
+              children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Mục tiêu học bổng:',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        score >= 90
-                            ? 'Đã đạt chuẩn Xuất sắc! 🏆'
-                            : (score >= 80
-                                ? 'Cần thêm ${(90 - score).toInt()}đ để đạt Xuất sắc ⭐'
-                                : 'Cần thêm ${(80 - score).toInt()}đ để đạt Tốt 🎯'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Ấn xem chi tiết điểm',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 3),
-                            Icon(Icons.chevron_right_rounded, color: Colors.white, size: 14),
-                          ],
-                        ),
-                      ),
-                    ],
+                  child: _buildInlineMetric(
+                    value: '${data.registeredCount}',
+                    label: 'Hoạt động',
+                    onTap: () => _showRegisteredActivitiesSheet(data.registeredActivities),
+                  ),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: AppColors.adaptiveBorder),
+                Expanded(
+                  child: _buildInlineMetric(
+                    value: '${data.summary.semesterSummaries.length}',
+                    label: 'Học kỳ',
+                    onTap: () => _showRecordedSemestersSheet(data),
+                  ),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: AppColors.adaptiveBorder),
+                Expanded(
+                  child: _buildInlineMetric(
+                    value: '${data.unreadNotifications}',
+                    label: 'Tin chưa đọc',
+                    onTap: _openNotifications,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildKpiGrid({required _StatsData data, required double score}) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildKpiTile(
-            icon: Icons.event_available_rounded,
-            iconColor: const Color(0xFF2563EB),
-            title: 'Hoạt động',
-            value: '${data.registeredCount}',
-            unit: 'đã đăng ký',
-            onTap: () => _showRegisteredActivitiesSheet(data.registeredActivities),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildKpiTile(
-            icon: Icons.school_rounded,
-            iconColor: const Color(0xFF0284C7),
-            title: 'Học kỳ',
-            value: '${data.summary.semesterSummaries.length}',
-            unit: 'đã ghi nhận',
-            onTap: () => _showRecordedSemestersSheet(data),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildKpiTile(
-            icon: Icons.notifications_active_rounded,
-            iconColor: const Color(0xFF1D4ED8),
-            title: 'Tin mới',
-            value: '${data.unreadNotifications}',
-            unit: 'chưa đọc',
-            onTap: _openNotifications,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildKpiTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
+  Widget _buildInlineMetric({
     required String value,
-    required String unit,
+    required String label,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.adaptiveCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.adaptiveBorder),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.adaptiveTextPrimary,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: iconColor, size: 18),
-                  ),
-                  Icon(
-                    Icons.open_in_new_rounded,
-                    size: 13,
-                    color: iconColor.withValues(alpha: 0.75),
-                  ),
-                ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adaptiveTextSecondary,
               ),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.adaptiveTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                unit,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.adaptiveTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      'Xem chi tiết',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: iconColor,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.chevron_right_rounded, size: 14, color: iconColor),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1110,257 +989,196 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Các học kỳ',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+              GestureDetector(
+                onTap: _openDrlSummary,
+                child: const Text(
+                  'Bảng điểm',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.adaptiveCard,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.adaptiveBorder),
+          ),
+          child: Column(
+            children: List.generate(summaries.length, (index) {
+              final item = summaries[index];
+              final s = item.totalPoints;
+              final p = (s / 100).clamp(0.0, 1.0);
+              final (rank, color) = _getRankInfo(s);
+
+              return Column(
+                children: [
+                  InkWell(
+                    borderRadius: BorderRadius.vertical(
+                      top: index == 0 ? const Radius.circular(18) : Radius.zero,
+                      bottom: index == summaries.length - 1 ? const Radius.circular(18) : Radius.zero,
+                    ),
+                    onTap: () => _openSemesterDetail(item.semesterId),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.semesterName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.adaptiveTextPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${item.activityCount} HĐ',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.adaptiveTextSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                '${s.toStringAsFixed(s % 1 == 0 ? 0 : 1)}đ',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.adaptiveTextPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                rank,
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 17,
+                                color: AppColors.adaptiveTextSecondary,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 7),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: LinearProgressIndicator(
+                              value: p,
+                              minHeight: 4.5,
+                              backgroundColor: AppColors.adaptiveCardSubtle,
+                              valueColor: AlwaysStoppedAnimation<Color>(color),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (index < summaries.length - 1)
+                    Divider(height: 1, indent: 14, endIndent: 14, color: AppColors.adaptiveBorder),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactRankingStrip() {
+    Widget chip(String label, String range, Color color) {
+      return Expanded(
+        child: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 20),
-                const SizedBox(width: 8),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  'Lịch sử rèn luyện qua các học kỳ',
+                  label,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.adaptiveTextPrimary,
                   ),
                 ),
               ],
             ),
-            TextButton(
-              onPressed: _openDrlSummary,
-              child: const Text(
-                'Tất cả',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+            const SizedBox(height: 2),
+            Text(
+              range,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adaptiveTextSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.adaptiveCard,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.adaptiveBorder),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: AppColors.isDark ? 0.2 : 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: summaries.map((item) {
-              final s = item.totalPoints;
-              final p = (s / 100).clamp(0.0, 1.0);
-              final (rank, color) = _getRankInfo(s);
+      );
+    }
 
-              return InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => _openSemesterDetail(item.semesterId),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.semesterName,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.adaptiveTextPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Đã ghi nhận ${item.activityCount} hoạt động • Ấn để xem chi tiết',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.adaptiveTextSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                '${s.toStringAsFixed(s % 1 == 0 ? 0 : 1)}đ',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  color: color,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  rank,
-                                  style: TextStyle(
-                                    color: color,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 18,
-                                color: AppColors.adaptiveTextSecondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: p,
-                          minHeight: 8,
-                          backgroundColor: AppColors.cardSubtle,
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRankingStandardCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.adaptiveCard,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.adaptiveBorder),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Thang điểm xếp loại chuẩn COFER',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: AppColors.adaptiveTextPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildRankRow('Xuất sắc', '90 - 100 điểm', const Color(0xFF10B981)),
-          Divider(height: 14, color: AppColors.adaptiveBorder),
-          _buildRankRow('Tốt', '80 - 89 điểm', const Color(0xFF2563EB)),
-          Divider(height: 14, color: AppColors.adaptiveBorder),
-          _buildRankRow('Khá', '65 - 79 điểm', const Color(0xFF0284C7)),
-          Divider(height: 14, color: AppColors.adaptiveBorder),
-          _buildRankRow('Trung bình', '50 - 64 điểm', AppColors.adaptiveTextSecondary),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRankRow(String rank, String range, Color color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              rank,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: AppColors.adaptiveTextPrimary,
-              ),
-            ),
-          ],
-        ),
-        Text(
-          range,
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: color),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSmartRecommendationCard({required double score}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
-      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.lightbulb_rounded, color: Color(0xFF2563EB), size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Gợi ý từ Cố vấn rèn luyện AI',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    color: Color(0xFF1E3A8A),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  score >= 80
-                      ? 'Bạn đang giữ phong độ rất tốt! Hãy tiếp tục tham gia các hoạt động nghiên cứu khoa học hoặc chiến dịch tình nguyện để duy trì học bổng khuyến khích tài năng.'
-                      : 'Hãy tham gia thêm ít nhất 2 hoạt động phong trào hoặc hoạt động kỹ năng trong tháng này để cải thiện bậc xếp loại rèn luyện lên mức Tốt nhé!',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF1E40AF),
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          chip('Xuất sắc', '90–100', const Color(0xFF10B981)),
+          chip('Tốt', '80–89', AppColors.primary),
+          chip('Khá', '65–79', const Color(0xFF0284C7)),
+          chip('TB', '50–64', AppColors.adaptiveTextSecondary),
         ],
       ),
     );
   }
 
   (String, Color) _getRankInfo(double score) {
-    if (score >= 90) return ('XUẤT SẮC 🏅', const Color(0xFF10B981));
-    if (score >= 80) return ('TỐT ⭐', const Color(0xFF38BDF8));
-    if (score >= 65) return ('KHÁ 👍', const Color(0xFF60A5FA));
-    if (score >= 50) return ('TRUNG BÌNH', const Color(0xFFF59E0B));
-    return ('YẾU', const Color(0xFFEF4444));
+    if (score >= 90) return ('Xuất sắc', const Color(0xFF10B981));
+    if (score >= 80) return ('Tốt', AppColors.primary);
+    if (score >= 65) return ('Khá', const Color(0xFF0284C7));
+    if (score >= 50) return ('Trung bình', const Color(0xFFD97706));
+    return ('Yếu', AppColors.danger);
   }
 }
 
