@@ -56,4 +56,26 @@ class ActivityService {
     final data = await _apiClient.post('/mobile/activities/$id/cancel');
     return ActivityItem.fromJson(data['data'] as Map<String, dynamic>);
   }
+
+  Future<CollaboratorOverviewData> fetchCollaboratorOverview(String id) async {
+    final data = await _apiClient.get('/mobile/activities/$id/collaborator/overview');
+    return CollaboratorOverviewData.fromJson(
+      (data['data'] as Map<String, dynamic>?) ?? const {},
+    );
+  }
+
+  Future<String> collaboratorCheckIn({
+    required String id,
+    required String studentCode,
+    required int type,
+  }) async {
+    final data = await _apiClient.post(
+      '/mobile/activities/$id/collaborator/check-in',
+      body: {
+        'student_code': studentCode.trim(),
+        'type': type,
+      },
+    );
+    return data['message']?.toString() ?? 'Đã ghi nhận điểm danh thành công!';
+  }
 }

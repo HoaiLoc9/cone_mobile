@@ -9,6 +9,7 @@ import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/certificate_screen.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
+import 'activity_collaborator_panel.dart';
 import 'activity_helpers.dart';
 
 class ActivityDetailScreen extends StatefulWidget {
@@ -350,6 +351,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                         _ErrorBox(message: _errorMessage!),
                       ],
                       const SizedBox(height: 18),
+                      ActivityCollaboratorPanel(
+                        activity: activity,
+                        service: widget.service,
+                      ),
                       _InfoSection(activity: activity),
                       const SizedBox(height: 18),
                       _DescriptionSection(activity: activity),
