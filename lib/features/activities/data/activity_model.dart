@@ -47,6 +47,17 @@ class ActivityItem {
   final bool canCancel;
   final CollaboratorRoleInfo collaborator;
 
+  bool get isEnded {
+    if (status == 'completed' ||
+        statusLabel.toLowerCase().contains('kết thúc')) {
+      return true;
+    }
+    if (timeStop != null && timeStop!.isBefore(DateTime.now())) {
+      return true;
+    }
+    return false;
+  }
+
   factory ActivityItem.fromJson(Map<String, dynamic> json) {
     final collabRaw = json['collaborator'];
     return ActivityItem(

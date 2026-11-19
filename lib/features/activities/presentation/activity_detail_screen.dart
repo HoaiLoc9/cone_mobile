@@ -5,12 +5,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../activity_support/data/activity_support_models.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/certificate_screen.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
 import 'activity_collaborator_panel.dart';
 import 'activity_helpers.dart';
+import 'missing_checkout_sheet.dart';
 
 class ActivityDetailScreen extends StatefulWidget {
   const ActivityDetailScreen({
@@ -31,6 +33,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _errorMessage;
+  MissingAttendanceRequest? _missingCheckoutRequest;
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     try {
       final activity = await widget.service.fetchActivity(widget.activityId);
       setState(() => _activity = activity);
+      _checkMissingSupport(activity);
     } on ApiException catch (error) {
       setState(() => _errorMessage = error.message);
     } catch (_) {
@@ -55,6 +59,40 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _checkMissingSupport(ActivityItem activity) async {
+    if (!activity.isRegistered || !activity.isEnded) return;
+    try {
+      final supportService = ActivitySupportService(token: widget.service.token);
+      final data = await supportService.fetchMissingAttendance();
+      if (!mounted) return;
+      final existing = data.requests.where((r) => r.activityId == activity.id).firstOrNull;
+      setState(() {
+        _missingCheckoutRequest = existing;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _openMissingCheckoutForm(ActivityItem activity) async {
+    final supportService = ActivitySupportService(token: widget.service.token);
+    final submitted = await MissingCheckoutSheet.show(
+      context,
+      service: supportService,
+      activityId: activity.id,
+      activityName: activity.name,
+      timeStop: activity.timeStop,
+      location: activity.location,
+    );
+    if (submitted == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi yêu cầu bổ sung check-out thành công! Quản trị viên sẽ xem xét duyệt.'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+      _load();
     }
   }
 
@@ -359,17 +397,114 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                       const SizedBox(height: 18),
                       _DescriptionSection(activity: activity),
                       const SizedBox(height: 24),
-                      PrimaryButton(
-                        label: activity.isRegistered
-                            ? 'Hủy đăng ký'
-                            : 'Đăng ký hoạt động',
-                        isLoading: _isSubmitting,
-                        onPressed: activity.isRegistered
-                            ? (activity.canCancel ? _toggleRegistration : null)
-                            : (activity.canRegister
-                                  ? _toggleRegistration
-                                  : null),
-                      ),
+                      if (activity.isEnded) ...[
+                        if (activity.isRegistered) ...[
+                          if (_missingCheckoutRequest?.status == 'pending') ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFFDE68A)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 24),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Yêu cầu bổ sung check-out đang chờ duyệt',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF92400E),
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Quản trị viên đang xem xét minh chứng của bạn.',
+                                          style: TextStyle(
+                                            color: Color(0xFFB45309),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (_missingCheckoutRequest?.status == 'approved') ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFBBF7D0)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 24),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Đã duyệt bổ sung check-out thành công',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF166534),
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Điểm rèn luyện của bạn đã được ghi nhận.',
+                                          style: TextStyle(
+                                            color: Color(0xFF15803D),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            PrimaryButton(
+                              label: 'Bổ sung check out',
+                              icon: Icons.assignment_turned_in_rounded,
+                              backgroundColor: const Color(0xFFD97706),
+                              onPressed: () => _openMissingCheckoutForm(activity),
+                            ),
+                          ],
+                        ] else ...[
+                          const PrimaryButton(
+                            label: 'Hoạt động đã kết thúc',
+                            icon: Icons.event_busy_rounded,
+                            onPressed: null,
+                          ),
+                        ],
+                      ] else ...[
+                        PrimaryButton(
+                          label: activity.isRegistered
+                              ? 'Hủy đăng ký'
+                              : 'Đăng ký hoạt động',
+                          isLoading: _isSubmitting,
+                          onPressed: activity.isRegistered
+                              ? (activity.canCancel ? _toggleRegistration : null)
+                              : (activity.canRegister
+                                    ? _toggleRegistration
+                                    : null),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
@@ -437,7 +572,7 @@ class _HeroCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              activity.statusLabel,
+              activity.isEnded ? 'ĐÃ KẾT THÚC' : activity.statusLabel,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,

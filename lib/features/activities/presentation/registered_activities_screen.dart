@@ -1,10 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../activity_support/data/activity_support_service.dart';
 import '../data/activity_model.dart';
 import '../data/activity_service.dart';
 import 'activity_detail_screen.dart';
 import 'activity_helpers.dart';
+import 'missing_checkout_sheet.dart';
 
 class RegisteredActivitiesScreen extends StatefulWidget {
   const RegisteredActivitiesScreen({super.key, required this.service});
@@ -43,6 +45,27 @@ class _RegisteredActivitiesScreenState
     if (points == null) return '0';
     if (points == points.roundToDouble()) return points.toInt().toString();
     return points.toStringAsFixed(1);
+  }
+
+  Future<void> _openMissingCheckout(ActivityItem item) async {
+    final supportService = ActivitySupportService(token: widget.service.token);
+    final submitted = await MissingCheckoutSheet.show(
+      context,
+      service: supportService,
+      activityId: item.id,
+      activityName: item.name,
+      timeStop: item.timeStop,
+      location: item.location,
+    );
+    if (submitted == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi yêu cầu bổ sung check-out thành công! Quản trị viên sẽ xem xét duyệt.'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+      _reload();
+    }
   }
 
   @override
@@ -283,9 +306,25 @@ class _RegisteredActivitiesScreenState
   Widget _buildRegisteredCard(ActivityItem item) {
     final isAttended = item.registrationStatusLabel.contains('điểm danh') ||
         item.registrationStatusLabel.contains('Hoàn thành');
+    final isEnded = item.isEnded;
 
-    final statusColor = isAttended ? const Color(0xFF10B981) : const Color(0xFF2563EB);
-    final statusText = isAttended ? 'ĐÃ ĐIỂM DANH' : 'ĐÃ ĐĂNG KÝ';
+    final Color statusColor;
+    final String statusText;
+    final IconData statusIcon;
+
+    if (isAttended) {
+      statusColor = const Color(0xFF10B981);
+      statusText = 'ĐÃ HOÀN THÀNH';
+      statusIcon = Icons.check_circle_rounded;
+    } else if (isEnded) {
+      statusColor = const Color(0xFFD97706);
+      statusText = 'ĐÃ KẾT THÚC • CHƯA CHECK-OUT';
+      statusIcon = Icons.warning_amber_rounded;
+    } else {
+      statusColor = const Color(0xFF2563EB);
+      statusText = 'ĐÃ ĐĂNG KÝ';
+      statusIcon = Icons.schedule_rounded;
+    }
 
     return Material(
       color: Colors.transparent,
@@ -300,7 +339,9 @@ class _RegisteredActivitiesScreenState
             border: Border.all(
               color: isAttended
                   ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                  : AppColors.adaptiveBorder,
+                  : (isEnded
+                      ? const Color(0xFFD97706).withValues(alpha: 0.35)
+                      : AppColors.adaptiveBorder),
             ),
             boxShadow: [
               BoxShadow(
@@ -326,7 +367,7 @@ class _RegisteredActivitiesScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isAttended ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                          statusIcon,
                           size: 13,
                           color: statusColor,
                         ),
@@ -396,6 +437,26 @@ class _RegisteredActivitiesScreenState
                   ),
                 ],
               ),
+              if (isEnded && !isAttended) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEF3C7),
+                      foregroundColor: const Color(0xFFB45309),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                    ),
+                    onPressed: () => _openMissingCheckout(item),
+                    icon: const Icon(Icons.assignment_turned_in_rounded, size: 16),
+                    label: const Text(
+                      'Bổ sung check out',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               Divider(height: 1, color: AppColors.adaptiveBorder),
               const SizedBox(height: 8),

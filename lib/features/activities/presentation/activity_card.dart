@@ -12,16 +12,26 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEnded = activity.isEnded;
     final isRegistered = activity.isRegistered;
     final canRegister = activity.canRegister;
 
-    final Color statusColor = isRegistered
-        ? const Color(0xFF10B981)
-        : (canRegister ? const Color(0xFF2563EB) : const Color(0xFF64748B));
+    final Color statusColor;
+    final String statusText;
 
-    final String statusText = isRegistered
-        ? 'ĐÃ ĐĂNG KÝ'
-        : (canRegister ? 'ĐANG MỞ ĐĂNG KÝ' : 'ĐÃ ĐÓNG ĐĂNG KÝ');
+    if (isEnded) {
+      statusColor = const Color(0xFF64748B);
+      statusText = 'ĐÃ KẾT THÚC';
+    } else if (isRegistered) {
+      statusColor = const Color(0xFF10B981);
+      statusText = 'ĐÃ ĐĂNG KÝ';
+    } else if (canRegister) {
+      statusColor = const Color(0xFF2563EB);
+      statusText = 'ĐANG MỞ ĐĂNG KÝ';
+    } else {
+      statusColor = const Color(0xFF64748B);
+      statusText = 'ĐÃ ĐÓNG ĐĂNG KÝ';
+    }
 
     final double progress = (activity.maxRegistrations > 0)
         ? (activity.registeredCount / activity.maxRegistrations).clamp(0.0, 1.0)
@@ -41,14 +51,14 @@ class ActivityCard extends StatelessWidget {
             color: AppColors.adaptiveCard,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isRegistered
+              color: (!isEnded && isRegistered)
                   ? const Color(0xFF10B981).withValues(alpha: 0.35)
                   : AppColors.adaptiveBorder,
-              width: isRegistered ? 1.5 : 1.0,
+              width: (!isEnded && isRegistered) ? 1.5 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: isRegistered
+                color: (!isEnded && isRegistered)
                     ? const Color(0xFF10B981).withValues(alpha: 0.06)
                     : Colors.black.withValues(alpha: AppColors.isDark ? 0.20 : 0.04),
                 blurRadius: 14,
