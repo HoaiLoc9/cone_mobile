@@ -12,9 +12,14 @@ import '../data/qr_scan_result.dart';
 import '../data/qr_scan_service.dart';
 
 class QrScanScreen extends StatefulWidget {
-  const QrScanScreen({super.key, required this.service});
+  const QrScanScreen({
+    super.key,
+    required this.service,
+    this.onComplete,
+  });
 
   final QrScanService service;
+  final VoidCallback? onComplete;
 
   @override
   State<QrScanScreen> createState() => _QrScanScreenState();
@@ -118,6 +123,13 @@ class _QrScanScreenState extends State<QrScanScreen> {
     await _controller.start();
   }
 
+  void _completeAttendance() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+    widget.onComplete?.call();
+  }
+
   Future<void> _toggleTorch() async {
     await _controller.toggleTorch();
     setState(() => _torchOn = !_torchOn);
@@ -151,7 +163,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
       body: SafeArea(
         child: _result == null
             ? _buildScanner()
-            : _ResultView(result: _result!, onScanAgain: _scanAgain),
+            : _ResultView(
+                result: _result!,
+                onScanAgain: _scanAgain,
+                onCompleteAttendance: _completeAttendance,
+              ),
       ),
     );
   }
@@ -304,10 +320,15 @@ class _ScanHint extends StatelessWidget {
 }
 
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.result, required this.onScanAgain});
+  const _ResultView({
+    required this.result,
+    required this.onScanAgain,
+    required this.onCompleteAttendance,
+  });
 
   final QrScanResult result;
   final Future<void> Function() onScanAgain;
+  final VoidCallback onCompleteAttendance;
 
   @override
   Widget build(BuildContext context) {
@@ -358,7 +379,35 @@ class _ResultView extends StatelessWidget {
           const SizedBox(height: 18),
           _ResultCard(result: result),
           const SizedBox(height: 24),
-          PrimaryButton(label: 'Quét mã khác', onPressed: onScanAgain),
+          PrimaryButton(
+            label: 'Hoàn thành điểm danh',
+            icon: Icons.check_circle_rounded,
+            backgroundColor: const Color(0xFF059669),
+            onPressed: onCompleteAttendance,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: onScanAgain,
+              icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+              label: const Text(
+                'Quét mã khác',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.adaptiveTextPrimary,
+                side: BorderSide(color: AppColors.adaptiveBorder, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -9,15 +9,18 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.icon,
+    this.backgroundColor,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
   final IconData? icon;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = backgroundColor ?? AppColors.primary;
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -27,7 +30,7 @@ class PrimaryButton extends StatelessWidget {
           boxShadow: onPressed != null && !isLoading
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.28),
+                    color: effectiveColor.withValues(alpha: 0.28),
                     blurRadius: 14,
                     offset: const Offset(0, 5),
                   ),
@@ -37,8 +40,8 @@ class PrimaryButton extends StatelessWidget {
         child: FilledButton(
           onPressed: isLoading ? null : onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
+            backgroundColor: effectiveColor,
+            disabledBackgroundColor: effectiveColor.withValues(alpha: 0.45),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),

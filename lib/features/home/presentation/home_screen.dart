@@ -189,7 +189,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _openQrScan() {
     _pushScreen(
-      QrScanScreen(service: QrScanService(token: _session.token)),
+      QrScanScreen(
+        service: QrScanService(token: _session.token),
+        onComplete: () {
+          if (mounted) {
+            setState(() => _currentNavIndex = 0);
+            _reloadDashboard();
+          }
+        },
+      ),
     );
   }
 
