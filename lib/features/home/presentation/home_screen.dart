@@ -379,12 +379,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       valueListenable: _sessionNotifier,
       builder: (context, currentSession, _) {
         final user = currentSession.user;
-        final displayName = user.name.isEmpty ? user.code : user.name;
+        final hour = DateTime.now().hour;
+        final greeting = hour < 11
+            ? 'Chào buổi sáng'
+            : (hour < 14
+                ? 'Chào buổi trưa'
+                : (hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'));
 
         return Stack(
           children: [
             AppShell(
-              title: 'Xin chào, $displayName',
+              title: greeting,
               customTitle: Row(
             children: [
               GestureDetector(
@@ -434,27 +439,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'Xin chào, $displayName',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.adaptiveTextPrimary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text('👋', style: TextStyle(fontSize: 14)),
-                      ],
+                    Text(
+                      greeting,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.adaptiveTextPrimary,
+                      ),
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      'COne • Hệ thống rèn luyện sinh viên',
+                      'COne • CĐ Kinh tế Đối ngoại',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
