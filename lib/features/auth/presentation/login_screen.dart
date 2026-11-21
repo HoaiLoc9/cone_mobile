@@ -810,60 +810,97 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final heroBgHeight = (screenHeight * 0.42).clamp(260.0, 390.0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFEAF4FF),
       body: Stack(
         children: [
-          // Ambient Glowing Spheres (Không gian chiều sâu tinh tế)
-          Positioned(
-            top: -80,
-            left: -60,
+          // 1. Nền xanh nhạt mềm mại chuyển sắc toàn màn hình
+          Positioned.fill(
             child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF38BDF8).withValues(alpha: 0.18),
-                    Colors.transparent,
+                    Color(0xFFE0F2FE),
+                    Color(0xFFEAF4FF),
+                    Color(0xFFF4F9FF),
+                    Color(0xFFE5F0FF),
                   ],
                 ),
               ),
             ),
           ),
+
+          // 2. Ảnh nền khuôn viên trường đại học nắng sáng ở phần đầu
           Positioned(
-            top: 200,
-            right: -100,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF6366F1).withValues(alpha: 0.14),
-                    Colors.transparent,
-                  ],
+            top: 0,
+            left: 0,
+            right: 0,
+            height: heroBgHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/login_campus_bg.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  errorBuilder: (_, _, _) => Image.asset(
+                    'assets/images/campus_real.png',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
                 ),
-              ),
+                // Lớp sương sáng dịu ở giữa giúp logo & chữ COne luôn nổi bật sắc nét
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.05),
+                      radius: 0.72,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.72),
+                        Colors.white.withValues(alpha: 0.35),
+                        Colors.white.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                // Chuyển tiếp mờ êm ở mép dưới vào sóng xanh nhạt
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 95,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0xFFEAF4FF).withValues(alpha: 0.0),
+                          const Color(0xFFEAF4FF).withValues(alpha: 0.85),
+                          const Color(0xFFEAF4FF),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+
+          // 3. Dải sóng mềm mại phía sau khung đăng nhập
           Positioned(
-            bottom: -60,
-            left: -30,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF2563EB).withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            top: heroBgHeight - 68,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: CustomPaint(
+              painter: _LoginWaveBackdropPainter(),
             ),
           ),
 
@@ -968,78 +1005,91 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 18,
                   height: 18,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
+                    color: const Color(0xFF22C55E),
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.5),
+                        color: const Color(0xFF22C55E).withValues(alpha: 0.45),
                         blurRadius: 6,
                       ),
                     ],
                   ),
                 ),
               ),
+              // 3 tia trang trí nhỏ phía trên góc phải logo
+              Positioned(
+                top: -12,
+                right: -18,
+                child: CustomPaint(
+                  size: const Size(22, 22),
+                  painter: _LogoSparklePainter(),
+                ),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 18),
-        // App title with stylized gradient
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFF0F172A), Color(0xFF1E40AF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(bounds),
-          child: const Text(
-            'COne',
+        const SizedBox(height: 14),
+        // Tiêu đề thương hiệu 2 tông màu: C (navy) + One (blue)
+        RichText(
+          text: const TextSpan(
             style: TextStyle(
-              color: Colors.white,
               fontSize: 34,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.8,
+              height: 1.05,
             ),
+            children: [
+              TextSpan(
+                text: 'C',
+                style: TextStyle(color: Color(0xFF0F172A)),
+              ),
+              TextSpan(
+                text: 'One',
+                style: TextStyle(color: Color(0xFF1D4ED8)),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 5),
         const Text(
           'Hệ thống Điểm rèn luyện sinh viên',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xFF1E293B),
-            fontSize: 15,
+            fontSize: 14.5,
             fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
         // University badge pill
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: Colors.white.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF1E3A8A).withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.verified_rounded, size: 14, color: Color(0xFF2563EB)),
+              Icon(Icons.verified_rounded, size: 15, color: Color(0xFF2563EB)),
               SizedBox(width: 6),
               Flexible(
                 child: Text(
                   'Trường Cao đẳng Kinh tế Đối ngoại',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF475569),
+                    color: Color(0xFF334155),
                   ),
                 ),
               ),
@@ -1228,24 +1278,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
           const SizedBox(height: 22),
-          // Nút Đăng nhập Gradient nổi bật
+          // Nút Đăng nhập Gradient dạng viên thuốc nổi bật
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: isLoading ? null : _submit,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(999),
               child: Ink(
                 height: 54,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.38),
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.36),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -1465,4 +1515,57 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
+}
+
+class _LoginWaveBackdropPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final backWave = Paint()
+      ..color = const Color(0xFFD6E9FF).withValues(alpha: 0.65)
+      ..style = PaintingStyle.fill;
+
+    final backPath = Path()
+      ..moveTo(0, 32)
+      ..quadraticBezierTo(size.width * 0.28, -8, size.width * 0.56, 26)
+      ..quadraticBezierTo(size.width * 0.82, 56, size.width, 18)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(backPath, backWave);
+
+    final frontWave = Paint()
+      ..color = const Color(0xFFF3F8FF)
+      ..style = PaintingStyle.fill;
+
+    final frontPath = Path()
+      ..moveTo(0, 50)
+      ..quadraticBezierTo(size.width * 0.34, 8, size.width * 0.68, 42)
+      ..quadraticBezierTo(size.width * 0.88, 60, size.width, 36)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(frontPath, frontWave);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _LogoSparklePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1E3A8A)
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // 3 nét tia trang trí tinh tế giống bản thiết kế
+    canvas.drawLine(const Offset(4, 10), const Offset(6, 2), paint);
+    canvas.drawLine(const Offset(9, 13), const Offset(17, 6), paint);
+    canvas.drawLine(const Offset(11, 18), const Offset(20, 17), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
