@@ -1350,14 +1350,14 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 20),
           // Divider "HOẶC TIẾP TỤC VỚI"
-          const Row(
+          Row(
             children: [
-              Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+              const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  'HOẶC TIẾP TỤC VỚI',
-                  style: TextStyle(
+                  tr('HOẶC TIẾP TỤC VỚI', 'OR CONTINUE WITH'),
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
@@ -1365,7 +1365,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+              const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
             ],
           ),
           const SizedBox(height: 18),
@@ -1413,10 +1413,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             _biometricType == 'face'
-                                ? 'Đăng nhập bằng Face ID'
+                                ? tr('Đăng nhập bằng Face ID', 'Sign in with Face ID')
                                 : (_biometricType == 'fingerprint'
-                                    ? 'Đăng nhập bằng Vân tay'
-                                    : 'Đăng nhập sinh trắc học'),
+                                    ? tr('Đăng nhập bằng Vân tay', 'Sign in with Fingerprint')
+                                    : tr('Đăng nhập sinh trắc học', 'Biometric Sign In')),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -1426,10 +1426,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 2),
                           Text(
                             _biometricType == 'face'
-                                ? 'Nhận diện khuôn mặt Face ID an toàn'
+                                ? tr('Nhận diện khuôn mặt Face ID an toàn', 'Secure Face ID authentication')
                                 : (_biometricType == 'fingerprint'
-                                    ? 'Chạm vân tay để xác thực nhanh'
-                                    : 'Xác thực sinh trắc học không cần mật khẩu'),
+                                    ? tr('Chạm vân tay để xác thực nhanh', 'Touch sensor for quick sign in')
+                                    : tr('Xác thực sinh trắc học không cần mật khẩu', 'Passwordless biometric authentication')),
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,

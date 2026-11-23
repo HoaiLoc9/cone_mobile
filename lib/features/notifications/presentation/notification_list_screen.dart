@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/local_notification_service.dart';
 import '../../activities/data/activity_service.dart';
@@ -434,15 +435,15 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
   String _actionTextForNotification(AppNotification item) {
     if (_isActivityNotification(item)) {
-      return 'Mở hoạt động >';
+      return tr('Mở hoạt động >', 'Open activity >');
     }
     if (_isAppellationNotification(item)) {
-      return 'Xem danh hiệu >';
+      return tr('Xem danh hiệu >', 'View award >');
     }
     if (_isDrlNotification(item)) {
-      return 'Xem điểm ĐRL >';
+      return tr('Xem điểm ĐRL >', 'View score >');
     }
-    return 'Xem chi tiết >';
+    return tr('Xem chi tiết >', 'View details >');
   }
 
   void _onCategorySelected(String? type, bool unreadOnly) {
@@ -468,7 +469,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         title: Row(
           children: [
             Text(
-              'Thông báo',
+              tr('Thông báo', 'Notifications'),
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: AppColors.adaptiveTextPrimary),
             ),
             if (unreadCount > 0) ...[
@@ -480,7 +481,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$unreadCount mới',
+                  tr('$unreadCount mới', '$unreadCount new'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -498,9 +499,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               child: TextButton.icon(
                 onPressed: _markAllRead,
                 icon: const Icon(Icons.done_all_rounded, size: 18),
-                label: const Text(
-                  'Đọc tất cả',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                label: Text(
+                  tr('Đọc tất cả', 'Mark all read'),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                 ),
               ),
             ),
@@ -525,14 +526,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   child: Row(
                     children: [
                       _FilterPill(
-                        label: 'Tất cả',
+                        label: tr('Tất cả', 'All'),
                         isSelected: !_unreadOnly && _selectedType == null,
                         icon: Icons.all_inbox_rounded,
                         onTap: () => _onCategorySelected(null, false),
                       ),
                       const SizedBox(width: 8),
                       _FilterPill(
-                        label: 'Chưa đọc',
+                        label: tr('Chưa đọc', 'Unread'),
                         badgeCount: unreadCount > 0 ? unreadCount : null,
                         isSelected: _unreadOnly,
                         icon: Icons.mark_chat_unread_outlined,
@@ -540,14 +541,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                       ),
                       const SizedBox(width: 8),
                       _FilterPill(
-                        label: 'Hoạt động',
+                        label: tr('Hoạt động', 'Activities'),
                         isSelected: !_unreadOnly && _selectedType == 'activity',
                         icon: Icons.event_note_rounded,
                         onTap: () => _onCategorySelected('activity', false),
                       ),
                       const SizedBox(width: 8),
                       _FilterPill(
-                        label: 'Danh hiệu',
+                        label: tr('Danh hiệu', 'Awards'),
                         isSelected: !_unreadOnly && _selectedType == 'appellation',
                         icon: Icons.emoji_events_rounded,
                         onTap: () => _onCategorySelected('appellation', false),

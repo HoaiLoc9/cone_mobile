@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activity_support/data/activity_support_models.dart';
@@ -148,7 +149,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Hoạt động sinh viên',
+          tr('Hoạt động sinh viên', 'Student Activities'),
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 18,
@@ -215,7 +216,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           onSubmitted: (_) => _load(refresh: true),
                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.adaptiveTextPrimary),
                           decoration: InputDecoration(
-                            hintText: 'Tìm kiếm hoạt động, sự kiện...',
+                            hintText: tr('Tìm kiếm hoạt động, sự kiện...', 'Search activities, events...'),
                             hintStyle: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 13.5),
                             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 22),
                             suffixIcon: _searchController.text.isNotEmpty
@@ -239,11 +240,11 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
-                            _buildFilterChip('Tất cả', ''),
+                            _buildFilterChip(tr('Tất cả', 'All'), ''),
                             const SizedBox(width: 8),
-                            _buildFilterChip('Đang mở đăng ký 🟢', 'open'),
+                            _buildFilterChip(tr('Đang mở đăng ký 🟢', 'Open 🟢'), 'open'),
                             const SizedBox(width: 8),
-                            _buildFilterChip('Đã đóng đăng ký', 'closed'),
+                            _buildFilterChip(tr('Đã đóng đăng ký', 'Closed'), 'closed'),
                           ],
                         ),
                       ),

@@ -901,7 +901,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Tài khoản',
+          tr('Tài khoản', 'Account'),
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 22,
@@ -966,7 +966,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             // 2. NHÓM 1: THÔNG TIN SINH VIÊN & LIÊN HỆ
                             _SectionGroup(
-                              title: 'Hồ sơ học tập & Liên hệ',
+                              title: tr('Hồ sơ học tập & Liên hệ', 'Academic & Contact Info'),
                               icon: Icons.school_rounded,
                               action: TextButton.icon(
                                 onPressed: () {
@@ -978,15 +978,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: AppColors.primary,
                                 ),
                                 label: Text(
-                                  _isEditingContact ? 'Đóng' : 'Cập nhật',
+                                  _isEditingContact ? tr('Đóng', 'Close') : tr('Cập nhật', 'Edit'),
                                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary),
                                 ),
                               ),
                               children: [
-                                _InfoTile(label: 'Mã số sinh viên', value: user.code, icon: Icons.badge_outlined),
-                                _InfoTile(label: 'Họ và tên', value: user.name, icon: Icons.person_outline_rounded),
-                                _InfoTile(label: 'Lớp sinh hoạt', value: user.studentClass, icon: Icons.class_outlined),
-                                _InfoTile(label: 'Khoa / Viện', value: user.department, icon: Icons.account_balance_outlined),
+                                _InfoTile(label: tr('Mã số sinh viên', 'Student ID'), value: user.code, icon: Icons.badge_outlined),
+                                _InfoTile(label: tr('Họ và tên', 'Full Name'), value: user.name, icon: Icons.person_outline_rounded),
+                                _InfoTile(label: tr('Lớp sinh hoạt', 'Class'), value: user.studentClass, icon: Icons.class_outlined),
+                                _InfoTile(label: tr('Khoa / Viện', 'Faculty / Dept'), value: user.department, icon: Icons.account_balance_outlined),
 
                                 Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
 
@@ -1052,9 +1052,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
 
                                 if (!_isEditingContact) ...[
-                                  _InfoTile(label: 'Địa chỉ Email', value: user.email, icon: Icons.email_outlined),
-                                  _InfoTile(label: 'Số điện thoại', value: user.phone, icon: Icons.phone_outlined),
-                                  _InfoTile(label: 'Địa chỉ liên hệ', value: user.address, icon: Icons.home_outlined),
+                                  _InfoTile(label: tr('Địa chỉ Email', 'Email Address'), value: user.email, icon: Icons.email_outlined),
+                                  _InfoTile(label: tr('Số điện thoại', 'Phone Number'), value: user.phone, icon: Icons.phone_outlined),
+                                  _InfoTile(label: tr('Địa chỉ liên hệ', 'Address'), value: user.address, icon: Icons.home_outlined),
                                 ] else ...[
                                   // Form cập nhật thông tin
                                   const SizedBox(height: 4),
@@ -1100,7 +1100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             // 3. NHÓM 2: BẢO MẬT & ĐĂNG NHẬP
                             _SectionGroup(
-                              title: 'Bảo mật tài khoản',
+                              title: tr('Bảo mật tài khoản', 'Account Security'),
                               icon: Icons.shield_rounded,
                               children: [
                                 // Nút bung mở Đổi mật khẩu
@@ -1131,7 +1131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Đổi mật khẩu qua OTP Email',
+                                                  tr('Đổi mật khẩu qua OTP Email', 'Change Password via Email OTP'),
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.w800,
                                                     fontSize: 14.5,
@@ -1139,7 +1139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  'Xác thực mã bảo mật gửi đến hộp thư sinh viên',
+                                                  tr('Xác thực mã bảo mật gửi đến hộp thư sinh viên', 'Verify security code sent to student email'),
                                                   style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                                 ),
                                               ],
@@ -1265,7 +1265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     child: const Icon(Icons.fingerprint_rounded, color: AppColors.primary, size: 22),
                                   ),
                                   title: Text(
-                                    'Vân tay & Face ID',
+                                    tr('Vân tay & Face ID', 'Biometric Sign In'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 14.5,
@@ -1273,7 +1273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   subtitle: Text(
-                                    'Mở khóa và đăng nhập app nhanh chóng',
+                                    tr('Mở khóa và đăng nhập app nhanh chóng', 'Quick unlock with Face ID / Fingerprint'),
                                     style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                   ),
                                   value: _biometricEnabled,
@@ -1292,7 +1292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     child: const Icon(Icons.security_rounded, color: AppColors.primary, size: 22),
                                   ),
                                   title: Text(
-                                    'Khóa ứng dụng (App Lock)',
+                                    tr('Khóa ứng dụng (App Lock)', 'App Lock'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 14.5,
@@ -1300,7 +1300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   subtitle: Text(
-                                    'Yêu cầu Face ID / Vân tay khi quay lại app',
+                                    tr('Yêu cầu Face ID / Vân tay khi quay lại app', 'Require biometrics when returning to app'),
                                     style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                   ),
                                   value: _appLockEnabled,
@@ -1314,7 +1314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                             // 4. NHÓM 3: CÀI ĐẶT & HỖ TRỢ (GỌN GÀNG ĐỒNG BỘ MÀU)
                             _SectionGroup(
-                              title: 'Cài đặt & Hỗ trợ',
+                              title: tr('Cài đặt & Hỗ trợ', 'Settings & Support'),
                               icon: Icons.tune_rounded,
                               children: [
                                 SwitchListTile.adaptive(
@@ -1332,7 +1332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   title: Text(
-                                    'Giao diện Tối (Dark Mode)',
+                                    tr('Giao diện Tối (Dark Mode)', 'Dark Mode'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 14.5,
@@ -1393,22 +1393,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
                                 _ProfileActionRow(
                                   icon: Icons.support_agent_rounded,
-                                  title: 'Hỗ trợ sinh viên (Phòng CTSV)',
-                                  subtitle: 'Địa chỉ cơ sở, hotline, email & giờ làm việc',
+                                  title: tr('Hỗ trợ sinh viên (Phòng CTSV)', 'Student Support Office'),
+                                  subtitle: tr('Địa chỉ cơ sở, hotline, email & giờ làm việc', 'Campus address, hotline, email & hours'),
                                   onTap: _showSupportSheet,
                                 ),
                                 Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
                                 _ProfileActionRow(
                                   icon: Icons.help_outline_rounded,
-                                  title: 'Hỏi đáp thường gặp (FAQ)',
-                                  subtitle: 'Quy chế chốt điểm, minh chứng & xếp loại ĐRL',
+                                  title: tr('Hỏi đáp thường gặp (FAQ)', 'Frequently Asked Questions'),
+                                  subtitle: tr('Quy chế chốt điểm, minh chứng & xếp loại ĐRL', 'Conduct rules, evidence & ranking'),
                                   onTap: _showFaqSheet,
                                 ),
                                 Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
                                 _ProfileActionRow(
                                   icon: Icons.sync_rounded,
-                                  title: 'Phiên bản ứng dụng',
-                                  subtitle: 'COne Mobile v1.0.4 • Kiểm tra bản cập nhật',
+                                  title: tr('Phiên bản ứng dụng', 'App Version'),
+                                  subtitle: tr('COne Mobile v1.0.4 • Kiểm tra bản cập nhật', 'COne Mobile v1.0.4 • Check for updates'),
                                   onTap: _checkUpdate,
                                 ),
                               ],
@@ -1446,7 +1446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // 6. CHÚ THÍCH NHỎ CUỐI TRANG
                             Center(
                               child: Text(
-                                'COne Mobile v1.0.4 • Hệ thống Quản lý Điểm rèn luyện',
+                                tr('COne Mobile v1.0.4 • Hệ thống Quản lý Điểm rèn luyện', 'COne Mobile v1.0.4 • Student Conduct System'),
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,

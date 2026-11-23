@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
+import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activities/data/activity_model.dart';
 import '../../activities/data/activity_service.dart';
@@ -691,7 +693,7 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
       backgroundColor: AppColors.adaptiveBackground,
       appBar: AppBar(
         title: Text(
-          'Thống kê rèn luyện',
+          tr('Thống kê rèn luyện', 'Conduct Statistics'),
           style: TextStyle(
             fontWeight: FontWeight.w900,
             color: AppColors.adaptiveTextPrimary,
@@ -723,33 +725,10 @@ class _StudentStatsScreenState extends State<StudentStatsScreen> {
               );
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 48),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Chưa tải được thống kê',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        snapshot.error.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _reload,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Thử lại'),
-                      ),
-                    ],
-                  ),
-                ),
+              return AppErrorView.fromError(
+                snapshot.error,
+                fallbackTitle: tr('Chưa tải được thống kê', 'Unable to load statistics'),
+                onRetry: _reload,
               );
             }
 

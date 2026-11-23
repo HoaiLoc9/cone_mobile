@@ -466,7 +466,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      'COne • CĐ Kinh tế Đối ngoại',
+                      tr('COne • CĐ Kinh tế Đối ngoại', 'COne • COFER Student Portal'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -566,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Tiện ích hệ thống',
+                            tr('Tiện ích hệ thống', 'Quick Utilities'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
@@ -599,7 +599,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             DraggableAiRobotOverlay(
               onTap: _openChatbot,
-              greetingText: 'Hỏi AI nhé! ✨',
+              greetingText: tr('Hỏi AI nhé! ✨', 'Ask AI! ✨'),
             ),
           ],
         );
@@ -970,18 +970,18 @@ class _Student3DCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.qr_code_scanner_rounded,
                                   color: Color(0xFF0F172A),
                                   size: 18,
                                 ),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'QUÉT ĐIỂM DANH',
-                                  style: TextStyle(
+                                  tr('QUÉT ĐIỂM DANH', 'SCAN QR'),
+                                  style: const TextStyle(
                                     color: Color(0xFF0F172A),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w900,
@@ -1027,12 +1027,12 @@ class _Dashboard3DGrid extends StatelessWidget {
   final VoidCallback onProfileTap;
 
   String _getGradeLabel(double score) {
-    if (score >= 90) return 'XUẤT SẮC';
-    if (score >= 80) return 'TỐT';
-    if (score >= 65) return 'KHÁ';
-    if (score >= 50) return 'TRUNG BÌNH';
-    if (score > 0) return 'CẦN CỐ GẮNG';
-    return 'ĐANG TÍCH LŨY';
+    if (score >= 90) return tr('XUẤT SẮC', 'EXCELLENT');
+    if (score >= 80) return tr('TỐT', 'GOOD');
+    if (score >= 65) return tr('KHÁ', 'FAIR');
+    if (score >= 50) return tr('TRUNG BÌNH', 'AVERAGE');
+    if (score > 0) return tr('CẦN CỐ GẮNG', 'NEEDS WORK');
+    return tr('ĐANG TÍCH LŨY', 'IN PROGRESS');
   }
 
   Color _getGradeColor(double score) {
@@ -1253,7 +1253,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Hoạt động kỳ này',
+                                        tr('Hoạt động kỳ này', 'This Semester'),
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: AppColors.adaptiveTextSecondary,
@@ -1261,7 +1261,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        '$activityCount hoạt động đã tham gia',
+                                        tr('$activityCount hoạt động đã tham gia', '$activityCount activities attended'),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
@@ -1308,7 +1308,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Mục tiêu xếp loại',
+                                        tr('Mục tiêu xếp loại', 'Target Rank'),
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: AppColors.adaptiveTextSecondary,
@@ -1317,8 +1317,11 @@ class _Dashboard3DGrid extends StatelessWidget {
                                       ),
                                       Text(
                                         score >= 80
-                                            ? 'Đã đạt chuẩn Tốt 🏅'
-                                            : 'Cần thêm ${(80 - score).clamp(0, 100).toInt()}đ để đạt Tốt',
+                                            ? tr('Đã đạt chuẩn Tốt 🏅', 'Good rank achieved 🏅')
+                                            : tr(
+                                                'Cần thêm ${(80 - score).clamp(0, 100).toInt()}đ để đạt Tốt',
+                                                'Need ${(80 - score).clamp(0, 100).toInt()} more pts for Good',
+                                              ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
@@ -1354,7 +1357,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          'Bảng phân tích 5 tiêu chí rèn luyện',
+                          tr('Bảng phân tích 5 tiêu chí rèn luyện', '5 Conduct Criteria Breakdown'),
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -1366,7 +1369,7 @@ class _Dashboard3DGrid extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'Chi tiết',
+                          tr('Chi tiết', 'Details'),
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w800,
@@ -1438,29 +1441,29 @@ class _QuickAction3DGrid extends StatelessWidget {
           childAspectRatio: isWide ? 2.5 : 2.05,
           children: [
             _FeatureCard3D(
-              title: 'Bảng điểm ĐRL',
-              subtitle: 'Xem kết quả rèn luyện',
+              title: tr('Bảng điểm ĐRL', 'Conduct Score'),
+              subtitle: tr('Xem kết quả rèn luyện', 'View semester scores'),
               icon: Icons.bar_chart_rounded,
               color: AppColors.primary,
               onTap: onDrl,
             ),
             _FeatureCard3D(
-              title: 'Minh chứng',
-              subtitle: 'Tải lên & quản lý',
+              title: tr('Minh chứng', 'Evidence'),
+              subtitle: tr('Tải lên & quản lý', 'Upload & track'),
               icon: Icons.upload_file_rounded,
               color: AppColors.primary,
               onTap: onEvidence,
             ),
             _FeatureCard3D(
-              title: 'Đã đăng ký',
-              subtitle: 'Lịch hoạt động của bạn',
+              title: tr('Đã đăng ký', 'Registered'),
+              subtitle: tr('Lịch hoạt động của bạn', 'Your activity schedule'),
               icon: Icons.event_note_rounded,
               color: AppColors.primary,
               onTap: onRegisteredActivities,
             ),
             _FeatureCard3D(
-              title: 'Danh hiệu',
-              subtitle: 'Thành tích của bạn',
+              title: tr('Danh hiệu', 'Awards'),
+              subtitle: tr('Thành tích của bạn', 'Your achievements'),
               icon: Icons.workspace_premium_rounded,
               color: AppColors.primary,
               badge: 'TOP',
@@ -1475,7 +1478,7 @@ class _QuickAction3DGrid extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Dịch vụ & Tiện ích',
+              tr('Dịch vụ & Tiện ích', 'Services & Tools'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
@@ -1483,7 +1486,7 @@ class _QuickAction3DGrid extends StatelessWidget {
               ),
             ),
             Text(
-              'Trượt ngang →',
+              tr('Trượt ngang →', 'Swipe →'),
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -1502,32 +1505,32 @@ class _QuickAction3DGrid extends StatelessWidget {
             children: [
               _CircleServiceBubble(
                 icon: Icons.warning_amber_rounded,
-                label: 'Khiếu nại',
+                label: tr('Khiếu nại', 'Complaints'),
                 onTap: onComplaints,
               ),
               _CircleServiceBubble(
                 icon: Icons.assignment_turned_in_rounded,
-                label: 'Giấy xin phép',
+                label: tr('Giấy xin phép', 'Leave Form'),
                 onTap: onPermissionRequests,
               ),
               _CircleServiceBubble(
                 icon: Icons.draw_rounded,
-                label: 'Chữ ký số',
+                label: tr('Chữ ký số', 'E-Sign'),
                 onTap: onSignatureRequests,
               ),
               _CircleServiceBubble(
                 icon: Icons.verified_user_rounded,
-                label: 'Hồ sơ SV',
+                label: tr('Hồ sơ SV', 'Profile'),
                 onTap: onProfileStatus,
               ),
               _CircleServiceBubble(
                 icon: Icons.folder_copy_rounded,
-                label: 'Tài liệu',
+                label: tr('Tài liệu', 'Docs'),
                 onTap: onDocuments,
               ),
               _CircleServiceBubble(
                 icon: Icons.badge_rounded,
-                label: 'CV sinh viên',
+                label: tr('CV sinh viên', 'Resume CV'),
                 badge: 'PRO',
                 onTap: onCv,
               ),
@@ -2011,18 +2014,18 @@ class _AnimatedAiSuggestionBannerState
                                   ),
                                   borderRadius: BorderRadius.circular(7),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.bolt_rounded,
                                       color: Colors.white,
                                       size: 10,
                                     ),
-                                    SizedBox(width: 2),
+                                    const SizedBox(width: 2),
                                     Text(
-                                      'AI GỢI Ý',
-                                      style: TextStyle(
+                                      tr('AI GỢI Ý', 'AI PICK'),
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 9,
                                         fontWeight: FontWeight.w900,
@@ -2035,7 +2038,7 @@ class _AnimatedAiSuggestionBannerState
                               const SizedBox(width: 7),
                               Flexible(
                                 child: Text(
-                                  'Gợi ý rèn luyện',
+                                  tr('Gợi ý rèn luyện', 'Smart Suggestions'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -2051,7 +2054,7 @@ class _AnimatedAiSuggestionBannerState
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            'Khám phá hoạt động phù hợp với bạn.',
+                            tr('Khám phá hoạt động phù hợp với bạn.', 'Discover activities tailored for you.'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -2084,19 +2087,19 @@ class _AnimatedAiSuggestionBannerState
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Xem ngay',
-                            style: TextStyle(
+                            tr('Xem ngay', 'Explore'),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11.5,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          SizedBox(width: 3),
-                          Icon(
+                          const SizedBox(width: 3),
+                          const Icon(
                             Icons.arrow_forward_ios_rounded,
                             color: Colors.white,
                             size: 10,
