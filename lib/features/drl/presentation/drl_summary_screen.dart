@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/achievement_story_modal.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../auth/data/auth_service.dart';
 import '../data/drl_models.dart';
+import '../data/drl_pdf_exporter.dart';
 import '../data/drl_service.dart';
 import 'drl_detail_screen.dart';
 import 'drl_score_format.dart';
@@ -22,6 +24,7 @@ class DrlSummaryScreen extends StatefulWidget {
 
 class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
   bool _isLoading = true;
+  bool _isExportingPdf = false;
   String? _errorMessage;
   DrlSummary? _summary;
 
@@ -90,6 +93,27 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
     );
   }
 
+  Future<void> _exportPdf(DrlSummary summary) async {
+    if (_isExportingPdf) return;
+    setState(() => _isExportingPdf = true);
+    try {
+      await DrlPdfExporter.exportAndShare(
+        summary: summary,
+        user: widget.session?.user,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không xuất được PDF: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
@@ -105,6 +129,18 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.adaptiveTextPrimary, fontSize: 18),
         ),
         actions: [
+          if (summary != null)
+            IconButton(
+              onPressed: _isExportingPdf ? null : () => _exportPdf(summary),
+              icon: _isExportingPdf
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary),
+              tooltip: 'Xuất bảng điểm PDF',
+            ),
           if (summary != null)
             IconButton(
               onPressed: () => _openShareStory(summary),
@@ -126,7 +162,9 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
         child: RefreshIndicator(
           onRefresh: _load,
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const SingleChildScrollView(
+                  child: ShimmerListLoading(itemCount: 4),
+                )
               : _errorMessage != null
                   ? _buildMessage(message: _errorMessage!, isError: true)
                   : summary == null
@@ -289,35 +327,72 @@ class _DrlSummaryScreenState extends State<DrlSummaryScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: InkWell(
-              onTap: () => _openShareStory(summary),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.share_rounded, color: Colors.white, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'Chia sẻ Story thành tích ✨',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12.5,
-                      ),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: _isExportingPdf ? null : () => _exportPdf(summary),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isExportingPdf)
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isExportingPdf ? 'Đang tạo PDF...' : 'Xuất bảng điểm PDF',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+              InkWell(
+                onTap: () => _openShareStory(summary),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.share_rounded, color: Colors.white, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Chia sẻ Story',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

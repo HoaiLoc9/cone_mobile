@@ -310,7 +310,61 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
         if (_isAppLocked && _session != null) {
           return _buildLockScreen();
         }
-        return child ?? const SizedBox();
+        final content = child ?? const SizedBox();
+        return ValueListenableBuilder<bool>(
+          valueListenable: ApiClient.isOfflineMode,
+          builder: (context, isOffline, _) {
+            if (!isOffline) return content;
+            return Column(
+              children: [
+                Material(
+                  color: const Color(0xFF0F172A),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.wifi_off_rounded,
+                            color: Color(0xFFFBBF24),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Đang xem dữ liệu ngoại tuyến (Offline)',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => ApiClient.isOfflineMode.value = false,
+                            borderRadius: BorderRadius.circular(12),
+                            child: const Padding(
+                              padding: EdgeInsets.all(2),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: Color(0xFF94A3B8),
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(child: content),
+              ],
+            );
+          },
+        );
       },
       home: _isCheckingSession
           ? Scaffold(

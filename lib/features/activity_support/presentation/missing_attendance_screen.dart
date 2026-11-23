@@ -5,6 +5,7 @@ import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/image_compressor.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../../activities/presentation/missing_checkout_sheet.dart';
 import '../data/activity_support_models.dart';
@@ -172,7 +173,7 @@ class _MissingAttendanceScreenState extends State<MissingAttendanceScreen>
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4))
             : _errorMessage != null
                 ? _buildErrorView()
                 : TabBarView(

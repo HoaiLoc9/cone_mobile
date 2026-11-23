@@ -14,6 +14,7 @@ import '../../../shared/widgets/app_state_view.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/cone_card.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../data/student_services_service.dart';
 import 'topcv_builder_screen.dart';
 
@@ -86,7 +87,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
             }
             if (snapshot.hasError) {
               return Center(
@@ -812,7 +813,7 @@ class _PermissionRequestsScreenState extends State<PermissionRequestsScreen> {
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
             }
             if (snapshot.hasError) {
               return Center(
@@ -1006,7 +1007,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
             return AppStateView(
@@ -1068,7 +1069,7 @@ class ProfileStatusScreen extends StatelessWidget {
         future: service.profileStatus(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
             return AppStateView(
@@ -1153,7 +1154,7 @@ class ActivitySuggestionsScreen extends StatelessWidget {
         future: service.activitySuggestions(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
             return AppStateView(
@@ -1228,7 +1229,7 @@ class _SignatureRequestsScreenState extends State<SignatureRequestsScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
             return AppStateView(

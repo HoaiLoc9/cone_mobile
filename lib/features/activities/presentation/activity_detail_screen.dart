@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/local_notification_service.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activity_support/data/activity_support_models.dart';
 import '../../activity_support/data/activity_support_service.dart';
@@ -116,14 +117,32 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
           ? await widget.service.cancel(activity.id)
           : await widget.service.register(activity.id);
       setState(() => _activity = updated);
+
+      // Tự động đặt / hủy nhắc lịch trước 30 phút
+      bool reminderScheduled = false;
+      if (updated.isRegistered && updated.timeStart != null) {
+        reminderScheduled =
+            LocalNotificationService.instance.scheduleActivityReminder(
+          activityId: updated.id,
+          activityName: updated.name,
+          startTime: updated.timeStart!,
+          location: updated.location,
+        );
+      } else if (!updated.isRegistered) {
+        LocalNotificationService.instance.cancelActivityReminder(updated.id);
+      }
+
       if (mounted) {
+        final msg = updated.isRegistered
+            ? (reminderScheduled
+                ? 'Đăng ký thành công! Đã bật nhắc lịch trước 30 phút.'
+                : 'Đăng ký hoạt động thành công.')
+            : 'Đã hủy đăng ký hoạt động.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              updated.isRegistered
-                  ? 'Đăng ký hoạt động thành công.'
-                  : 'Đã hủy đăng ký hoạt động.',
-            ),
+            content: Text(msg),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }

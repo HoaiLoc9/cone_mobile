@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -6,6 +10,7 @@ import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/local_notification_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/storage/app_storage.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../data/qr_scan_result.dart';
@@ -31,9 +36,327 @@ class _QrScanScreenState extends State<QrScanScreen> {
   );
   bool _isBusy = false;
   bool _torchOn = false;
+  static const String _historyStorageKey = 'cone_qr_scan_history';
   String? _lastRawValue;
   String? _message;
   QrScanResult? _result;
+  List<_QrHistoryEntry> _history = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      final raw = await AppStorage.instance.getString(_historyStorageKey);
+      if (raw == null || raw.isEmpty) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        final entries = decoded
+            .whereType<Map>()
+            .map((e) => _QrHistoryEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        if (mounted) {
+          setState(() => _history = entries);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveHistoryEntry(QrScanResult result) async {
+    final entry = _QrHistoryEntry(
+      activityName: result.activityName,
+      location: result.location,
+      typeLabel: result.typeLabel.isNotEmpty
+          ? result.typeLabel
+          : (result.checkOutAt != null ? 'Check-out' : 'Check-in'),
+      points: result.points,
+      scannedAt: result.scannedAt ?? DateTime.now(),
+      checkInAt: result.checkInAt,
+      checkOutAt: result.checkOutAt,
+    );
+    final updated = [entry, ..._history].take(30).toList();
+    if (mounted) {
+      setState(() => _history = updated);
+    }
+    try {
+      await AppStorage.instance.setString(
+        _historyStorageKey,
+        jsonEncode(updated.map((e) => e.toJson()).toList()),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _clearHistory() async {
+    if (mounted) {
+      setState(() => _history = []);
+    }
+    try {
+      await AppStorage.instance.remove(_historyStorageKey);
+    } catch (_) {}
+  }
+
+  Future<void> _pickQrFromGallery() async {
+    if (_isBusy) return;
+    if (kIsWeb) {
+      setState(() {
+        _message =
+            'Chọn ảnh mã QR từ thư viện hiện hỗ trợ trên ứng dụng điện thoại (Android/iOS). Vui lòng dùng camera trực tiếp trên Web.';
+      });
+      return;
+    }
+
+    try {
+      final picked = await FilePicker.platform.pickFiles(type: FileType.image);
+      if (picked == null || picked.files.isEmpty) return;
+      final path = picked.files.single.path;
+      if (path == null || path.isEmpty) {
+        setState(() => _message = 'Không đọc được đường dẫn ảnh đã chọn.');
+        return;
+      }
+
+      setState(() {
+        _isBusy = true;
+        _message = 'Đang phân tích mã QR từ ảnh...';
+      });
+
+      final capture = await _controller.analyzeImage(path);
+      String? rawValue;
+      if (capture != null) {
+        for (final barcode in capture.barcodes) {
+          final v = barcode.rawValue?.trim();
+          if (v != null && v.isNotEmpty) {
+            rawValue = v;
+            break;
+          }
+        }
+      }
+
+      if (rawValue == null) {
+        if (mounted) {
+          setState(() {
+            _isBusy = false;
+            _message = 'Không tìm thấy mã QR hợp lệ trong ảnh đã chọn.';
+          });
+        }
+        return;
+      }
+
+      _lastRawValue = rawValue;
+      await _submit(rawValue);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+          _message = 'Không thể phân tích ảnh QR. Vui lòng thử lại.';
+        });
+      }
+    }
+  }
+
+  void _openHistorySheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.72,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.adaptiveCard,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.adaptiveBorder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 14, 12, 10),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.history_rounded, color: AppColors.primary, size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Lịch sử điểm danh QR (${_history.length})',
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          if (_history.isNotEmpty)
+                            TextButton(
+                              onPressed: () async {
+                                await _clearHistory();
+                                setModalState(() {});
+                              },
+                              child: const Text(
+                                'Xóa tất cả',
+                                style: TextStyle(
+                                  color: Color(0xFFEF4444),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                          IconButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            icon: Icon(Icons.close_rounded, color: AppColors.adaptiveTextSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: AppColors.adaptiveBorder),
+                    if (_history.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 42, horizontal: 24),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.qr_code_2_rounded,
+                              size: 46,
+                              color: AppColors.adaptiveTextSecondary.withValues(alpha: 0.45),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Chưa có lịch sử điểm danh trên thiết bị này',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextPrimary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Các lần quét QR check-in / check-out thành công sẽ được lưu tự động tại đây.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColors.adaptiveTextSecondary,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                          itemCount: _history.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 10),
+                          itemBuilder: (_, index) {
+                            final item = _history[index];
+                            final isCheckout = item.typeLabel.toLowerCase().contains('out');
+                            final badgeColor = isCheckout
+                                ? const Color(0xFF059669)
+                                : AppColors.primary;
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.adaptiveBackground,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.adaptiveBorder),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: badgeColor.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          item.typeLabel,
+                                          style: TextStyle(
+                                            color: badgeColor,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        formatDateTime(item.scannedAt),
+                                        style: TextStyle(
+                                          color: AppColors.adaptiveTextSecondary,
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    item.activityName,
+                                    style: TextStyle(
+                                      color: AppColors.adaptiveTextPrimary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (item.location.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on_outlined,
+                                          size: 13.5,
+                                          color: AppColors.adaptiveTextSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            item.location,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: AppColors.adaptiveTextSecondary,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -86,6 +409,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
         _result = result;
         _message = 'Điểm danh thành công!';
       });
+      await _saveHistoryEntry(result);
 
       // 2. Bắn thông báo đẩy cục bộ
       LocalNotificationService.instance.showNotification(
@@ -146,6 +470,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Lịch sử điểm danh',
+            onPressed: _openHistorySheet,
+            icon: const Icon(Icons.history_rounded),
+          ),
           IconButton(
             tooltip: 'Đổi camera',
             onPressed: _result == null ? _controller.switchCamera : null,
@@ -233,7 +562,12 @@ class _QrScanScreenState extends State<QrScanScreen> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-          child: _ScanHint(message: _message),
+          child: _ScanHint(
+            message: _message,
+            historyCount: _history.length,
+            onPickImage: _isBusy ? null : _pickQrFromGallery,
+            onOpenHistory: _openHistorySheet,
+          ),
         ),
       ],
     );
@@ -241,9 +575,17 @@ class _QrScanScreenState extends State<QrScanScreen> {
 }
 
 class _ScanHint extends StatelessWidget {
-  const _ScanHint({required this.message});
+  const _ScanHint({
+    required this.message,
+    required this.historyCount,
+    required this.onPickImage,
+    required this.onOpenHistory,
+  });
 
   final String? message;
+  final int historyCount;
+  final VoidCallback? onPickImage;
+  final VoidCallback onOpenHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -293,9 +635,15 @@ class _ScanHint extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
+              color: AppColors.isDark
+                  ? AppColors.primary.withValues(alpha: 0.16)
+                  : const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFBFDBFE)),
+              border: Border.all(
+                color: AppColors.isDark
+                    ? AppColors.primary.withValues(alpha: 0.35)
+                    : const Color(0xFFBFDBFE),
+              ),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -312,6 +660,44 @@ class _ScanHint extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onPickImage,
+                  icon: const Icon(Icons.photo_library_outlined, size: 17),
+                  label: const Text(
+                    'Chọn ảnh QR',
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.35)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onOpenHistory,
+                  icon: const Icon(Icons.history_rounded, size: 17),
+                  label: Text(
+                    historyCount > 0 ? 'Lịch sử ($historyCount)' : 'Lịch sử',
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.adaptiveTextPrimary,
+                    side: BorderSide(color: AppColors.adaptiveBorder),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -595,6 +981,49 @@ class _ScannerError extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _QrHistoryEntry {
+  const _QrHistoryEntry({
+    required this.activityName,
+    required this.location,
+    required this.typeLabel,
+    required this.points,
+    required this.scannedAt,
+    this.checkInAt,
+    this.checkOutAt,
+  });
+
+  final String activityName;
+  final String location;
+  final String typeLabel;
+  final double points;
+  final DateTime scannedAt;
+  final DateTime? checkInAt;
+  final DateTime? checkOutAt;
+
+  Map<String, dynamic> toJson() => {
+        'activity_name': activityName,
+        'location': location,
+        'type_label': typeLabel,
+        'points': points,
+        'scanned_at': scannedAt.toIso8601String(),
+        'check_in_at': checkInAt?.toIso8601String(),
+        'check_out_at': checkOutAt?.toIso8601String(),
+      };
+
+  factory _QrHistoryEntry.fromJson(Map<String, dynamic> json) {
+    return _QrHistoryEntry(
+      activityName: json['activity_name']?.toString() ?? 'Hoạt động',
+      location: json['location']?.toString() ?? '',
+      typeLabel: json['type_label']?.toString() ?? 'Điểm danh',
+      points: (json['points'] as num?)?.toDouble() ?? 0,
+      scannedAt: DateTime.tryParse(json['scanned_at']?.toString() ?? '')?.toLocal() ??
+          DateTime.now(),
+      checkInAt: DateTime.tryParse(json['check_in_at']?.toString() ?? '')?.toLocal(),
+      checkOutAt: DateTime.tryParse(json['check_out_at']?.toString() ?? '')?.toLocal(),
     );
   }
 }

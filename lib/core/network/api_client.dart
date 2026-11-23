@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../config/api_config.dart';
 import '../storage/app_storage.dart';
 import 'api_exception.dart';
@@ -8,6 +10,7 @@ import 'api_transport.dart';
 
 class ApiClient {
   static void Function()? onSessionExpired;
+  static final ValueNotifier<bool> isOfflineMode = ValueNotifier<bool>(false);
 
   ApiClient({ApiTransport? transport})
     : _transport = transport ?? createApiTransport();
@@ -74,6 +77,7 @@ class ApiClient {
           try {
             final parsed = jsonDecode(cached);
             if (parsed is Map<String, dynamic>) {
+              isOfflineMode.value = true;
               return parsed;
             }
           } catch (_) {}
@@ -110,6 +114,7 @@ class ApiClient {
           try {
             final parsed = jsonDecode(cached);
             if (parsed is Map<String, dynamic>) {
+              isOfflineMode.value = true;
               return parsed;
             }
           } catch (_) {}
@@ -153,6 +158,10 @@ class ApiClient {
         message,
         statusCode: response.statusCode,
       );
+    }
+
+    if (isOfflineMode.value) {
+      isOfflineMode.value = false;
     }
 
     if (method == 'GET' && response.body.isNotEmpty) {

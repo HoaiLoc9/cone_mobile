@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../data/appellation_models.dart';
 import '../data/appellation_service.dart';
@@ -165,10 +166,7 @@ class _AppellationListScreenState extends State<AppellationListScreen> {
               const SizedBox(height: 14),
 
               if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 80),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+                const ShimmerListLoading(itemCount: 4)
               else if (_errorMessage != null)
                 _buildMessage(message: _errorMessage!, isError: true)
               else if (filteredItems.isEmpty)

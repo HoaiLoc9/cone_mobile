@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../activities/presentation/activity_helpers.dart';
 import '../../auth/data/auth_service.dart';
 import '../../auth/data/student_user.dart';
@@ -114,7 +115,7 @@ class _DrlDetailScreenState extends State<DrlDetailScreen> {
         ),
         body: SafeArea(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4))
               : _errorMessage != null
                   ? _Message(message: _errorMessage!, isError: true)
                   : detail == null

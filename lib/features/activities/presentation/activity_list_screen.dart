@@ -28,6 +28,9 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   String _status = '';
   bool _isLoading = true;
   bool _isLoadingMore = false;
+  bool _calendarView = false;
+  DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime? _selectedDay;
   String? _errorMessage;
   Set<String> _eligibleActivityIds = {};
   Map<String, MissingAttendanceRequest> _missingRequests = {};
@@ -154,6 +157,21 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
         ),
         actions: [
           IconButton(
+            onPressed: () {
+              setState(() {
+                _calendarView = !_calendarView;
+                if (_calendarView && _selectedDay == null) {
+                  _selectedDay = DateTime.now();
+                }
+              });
+            },
+            icon: Icon(
+              _calendarView ? Icons.view_list_rounded : Icons.calendar_month_rounded,
+              color: _calendarView ? AppColors.primary : AppColors.adaptiveTextSecondary,
+            ),
+            tooltip: _calendarView ? 'Chế độ danh sách' : 'Xem theo lịch tháng',
+          ),
+          IconButton(
             onPressed: () => _load(refresh: true),
             icon: Icon(Icons.refresh_rounded, color: AppColors.adaptiveTextSecondary),
             tooltip: 'Làm mới',
@@ -195,7 +213,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           controller: _searchController,
                           textInputAction: TextInputAction.search,
                           onSubmitted: (_) => _load(refresh: true),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.adaptiveTextPrimary),
                           decoration: InputDecoration(
                             hintText: 'Tìm kiếm hoạt động, sự kiện...',
                             hintStyle: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 13.5),
@@ -262,36 +280,16 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                     },
                   ),
                 )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                  sliver: SliverList.separated(
-                    itemCount: _items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final activity = _items[index];
-                      final isMissingEligible = _eligibleActivityIds.contains(activity.id) ||
-                          _missingRequests[activity.id]?.status == 'rejected';
-                      final isMissing = activity.isEnded &&
-                          activity.isRegistered &&
-                          !activity.isMissingCheckoutExpired &&
-                          isMissingEligible;
-                      final isMissingExpired = activity.isEnded &&
-                          activity.isRegistered &&
-                          activity.isMissingCheckoutExpired &&
-                          isMissingEligible;
-                      return ActivityCard(
-                        activity: activity,
-                        onTap: () => _openDetail(activity),
-                        isMissingCheckout: isMissing,
-                        isMissingExpired: isMissingExpired,
-                        onMissingCheckout: isMissing
-                            ? () => _openMissingCheckout(activity)
-                            : null,
-                      );
-                    },
+              else ...[
+                if (_calendarView)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                      child: _buildCalendarCard(),
+                    ),
                   ),
-                ),
+                ..._buildActivitySlivers(),
+              ],
 
               if (!_isLoading && _page < _lastPage)
                 SliverToBoxAdapter(
@@ -320,6 +318,240 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  List<Widget> _buildActivitySlivers() {
+    final visibleItems = (_calendarView && _selectedDay != null)
+        ? _items.where((a) {
+            final start = a.timeStart;
+            if (start == null) return false;
+            return _isSameDay(start, _selectedDay!);
+          }).toList()
+        : _items;
+
+    if (visibleItems.isEmpty && _calendarView && _selectedDay != null) {
+      final d = _selectedDay!;
+      final dateLabel =
+          '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+      return [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.adaptiveCard,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.adaptiveBorder),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.event_note_outlined, size: 32, color: AppColors.adaptiveTextSecondary),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Không có hoạt động ngày $dateLabel',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.adaptiveTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: () => setState(() => _selectedDay = null),
+                    child: const Text('Xem tất cả hoạt động'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+        sliver: SliverList.separated(
+          itemCount: visibleItems.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final activity = visibleItems[index];
+            final isMissingEligible = _eligibleActivityIds.contains(activity.id) ||
+                _missingRequests[activity.id]?.status == 'rejected';
+            final isMissing = activity.isEnded &&
+                activity.isRegistered &&
+                !activity.isMissingCheckoutExpired &&
+                isMissingEligible;
+            final isMissingExpired = activity.isEnded &&
+                activity.isRegistered &&
+                activity.isMissingCheckoutExpired &&
+                isMissingEligible;
+            return ActivityCard(
+              activity: activity,
+              onTap: () => _openDetail(activity),
+              isMissingCheckout: isMissing,
+              isMissingExpired: isMissingExpired,
+              onMissingCheckout: isMissing
+                  ? () => _openMissingCheckout(activity)
+                  : null,
+            );
+          },
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildCalendarCard() {
+    final year = _focusedMonth.year;
+    final month = _focusedMonth.month;
+    final firstDay = DateTime(year, month, 1);
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final startOffset = firstDay.weekday - 1; // Monday = 0
+    final today = DateTime.now();
+
+    final dayStatus = <int, bool>{}; // day -> hasRegistered
+    for (final act in _items) {
+      final dt = act.timeStart;
+      if (dt != null && dt.year == year && dt.month == month) {
+        dayStatus[dt.day] = (dayStatus[dt.day] ?? false) || act.isRegistered;
+      }
+    }
+
+    const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.adaptiveBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() {
+                  _focusedMonth = DateTime(year, month - 1);
+                }),
+                icon: Icon(Icons.chevron_left_rounded, color: AppColors.adaptiveTextPrimary),
+              ),
+              Text(
+                'Tháng $month / $year',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.adaptiveTextPrimary,
+                ),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() {
+                  _focusedMonth = DateTime(year, month + 1);
+                }),
+                icon: Icon(Icons.chevron_right_rounded, color: AppColors.adaptiveTextPrimary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: weekdays
+                .map(
+                  (w) => Expanded(
+                    child: Center(
+                      child: Text(
+                        w,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.adaptiveTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 8),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: startOffset + daysInMonth,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+              childAspectRatio: 1.05,
+            ),
+            itemBuilder: (_, idx) {
+              if (idx < startOffset) return const SizedBox.shrink();
+              final day = idx - startOffset + 1;
+              final date = DateTime(year, month, day);
+              final isSelected = _selectedDay != null && _isSameDay(date, _selectedDay!);
+              final isToday = _isSameDay(date, today);
+              final hasEvent = dayStatus.containsKey(day);
+              final hasRegistered = dayStatus[day] == true;
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  setState(() {
+                    _selectedDay = isSelected ? null : date;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isToday
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : Colors.transparent),
+                    borderRadius: BorderRadius.circular(12),
+                    border: isToday && !isSelected
+                        ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$day',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: isSelected || isToday ? FontWeight.w900 : FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.adaptiveTextPrimary,
+                        ),
+                      ),
+                      if (hasEvent) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected
+                                ? Colors.white
+                                : (hasRegistered ? const Color(0xFF10B981) : AppColors.primary),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

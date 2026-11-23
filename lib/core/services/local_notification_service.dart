@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -9,6 +10,7 @@ class LocalNotificationService {
   static final LocalNotificationService instance = LocalNotificationService._();
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final Map<String, Timer> _scheduledTimers = {};
   bool _isInitialized = false;
 
   /// Khởi tạo kênh thông báo trên Android & iOS
@@ -141,5 +143,41 @@ class LocalNotificationService {
     } catch (e) {
       debugPrint('[Notification] Lỗi hiển thị thông báo: $e');
     }
+  }
+
+  /// Đặt lịch nhắc tự động trước 30 phút khi sinh viên đăng ký hoạt động
+  bool scheduleActivityReminder({
+    required String activityId,
+    required String activityName,
+    required DateTime? startTime,
+    String? location,
+  }) {
+    cancelActivityReminder(activityId);
+    if (startTime == null) return false;
+
+    final remindAt = startTime.subtract(const Duration(minutes: 30));
+    final delay = remindAt.difference(DateTime.now());
+    if (delay.isNegative) return false;
+
+    // Đặt timer nhắc khi đến giờ (tránh overflow duration quá dài > 7 ngày)
+    if (delay <= const Duration(days: 7)) {
+      _scheduledTimers[activityId] = Timer(delay, () {
+        showNotification(
+          id: activityId.hashCode,
+          title: 'Sắp diễn ra hoạt động (30 phút nữa)',
+          body: location != null && location.isNotEmpty
+              ? '$activityName • Tại: $location'
+              : activityName,
+        );
+        _scheduledTimers.remove(activityId);
+      });
+      return true;
+    }
+    return false;
+  }
+
+  /// Hủy nhắc lịch nếu sinh viên hủy đăng ký hoạt động
+  void cancelActivityReminder(String activityId) {
+    _scheduledTimers.remove(activityId)?.cancel();
   }
 }
