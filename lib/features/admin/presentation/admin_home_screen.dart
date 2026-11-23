@@ -2,6 +2,7 @@
 
 import '../../../core/config/app_colors.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../../shared/widgets/smooth_page_route.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 import 'admin_account_screen.dart';
@@ -41,7 +42,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   void _push(Widget screen) {
     _navigatorKeys[_selectedIndex].currentState?.push(
-      MaterialPageRoute(builder: (_) => screen),
+      SmoothPageRoute(builder: (_) => screen),
     );
   }
 
@@ -381,25 +382,25 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             return;
           }
         },
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            _buildTabNavigator(0, _buildOverviewTab()),
-            _buildTabNavigator(
-              1,
-              AdminAppellationRegistrationsScreen(service: _service),
-            ),
-            _buildTabNavigator(
-              2,
-              AdminDrlAssessmentsScreen(service: _service),
-            ),
-            _buildTabNavigator(
-              3,
-              AdminAccountScreen(
-                session: widget.session,
-                onLogout: widget.onLogout,
-              ),
-            ),
+        child: LazyTabStack(
+          currentIndex: _selectedIndex,
+          tabBuilders: [
+            () => _buildTabNavigator(0, _buildOverviewTab()),
+            () => _buildTabNavigator(
+                  1,
+                  AdminAppellationRegistrationsScreen(service: _service),
+                ),
+            () => _buildTabNavigator(
+                  2,
+                  AdminDrlAssessmentsScreen(service: _service),
+                ),
+            () => _buildTabNavigator(
+                  3,
+                  AdminAccountScreen(
+                    session: widget.session,
+                    onLogout: widget.onLogout,
+                  ),
+                ),
           ],
         ),
       ),

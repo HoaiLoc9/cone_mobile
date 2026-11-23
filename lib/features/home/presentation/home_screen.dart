@@ -7,6 +7,7 @@ import '../../../core/config/app_colors.dart';
 import '../../../core/services/local_notification_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/smooth_page_route.dart';
 import '../../activity_support/data/activity_support_service.dart';
 import '../../activity_support/presentation/missing_attendance_screen.dart';
 import '../../activities/data/activity_service.dart';
@@ -175,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _pushScreen(Widget screen) {
     _navigatorKeys[_currentNavIndex].currentState?.push(
-      MaterialPageRoute(builder: (_) => screen),
+      SmoothPageRoute(builder: (_) => screen),
     );
   }
 
@@ -618,14 +619,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             return;
           }
         },
-        child: IndexedStack(
-          index: _currentNavIndex,
-          children: [
-            _buildTabNavigator(0, _buildDashboardScreen()),
-            _buildTabNavigator(1, _buildActivitiesScreen()),
-            _buildTabNavigator(2, _buildStatsScreen()),
-            _buildTabNavigator(3, _buildNotificationsScreen()),
-            _buildTabNavigator(4, _buildProfileScreen()),
+        child: LazyTabStack(
+          currentIndex: _currentNavIndex,
+          tabBuilders: [
+            () => _buildTabNavigator(0, _buildDashboardScreen()),
+            () => _buildTabNavigator(1, _buildActivitiesScreen()),
+            () => _buildTabNavigator(2, _buildStatsScreen()),
+            () => _buildTabNavigator(3, _buildNotificationsScreen()),
+            () => _buildTabNavigator(4, _buildProfileScreen()),
           ],
         ),
       ),

@@ -3,6 +3,7 @@
 import '../../../core/config/app_colors.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../../shared/widgets/smooth_page_route.dart';
 import '../data/admin_models.dart';
 import '../data/admin_service.dart';
 import 'admin_business_list_screen.dart';
@@ -29,7 +30,7 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
   void _reload() => setState(() => _future = _service.gvcnDashboard());
 
   void _push(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    Navigator.of(context).push(SmoothPageRoute(builder: (_) => screen));
   }
 
   void _openDrl({String status = ''}) {
