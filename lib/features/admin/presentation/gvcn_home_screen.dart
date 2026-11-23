@@ -2,6 +2,7 @@
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/services/theme_service.dart';
+import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/smooth_page_route.dart';
 import '../data/admin_models.dart';
@@ -576,26 +577,10 @@ class _StateMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.adaptiveTextSecondary),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 17),
-              label: const Text('Thử lại'),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorView.fromError(
+      message,
+      fallbackTitle: 'Không tải được dữ liệu lớp chủ nhiệm',
+      onRetry: onRetry,
     );
   }
 }

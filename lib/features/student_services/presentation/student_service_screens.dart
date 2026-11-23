@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/image_compressor.dart';
+import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/app_state_view.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/cone_card.dart';
@@ -90,33 +91,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 44),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Chưa tải được danh sách khiếu nại',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        snapshot.error.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _reload,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Thử lại'),
-                      ),
-                    ],
-                  ),
-                ),
+              return AppErrorView.fromError(
+                snapshot.error,
+                fallbackTitle: 'Chưa tải được danh sách khiếu nại',
+                onRetry: _reload,
               );
             }
 
@@ -816,37 +794,10 @@ class _PermissionRequestsScreenState extends State<PermissionRequestsScreen> {
               return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 44),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Chưa tải được giấy xin phép',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.adaptiveTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        snapshot.error.toString(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.adaptiveTextSecondary, fontSize: 13),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _reload,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Thử lại'),
-                      ),
-                    ],
-                  ),
-                ),
+              return AppErrorView.fromError(
+                snapshot.error,
+                fallbackTitle: 'Chưa tải được giấy xin phép',
+                onRetry: _reload,
               );
             }
 
@@ -1010,12 +961,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được tài liệu',
-              message: snapshot.error.toString(),
-              actionLabel: 'Thử lại',
-              onAction: _reload,
+            return AppErrorView.fromError(
+              snapshot.error,
+              fallbackTitle: 'Chưa tải được tài liệu',
+              onRetry: _reload,
             );
           }
           final items = snapshot.data!;
@@ -1072,10 +1021,9 @@ class ProfileStatusScreen extends StatelessWidget {
             return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được trạng thái hồ sơ',
-              message: snapshot.error.toString(),
+            return AppErrorView.fromError(
+              snapshot.error,
+              fallbackTitle: 'Chưa tải được trạng thái hồ sơ',
             );
           }
           final status = snapshot.data!;
@@ -1157,10 +1105,9 @@ class ActivitySuggestionsScreen extends StatelessWidget {
             return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được gợi ý',
-              message: snapshot.error.toString(),
+            return AppErrorView.fromError(
+              snapshot.error,
+              fallbackTitle: 'Chưa tải được gợi ý hoạt động',
             );
           }
           final items = snapshot.data!;
@@ -1232,12 +1179,10 @@ class _SignatureRequestsScreenState extends State<SignatureRequestsScreen> {
             return const SingleChildScrollView(child: ShimmerListLoading(itemCount: 4));
           }
           if (snapshot.hasError) {
-            return AppStateView(
-              icon: Icons.error_outline,
-              title: 'Chưa tải được hồ sơ cần ký',
-              message: snapshot.error.toString(),
-              actionLabel: 'Thử lại',
-              onAction: _reload,
+            return AppErrorView.fromError(
+              snapshot.error,
+              fallbackTitle: 'Chưa tải được hồ sơ cần ký',
+              onRetry: _reload,
             );
           }
           final items = snapshot.data!;

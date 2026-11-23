@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/smooth_page_route.dart';
 import '../data/admin_models.dart';
@@ -824,40 +825,11 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Không tải được dữ liệu quản trị',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: AppColors.adaptiveTextPrimary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: AppColors.adaptiveTextSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded, size: 17),
-            label: const Text('Thử lại'),
-          ),
-        ],
-      ),
+    return AppErrorView.fromError(
+      message,
+      fallbackTitle: 'Không tải được dữ liệu quản trị',
+      onRetry: onRetry,
+      compact: true,
     );
   }
 }
