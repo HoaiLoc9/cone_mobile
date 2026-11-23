@@ -98,6 +98,49 @@ class LocalNotificationService {
     return null;
   }
 
+  /// Chuẩn hóa tiêu đề & nội dung thông báo cho gọn đẹp (không cắt "...", nhấn mạnh điểm cộng)
+  static ({String title, String body}) formatCompactNotification(
+    String rawTitle,
+    String rawBody,
+  ) {
+    var title = rawTitle.trim();
+    var body = rawBody.trim();
+
+    final isDrlBonus = RegExp(r'cộng điểm', caseSensitive: false).hasMatch(title) ||
+        RegExp(r'được cộng\s+\d+', caseSensitive: false).hasMatch(body);
+
+    if (isDrlBonus) {
+      final ptsMatch = RegExp(
+        r'(?:được\s+cộng|\+)\s*(\d+(?:[.,]\d+)?)\s*điểm',
+        caseSensitive: false,
+      ).firstMatch(body);
+      final actMatch = RegExp(r'[""]([^""]+)[""]').firstMatch(body);
+      final semMatch = RegExp(r'\((HK[^)]+)\)', caseSensitive: false).firstMatch(body);
+
+      title = ptsMatch != null
+          ? 'Cộng +${ptsMatch.group(1)} điểm rèn luyện'
+          : 'Cộng điểm rèn luyện';
+
+      if (actMatch != null) {
+        final actName = actMatch.group(1)!.trim();
+        final sem = semMatch?.group(1)?.trim() ?? '';
+        body = sem.isNotEmpty ? '$actName • $sem' : actName;
+      }
+    } else if (title.length > 30 && title.contains(':')) {
+      final idx = title.indexOf(':');
+      final prefix = title.substring(0, idx).trim();
+      final rest = title.substring(idx + 1).trim();
+      if (prefix.length >= 4 && prefix.length <= 26) {
+        title = prefix;
+        if (rest.isNotEmpty && !body.toLowerCase().contains(rest.toLowerCase())) {
+          body = body.isNotEmpty ? '$rest • $body' : rest;
+        }
+      }
+    }
+
+    return (title: title, body: body);
+  }
+
   /// Hiển thị thông báo ngay lập tức trên thanh trạng thái (hoạt động trên cả Mobile và Web/iPhone PWA)
   Future<void> showNotification({
     int id = 0,
@@ -105,8 +148,12 @@ class LocalNotificationService {
     required String body,
     String? payload,
   }) async {
+    final formatted = formatCompactNotification(title, body);
+    final cleanTitle = formatted.title;
+    final cleanBody = formatted.body;
+
     if (kIsWeb) {
-      WebNotificationHelper.showNotification(title, body);
+      WebNotificationHelper.showNotification(cleanTitle, cleanBody);
       return;
     }
     if (!_isInitialized) await initialize();
@@ -135,8 +182,8 @@ class LocalNotificationService {
     try {
       await _plugin.show(
         id: id,
-        title: title,
-        body: body,
+        title: cleanTitle,
+        body: cleanBody,
         notificationDetails: notificationDetails,
         payload: payload,
       );

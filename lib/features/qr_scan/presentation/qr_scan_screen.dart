@@ -413,8 +413,8 @@ class _QrScanScreenState extends State<QrScanScreen> {
 
       // 2. Bắn thông báo đẩy cục bộ
       LocalNotificationService.instance.showNotification(
-        title: 'Điểm danh thành công! 🎉',
-        body: 'Hoạt động: ${result.activityName}. Điểm rèn luyện của bạn đã được ghi nhận.',
+        title: 'Điểm danh thành công',
+        body: '${result.activityName} • Đã ghi nhận ĐRL',
       );
     } on ApiException catch (error) {
       setState(() => _message = error.message);
