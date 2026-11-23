@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
@@ -57,10 +58,10 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
 
   String _greeting() {
     final h = DateTime.now().hour;
-    if (h < 11) return 'Chào buổi sáng';
-    if (h < 14) return 'Chào buổi trưa';
-    if (h < 18) return 'Chào buổi chiều';
-    return 'Chào buổi tối';
+    if (h < 11) return tr('Chào buổi sáng', 'Good morning');
+    if (h < 14) return tr('Chào buổi trưa', 'Good afternoon');
+    if (h < 18) return tr('Chào buổi chiều', 'Good afternoon');
+    return tr('Chào buổi tối', 'Good evening');
   }
 
   Future<void> _confirmLogout() async {
@@ -132,8 +133,12 @@ class _GvcnHomeScreenState extends State<GvcnHomeScreen> {
           ],
         ),
         actions: [
+          const Padding(
+            padding: EdgeInsets.only(right: 4),
+            child: Center(child: LanguageToggleChip()),
+          ),
           IconButton(
-            tooltip: 'Chế độ sáng / tối',
+            tooltip: tr('Chế độ sáng / tối', 'Toggle Dark/Light mode'),
             onPressed: () async {
               await ThemeService.instance.toggleTheme();
               if (mounted) setState(() {});

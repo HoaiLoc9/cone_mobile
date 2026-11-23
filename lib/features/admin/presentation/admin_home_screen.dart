@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/smooth_page_route.dart';
@@ -69,19 +70,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildTabNavigator(int index, Widget child) {
+  Widget _buildTabNavigator(int index, Widget Function() childBuilder) {
     return Navigator(
       key: _navigatorKeys[index],
-      onGenerateRoute: (settings) => MaterialPageRoute(builder: (_) => child),
+      onGenerateRoute: (settings) => MaterialPageRoute(
+        builder: (_) => ListenableBuilder(
+          listenable: LocaleService.instance,
+          builder: (_, _) => childBuilder(),
+        ),
+      ),
     );
   }
 
   String _greeting() {
     final h = DateTime.now().hour;
-    if (h < 11) return 'Chào buổi sáng';
-    if (h < 14) return 'Chào buổi trưa';
-    if (h < 18) return 'Chào buổi chiều';
-    return 'Chào buổi tối';
+    if (h < 11) return tr('Chào buổi sáng', 'Good morning');
+    if (h < 14) return tr('Chào buổi trưa', 'Good afternoon');
+    if (h < 18) return tr('Chào buổi chiều', 'Good afternoon');
+    return tr('Chào buổi tối', 'Good evening');
   }
 
   Widget _buildOverviewTab() {
@@ -386,18 +392,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         child: LazyTabStack(
           currentIndex: _selectedIndex,
           tabBuilders: [
-            () => _buildTabNavigator(0, _buildOverviewTab()),
+            () => _buildTabNavigator(0, _buildOverviewTab),
             () => _buildTabNavigator(
                   1,
-                  AdminAppellationRegistrationsScreen(service: _service),
+                  () => AdminAppellationRegistrationsScreen(service: _service),
                 ),
             () => _buildTabNavigator(
                   2,
-                  AdminDrlAssessmentsScreen(service: _service),
+                  () => AdminDrlAssessmentsScreen(service: _service),
                 ),
             () => _buildTabNavigator(
                   3,
-                  AdminAccountScreen(
+                  () => AdminAccountScreen(
                     session: widget.session,
                     onLogout: widget.onLogout,
                   ),
@@ -780,10 +786,10 @@ class _AdminBottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _item(0, Icons.dashboard_rounded, 'Tổng quan'),
-              _item(1, Icons.workspace_premium_rounded, 'Danh hiệu'),
-              _item(2, Icons.fact_check_rounded, 'Duyệt ĐRL'),
-              _item(3, Icons.person_rounded, 'Tài khoản'),
+              _item(0, Icons.dashboard_rounded, tr('Tổng quan', 'Overview')),
+              _item(1, Icons.workspace_premium_rounded, tr('Danh hiệu', 'Awards')),
+              _item(2, Icons.fact_check_rounded, tr('Duyệt ĐRL', 'Conduct')),
+              _item(3, Icons.person_rounded, tr('Tài khoản', 'Account')),
             ],
           ),
         ),

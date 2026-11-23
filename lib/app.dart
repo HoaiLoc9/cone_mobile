@@ -6,6 +6,7 @@ import 'core/config/cone_theme.dart';
 import 'core/network/api_client.dart';
 import 'core/services/biometric_auth_service.dart';
 import 'core/services/local_notification_service.dart';
+import 'core/services/locale_service.dart';
 import 'core/services/theme_service.dart';
 import 'features/admin/data/admin_models.dart';
 import 'features/admin/data/admin_service.dart';
@@ -42,6 +43,8 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
     ApiClient.onSessionExpired = _handleSessionExpired;
     ThemeService.instance.loadTheme();
     ThemeService.instance.addListener(_onThemeChanged);
+    LocaleService.instance.loadLocale();
+    LocaleService.instance.addListener(_onThemeChanged);
     LocalNotificationService.instance.initialize().then((_) {
       LocalNotificationService.instance.requestPermissions();
     });
@@ -332,10 +335,13 @@ class _QldrlAppState extends State<QldrlApp> with WidgetsBindingObserver {
                             size: 16,
                           ),
                           const SizedBox(width: 8),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Đang xem dữ liệu ngoại tuyến (Offline)',
-                              style: TextStyle(
+                              tr(
+                                'Đang xem dữ liệu ngoại tuyến (Offline)',
+                                'Viewing offline cached data',
+                              ),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/services/local_notification_service.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/smooth_page_route.dart';
@@ -327,12 +328,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildTabNavigator(int index, Widget rootWidget) {
+  Widget _buildTabNavigator(int index, Widget Function() rootBuilder) {
     return Navigator(
       key: _navigatorKeys[index],
       onGenerateRoute: (routeSettings) {
         return MaterialPageRoute(
-          builder: (context) => rootWidget,
+          builder: (context) => ListenableBuilder(
+            listenable: LocaleService.instance,
+            builder: (_, _) => rootBuilder(),
+          ),
         );
       },
     );
@@ -390,10 +394,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final user = currentSession.user;
         final hour = DateTime.now().hour;
         final greeting = hour < 11
-            ? 'Chào buổi sáng'
+            ? tr('Chào buổi sáng', 'Good morning')
             : (hour < 14
-                ? 'Chào buổi trưa'
-                : (hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'));
+                ? tr('Chào buổi trưa', 'Good afternoon')
+                : (hour < 18
+                    ? tr('Chào buổi chiều', 'Good afternoon')
+                    : tr('Chào buổi tối', 'Good evening')));
 
         return Stack(
           children: [
@@ -622,11 +628,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: LazyTabStack(
           currentIndex: _currentNavIndex,
           tabBuilders: [
-            () => _buildTabNavigator(0, _buildDashboardScreen()),
-            () => _buildTabNavigator(1, _buildActivitiesScreen()),
-            () => _buildTabNavigator(2, _buildStatsScreen()),
-            () => _buildTabNavigator(3, _buildNotificationsScreen()),
-            () => _buildTabNavigator(4, _buildProfileScreen()),
+            () => _buildTabNavigator(0, _buildDashboardScreen),
+            () => _buildTabNavigator(1, _buildActivitiesScreen),
+            () => _buildTabNavigator(2, _buildStatsScreen),
+            () => _buildTabNavigator(3, _buildNotificationsScreen),
+            () => _buildTabNavigator(4, _buildProfileScreen),
           ],
         ),
       ),
@@ -2146,16 +2152,16 @@ class _AppBottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.home_rounded, 'Trang chủ'),
-              _buildNavItem(1, Icons.calendar_month_outlined, 'Hoạt động'),
-              _buildNavItem(2, Icons.bar_chart_rounded, 'Thống kê'),
+              _buildNavItem(0, Icons.home_rounded, tr('Trang chủ', 'Home')),
+              _buildNavItem(1, Icons.calendar_month_outlined, tr('Hoạt động', 'Activities')),
+              _buildNavItem(2, Icons.bar_chart_rounded, tr('Thống kê', 'Stats')),
               _buildNavItem(
                 3,
                 Icons.notifications_none_rounded,
-                'Thông báo',
+                tr('Thông báo', 'Alerts'),
                 hasBadge: unreadCount > 0,
               ),
-              _buildNavItem(4, Icons.person_outline_rounded, 'Tài khoản'),
+              _buildNavItem(4, Icons.person_outline_rounded, tr('Tài khoản', 'Account')),
             ],
           ),
         ),

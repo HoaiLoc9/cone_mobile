@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/config/app_colors.dart';
+import '../../core/services/locale_service.dart';
 
 enum AppErrorKind {
   network,
@@ -44,13 +45,15 @@ ParsedAppError parseFriendlyError(Object? error, {String? fallbackTitle}) {
       lower.contains('timeout') ||
       lower.contains('timed out') ||
       lower.contains('quá thời gian')) {
-    return const ParsedAppError(
+    return ParsedAppError(
       kind: AppErrorKind.network,
-      title: 'Không thể kết nối mạng',
-      message:
-          'Vui lòng kiểm tra Wi-Fi hoặc dữ liệu di động 4G/5G rồi thử tải lại.',
+      title: tr('Không thể kết nối mạng', 'No internet connection'),
+      message: tr(
+        'Vui lòng kiểm tra Wi-Fi hoặc dữ liệu di động 4G/5G rồi thử tải lại.',
+        'Please check your Wi-Fi or mobile data and try again.',
+      ),
       icon: Icons.wifi_off_rounded,
-      accentColor: Color(0xFFF59E0B),
+      accentColor: const Color(0xFFF59E0B),
     );
   }
 
@@ -61,13 +64,15 @@ ParsedAppError parseFriendlyError(Object? error, {String? fallbackTitle}) {
       lower.contains('internal server') ||
       lower.contains('bad gateway') ||
       lower.contains('service unavailable')) {
-    return const ParsedAppError(
+    return ParsedAppError(
       kind: AppErrorKind.server,
-      title: 'Hệ thống đang tạm bận',
-      message:
-          'Máy chủ đang được bảo trì hoặc quá tải tạm thời. Vui lòng thử lại sau ít phút.',
+      title: tr('Hệ thống đang tạm bận', 'Server is temporarily busy'),
+      message: tr(
+        'Máy chủ đang được bảo trì hoặc quá tải tạm thời. Vui lòng thử lại sau ít phút.',
+        'The server is under maintenance or busy. Please try again in a few minutes.',
+      ),
       icon: Icons.cloud_off_rounded,
-      accentColor: Color(0xFFEF4444),
+      accentColor: const Color(0xFFEF4444),
     );
   }
 
@@ -77,23 +82,28 @@ ParsedAppError parseFriendlyError(Object? error, {String? fallbackTitle}) {
       lower.contains('forbidden') ||
       lower.contains('không có quyền') ||
       lower.contains('hết hạn')) {
-    return const ParsedAppError(
+    return ParsedAppError(
       kind: AppErrorKind.auth,
-      title: 'Không thể xác thực truy cập',
-      message:
-          'Phiên đăng nhập đã hết hạn hoặc tài khoản chưa được cấp quyền xem mục này.',
+      title: tr('Không thể xác thực truy cập', 'Authentication required'),
+      message: tr(
+        'Phiên đăng nhập đã hết hạn hoặc tài khoản chưa được cấp quyền xem mục này.',
+        'Your session has expired or you do not have permission to view this page.',
+      ),
       icon: Icons.lock_outline_rounded,
-      accentColor: Color(0xFF6366F1),
+      accentColor: const Color(0xFF6366F1),
     );
   }
 
   if (lower.contains('404') || lower.contains('not found')) {
-    return const ParsedAppError(
+    return ParsedAppError(
       kind: AppErrorKind.notFound,
-      title: 'Không tìm thấy nội dung',
-      message: 'Dữ liệu bạn yêu cầu có thể đã bị xóa hoặc không còn tồn tại.',
+      title: tr('Không tìm thấy nội dung', 'Content not found'),
+      message: tr(
+        'Dữ liệu bạn yêu cầu có thể đã bị xóa hoặc không còn tồn tại.',
+        'The requested data may have been removed or no longer exists.',
+      ),
       icon: Icons.search_off_rounded,
-      accentColor: Color(0xFF64748B),
+      accentColor: const Color(0xFF64748B),
     );
   }
 
@@ -106,9 +116,12 @@ ParsedAppError parseFriendlyError(Object? error, {String? fallbackTitle}) {
 
   return ParsedAppError(
     kind: AppErrorKind.generic,
-    title: fallbackTitle ?? 'Không thể tải dữ liệu',
+    title: fallbackTitle ?? tr('Không thể tải dữ liệu', 'Unable to load data'),
     message: isTechnical
-        ? 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.'
+        ? tr(
+            'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.',
+            'An unexpected error occurred. Please try again later.',
+          )
         : cleaned,
     icon: Icons.error_outline_rounded,
     accentColor: AppColors.danger,
@@ -124,7 +137,7 @@ class AppErrorView extends StatelessWidget {
     this.icon = Icons.error_outline_rounded,
     this.accentColor = AppColors.danger,
     this.onRetry,
-    this.retryLabel = 'Thử lại',
+    this.retryLabel, 
     this.compact = false,
   });
 
@@ -133,7 +146,7 @@ class AppErrorView extends StatelessWidget {
     Key? key,
     String? fallbackTitle,
     VoidCallback? onRetry,
-    String retryLabel = 'Thử lại',
+    String? retryLabel,
     bool compact = false,
   }) {
     final parsed = parseFriendlyError(error, fallbackTitle: fallbackTitle);
@@ -154,7 +167,7 @@ class AppErrorView extends StatelessWidget {
   final IconData icon;
   final Color accentColor;
   final VoidCallback? onRetry;
-  final String retryLabel;
+  final String? retryLabel;
   final bool compact;
 
   @override
@@ -226,7 +239,7 @@ class AppErrorView extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.refresh_rounded, size: 18),
                   label: Text(
-                    retryLabel,
+                    retryLabel ?? tr('Thử lại', 'Try again'),
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                   ),
                 ),
@@ -289,7 +302,7 @@ class GlobalErrorFallback extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Đã xảy ra sự cố hiển thị',
+                    tr('Đã xảy ra sự cố hiển thị', 'Something went wrong'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16.5,
@@ -299,7 +312,10 @@ class GlobalErrorFallback extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Một thành phần trên trang gặp lỗi bất ngờ. Bạn có thể quay lại hoặc tải lại mục này.',
+                    tr(
+                      'Một thành phần trên trang gặp lỗi bất ngờ. Bạn có thể quay lại hoặc tải lại mục này.',
+                      'A component on this screen encountered an unexpected error. Please go back or reload.',
+                    ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -341,9 +357,9 @@ class GlobalErrorFallback extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                      label: const Text(
-                        'Quay lại',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+                      label: Text(
+                        tr('Quay lại', 'Go back'),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
                   ],

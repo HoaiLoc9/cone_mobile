@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/api_config.dart';
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
@@ -904,6 +905,15 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
+          // Nút chuyển nhanh ngôn ngữ VI / EN ở góc trên phải
+          Positioned(
+            top: 10,
+            right: 16,
+            child: SafeArea(
+              child: LanguageToggleChip(lightOnDark: false),
+            ),
+          ),
+
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -1052,10 +1062,13 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 5),
-        const Text(
-          'Hệ thống Điểm rèn luyện sinh viên',
+        Text(
+          tr(
+            'Hệ thống Điểm rèn luyện sinh viên',
+            'Student Conduct & Activity Portal',
+          ),
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Color(0xFF1E293B),
             fontSize: 14.5,
             fontWeight: FontWeight.w800,
@@ -1077,16 +1090,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.verified_rounded, size: 15, color: Color(0xFF2563EB)),
-              SizedBox(width: 6),
+              const Icon(Icons.verified_rounded, size: 15, color: Color(0xFF2563EB)),
+              const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  'Trường Cao đẳng Kinh tế Đối ngoại',
+                  tr(
+                    'Trường Cao đẳng Kinh tế Đối ngoại',
+                    'College of Foreign Economic Relations',
+                  ),
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF334155),
@@ -1129,23 +1145,23 @@ class _LoginScreenState extends State<LoginScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Đăng nhập',
-                      style: TextStyle(
+                      tr('Đăng nhập', 'Sign In'),
+                      style: const TextStyle(
                         color: Color(0xFF0F172A),
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.4,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 3),
                     Text(
-                      'Chào mừng bạn quay trở lại! 👋',
-                      style: TextStyle(
+                      tr('Chào mừng bạn quay trở lại! 👋', 'Welcome back! 👋'),
+                      style: const TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -1171,8 +1187,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 22),
           _buildInputField3D(
-            label: 'MÃ SINH VIÊN / EMAIL',
-            hint: 'VD: 22714652 hoặc admin@cofer.edu.vn',
+            label: tr('MÃ SINH VIÊN / EMAIL', 'STUDENT ID / EMAIL'),
+            hint: tr('VD: 22714652 hoặc admin@cofer.edu.vn', 'e.g. 22714652 or admin@cofer.edu.vn'),
             icon: Icons.person_outline_rounded,
             controller: identifierController,
             keyboardType: TextInputType.emailAddress,
@@ -1180,8 +1196,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
           _buildInputField3D(
-            label: 'MẬT KHẨU',
-            hint: 'Nhập mật khẩu của bạn',
+            label: tr('MẬT KHẨU', 'PASSWORD'),
+            hint: tr('Nhập mật khẩu của bạn', 'Enter your password'),
             icon: Icons.lock_outline_rounded,
             controller: passwordController,
             obscureText: obscurePassword,
@@ -1218,12 +1234,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Ghi nhớ đăng nhập',
+                  tr('Ghi nhớ đăng nhập', 'Remember me'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF334155),
@@ -1238,9 +1254,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  'Quên mật khẩu?',
-                  style: TextStyle(
+                child: Text(
+                  tr('Quên mật khẩu?', 'Forgot password?'),
+                  style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1311,20 +1327,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Row(
+                      : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'ĐĂNG NHẬP NGAY',
-                              style: TextStyle(
+                              tr('ĐĂNG NHẬP NGAY', 'SIGN IN NOW'),
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded,
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward_rounded,
                                 color: Colors.white, size: 19),
                           ],
                         ),

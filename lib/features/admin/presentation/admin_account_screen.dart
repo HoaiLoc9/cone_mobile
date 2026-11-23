@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/config/app_colors.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../data/admin_models.dart';
 
@@ -68,7 +69,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Tài khoản',
+          tr('Tài khoản', 'Account'),
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: 22,
@@ -190,9 +191,9 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 3. Giao diện
+            // 3. Giao diện & Ngôn ngữ
             _AdminSectionCard(
-              title: 'Giao diện ứng dụng',
+              title: tr('Giao diện & Ngôn ngữ', 'Appearance & Language'),
               icon: Icons.tune_rounded,
               children: [
                 SwitchListTile.adaptive(
@@ -212,7 +213,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                     ),
                   ),
                   title: Text(
-                    'Giao diện Tối (Dark Mode)',
+                    tr('Giao diện Tối (Dark Mode)', 'Dark Mode'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
@@ -221,8 +222,8 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                   ),
                   subtitle: Text(
                     ThemeService.instance.isDarkMode
-                        ? 'Đang bật nền tối'
-                        : 'Đang bật nền sáng',
+                        ? tr('Đang bật nền tối', 'Dark theme enabled')
+                        : tr('Đang bật nền sáng', 'Light theme enabled'),
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.adaptiveTextSecondary,
@@ -232,6 +233,44 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                   activeThumbColor: AppColors.primary,
                   onChanged: (_) async {
                     await ThemeService.instance.toggleTheme();
+                    if (mounted) setState(() {});
+                  },
+                ),
+                Divider(height: 16, thickness: 0.6, color: AppColors.adaptiveBorder),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.language_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    tr('Ngôn ngữ hiển thị', 'Display Language'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: AppColors.adaptiveTextPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    LocaleService.instance.isEnglish
+                        ? 'English (EN)'
+                        : 'Tiếng Việt (VI)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.adaptiveTextSecondary,
+                    ),
+                  ),
+                  trailing: const LanguageToggleChip(),
+                  onTap: () async {
+                    await LocaleService.instance.toggleLocale();
                     if (mounted) setState(() {});
                   },
                 ),
@@ -261,9 +300,9 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                 ),
                 onPressed: _confirmLogout,
                 icon: const Icon(Icons.logout_rounded, size: 19),
-                label: const Text(
-                  'Đăng xuất tài khoản',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
+                label: Text(
+                  tr('Đăng xuất tài khoản', 'Sign Out'),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                 ),
               ),
             ),

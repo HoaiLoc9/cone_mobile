@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/biometric_auth_service.dart';
+import '../../../core/services/locale_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/utils/image_compressor.dart';
@@ -1339,13 +1340,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   subtitle: Text(
-                                    ThemeService.instance.isDarkMode ? 'Đang bật nền tối' : 'Đang bật nền sáng',
+                                    ThemeService.instance.isDarkMode
+                                        ? tr('Đang bật nền tối', 'Dark theme enabled')
+                                        : tr('Đang bật nền sáng', 'Light theme enabled'),
                                     style: TextStyle(fontSize: 12, color: AppColors.adaptiveTextSecondary),
                                   ),
                                   value: ThemeService.instance.isDarkMode,
                                   activeThumbColor: AppColors.primary,
                                   onChanged: (_) async {
                                     await ThemeService.instance.toggleTheme();
+                                    if (mounted) setState(() {});
+                                  },
+                                ),
+                                Divider(height: 20, thickness: 0.6, color: AppColors.adaptiveBorder),
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.language_rounded,
+                                      color: AppColors.primary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    tr('Ngôn ngữ hiển thị', 'Display Language'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
+                                      color: AppColors.adaptiveTextPrimary,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    LocaleService.instance.isEnglish
+                                        ? 'English (EN)'
+                                        : 'Tiếng Việt (VI)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.adaptiveTextSecondary,
+                                    ),
+                                  ),
+                                  trailing: const LanguageToggleChip(),
+                                  onTap: () async {
+                                    await LocaleService.instance.toggleLocale();
                                     if (mounted) setState(() {});
                                   },
                                 ),
@@ -1393,9 +1434,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 onPressed: _confirmAndLogout,
                                 icon: const Icon(Icons.logout_rounded, size: 19),
-                                label: const Text(
-                                  'Đăng xuất tài khoản',
-                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
+                                label: Text(
+                                  tr('Đăng xuất tài khoản', 'Sign Out'),
+                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                                 ),
                               ),
                             ),
