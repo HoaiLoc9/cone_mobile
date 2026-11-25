@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/locale_service.dart';
 import '../data/chatbot_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
@@ -19,21 +20,31 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
 
-  final List<ChatbotMessage> _messages = [
-    const ChatbotMessage(
-      text:
-          'Chào bạn! Mình là trợ lý COne. Bạn đang cần tìm hiểu về điểm rèn luyện, hoạt động hay danh hiệu Sinh viên 5 tốt nào?',
+  late final List<ChatbotMessage> _messages = [
+    ChatbotMessage(
+      text: tr(
+        'Chào bạn! Mình là trợ lý COne. Bạn đang cần tìm hiểu về điểm rèn luyện, hoạt động hay danh hiệu Sinh viên 5 tốt nào?',
+        'Hi there! I\'m the COne AI Assistant. How can I help you with conduct scores, activities, or the 5-Good Student award today?',
+      ),
       isUser: false,
     ),
   ];
 
-  static const _quickPrompts = [
-    '📊 Điểm rèn luyện của mình kỳ này thế nào?',
-    '🎯 Mình còn thiếu tiêu chí nào để lên loại Tốt?',
-    '🎪 Gợi ý hoạt động phong trào phù hợp để cộng điểm',
-    'Cách đăng ký danh hiệu SV5T?',
-    'Quy trình nộp minh chứng?',
-  ];
+  List<String> get _quickPrompts => LocaleService.instance.isEnglish
+      ? const [
+          '📊 How is my conduct score this semester?',
+          '🎯 What missing criteria do I need for Good rank?',
+          '🎪 Suggest activities to boost my conduct score',
+          'How to apply for the 5-Good Student award?',
+          'How to submit activity evidence?',
+        ]
+      : const [
+          '📊 Điểm rèn luyện của mình kỳ này thế nào?',
+          '🎯 Mình còn thiếu tiêu chí nào để lên loại Tốt?',
+          '🎪 Gợi ý hoạt động phong trào phù hợp để cộng điểm',
+          'Cách đăng ký danh hiệu SV5T?',
+          'Quy trình nộp minh chứng?',
+        ];
 
   bool _isSending = false;
 
@@ -83,9 +94,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (!mounted) return;
       setState(() {
         _messages.add(
-          const ChatbotMessage(
-            text:
-                'Hiện mình chưa kết nối được tới máy chủ trợ lý. Bạn thử lại sau ít phút nhé.',
+          ChatbotMessage(
+            text: tr(
+              'Hiện mình chưa kết nối được tới máy chủ trợ lý. Bạn thử lại sau ít phút nhé.',
+              'Unable to connect to the assistant server right now. Please try again in a few minutes.',
+            ),
             isUser: false,
           ),
         );
@@ -146,7 +159,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Trợ lý COne',
+                  tr('Trợ lý COne', 'COne Assistant'),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
@@ -165,7 +178,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      'Sẵn sàng hỗ trợ',
+                      tr('Sẵn sàng hỗ trợ', 'Ready to help'),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -193,8 +206,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 itemCount: _messages.length + (_isSending ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (_isSending && index == _messages.length) {
-                    return const _Bubble(
-                      text: 'Mình đang tìm thông tin cho bạn...',
+                    return _Bubble(
+                      text: tr(
+                        'Mình đang tìm thông tin cho bạn...',
+                        'Looking up the best answer for you...',
+                      ),
                       isUser: false,
                       isTyping: true,
                     );
@@ -266,7 +282,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         color: AppColors.adaptiveTextPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Hỏi bất cứ điều gì về COne...',
+                        hintText: tr(
+                          'Hỏi bất cứ điều gì về COne...',
+                          'Ask anything about COne...',
+                        ),
                         hintStyle: TextStyle(
                           color: AppColors.adaptiveTextSecondary,
                           fontSize: 13.5,
