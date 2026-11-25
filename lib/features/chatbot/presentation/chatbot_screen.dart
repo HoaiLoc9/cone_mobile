@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../core/network/api_exception.dart';
@@ -26,10 +28,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   ];
 
   static const _quickPrompts = [
-    'Cách xét Sinh viên 5 tốt',
-    'Gợi ý hoạt động tăng ĐRL',
-    'Thang điểm xếp loại ĐRL',
-    'Cách gửi minh chứng bù',
+    '📊 Điểm rèn luyện của mình kỳ này thế nào?',
+    '🎯 Mình còn thiếu tiêu chí nào để lên loại Tốt?',
+    '🎪 Gợi ý hoạt động phong trào phù hợp để cộng điểm',
+    'Cách đăng ký danh hiệu SV5T?',
+    'Quy trình nộp minh chứng?',
   ];
 
   bool _isSending = false;
@@ -330,12 +333,13 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = isUser ? Colors.white : AppColors.adaptiveTextPrimary;
+    final hasTable = !isUser && RegExp(r'^\s*\|.+\|\s*$', multiLine: true).hasMatch(text);
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.82,
+          maxWidth: MediaQuery.of(context).size.width * (hasTable ? 0.94 : 0.82),
         ),
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
@@ -367,8 +371,8 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-/// Hiển thị nội dung Chatbot sạch đẹp: tự động chuyển **in đậm**, *in nghiêng*,
-/// tiêu đề ### và gạch đầu dòng thành văn bản có định dạng — không bao giờ lộ dấu * thô.
+/// Hiển thị nội dung Chatbot sạch đẹp: tự động chuyển bảng Markdown, link [text](url),
+/// **in đậm**, *in nghiêng*, tiêu đề ### và gạch đầu dòng — không bao giờ lộ dấu * thô.
 class _FormattedMessageText extends StatelessWidget {
   const _FormattedMessageText({
     required this.text,
@@ -379,6 +383,107 @@ class _FormattedMessageText extends StatelessWidget {
   final String text;
   final Color baseColor;
   final bool isMuted;
+
+  bool _isTableLine(String line) {
+    final t = line.trim();
+    return t.startsWith('|') && t.endsWith('|') && t.length > 2;
+  }
+
+  bool _isTableSeparator(String line) {
+    return RegExp(r'^\|[\s\-:|]+\|$').hasMatch(line.trim());
+  }
+
+  List<String> _splitTableCells(String line) {
+    final t = line.trim();
+    final inner = t.substring(1, t.length - 1);
+    return inner.split('|').map((c) => c.trim()).toList();
+  }
+
+  Widget _buildMarkdownTable(List<String> rawLines) {
+    final rows = <List<String>>[];
+    int headerRowIndex = -1;
+
+    for (final raw in rawLines) {
+      if (_isTableSeparator(raw)) {
+        if (rows.isNotEmpty && headerRowIndex == -1) {
+          headerRowIndex = 0;
+        }
+        continue;
+      }
+      rows.add(_splitTableCells(raw));
+    }
+
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final colCount = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
+    if (colCount == 0) return const SizedBox.shrink();
+
+    final isDark = AppColors.isDark;
+    final headerBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
+    final zebraBg = isDark
+        ? Colors.white.withValues(alpha: 0.03)
+        : const Color(0xFFF8FAFC);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.adaptiveCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.adaptiveBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Table(
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          border: TableBorder.symmetric(
+            inside: BorderSide(color: AppColors.adaptiveBorder, width: 0.7),
+          ),
+          children: [
+            for (var r = 0; r < rows.length; r++)
+              TableRow(
+                decoration: BoxDecoration(
+                  color: r == headerRowIndex
+                      ? headerBg
+                      : (r.isEven ? zebraBg : Colors.transparent),
+                ),
+                children: [
+                  for (var c = 0; c < colCount; c++)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
+                      child: Text.rich(
+                        TextSpan(
+                          style: TextStyle(
+                            fontSize: 12.2,
+                            height: 1.35,
+                            fontWeight: r == headerRowIndex
+                                ? FontWeight.w800
+                                : FontWeight.w500,
+                            color: baseColor,
+                          ),
+                          children: _parseInlineMarkdown(
+                            c < rows[r].length ? rows[r][c] : '',
+                            TextStyle(
+                              fontSize: 12.2,
+                              height: 1.35,
+                              fontWeight: r == headerRowIndex
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                              color: baseColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +499,20 @@ class _FormattedMessageText extends StatelessWidget {
         continue;
       }
 
-      // Tiêu đề markdown (# / ## / ###)
+      // 1. Gom nhóm bảng Markdown liên tiếp
+      if (_isTableLine(line)) {
+        final tableLines = <String>[line];
+        while (i + 1 < lines.length && _isTableLine(lines[i + 1])) {
+          i++;
+          tableLines.add(lines[i].trimRight());
+        }
+        if (tableLines.length >= 2) {
+          widgets.add(_buildMarkdownTable(tableLines));
+          continue;
+        }
+      }
+
+      // 2. Tiêu đề markdown (# / ## / ###)
       var isHeading = false;
       final headingMatch = RegExp(r'^#{1,4}\s+').firstMatch(line.trimLeft());
       if (headingMatch != null) {
@@ -402,7 +520,7 @@ class _FormattedMessageText extends StatelessWidget {
         line = line.trimLeft().substring(headingMatch.end);
       }
 
-      // Gạch đầu dòng (- hoặc * hoặc •)
+      // 3. Gạch đầu dòng (- hoặc * hoặc •)
       var isBullet = false;
       final bulletMatch = RegExp(r'^[-*•]\s+').firstMatch(line.trimLeft());
       if (!isHeading && bulletMatch != null) {
@@ -467,7 +585,7 @@ class _FormattedMessageText extends StatelessWidget {
 
   List<InlineSpan> _parseInlineMarkdown(String input, TextStyle baseStyle) {
     final spans = <InlineSpan>[];
-    final pattern = RegExp(r'\*\*(.+?)\*\*|\*(.+?)\*');
+    final pattern = RegExp(r'\[([^\]]+)\]\(([^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*');
     var lastEnd = 0;
 
     for (final match in pattern.allMatches(input)) {
@@ -477,9 +595,31 @@ class _FormattedMessageText extends StatelessWidget {
           spans.add(TextSpan(text: plain));
         }
       }
-      final boldText = match.group(1);
-      final italicText = match.group(2);
-      if (boldText != null) {
+      final linkLabel = match.group(1);
+      final linkUrl = match.group(2);
+      final boldText = match.group(3);
+      final italicText = match.group(4);
+
+      if (linkLabel != null && linkUrl != null) {
+        final targetUri = Uri.tryParse(linkUrl.trim());
+        spans.add(
+          TextSpan(
+            text: linkLabel.replaceAll('*', ''),
+            style: baseStyle.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              decoration: TextDecoration.underline,
+              decorationColor: AppColors.primary,
+            ),
+            recognizer: targetUri == null
+                ? null
+                : (TapGestureRecognizer()
+                  ..onTap = () {
+                    launchUrl(targetUri, mode: LaunchMode.externalApplication);
+                  }),
+          ),
+        );
+      } else if (boldText != null) {
         spans.add(
           TextSpan(
             text: boldText.replaceAll('*', ''),

@@ -312,8 +312,8 @@ class _AdminChatbotKnowledgeScreenState
                           const SizedBox(height: 4),
                           Text(
                             tr(
-                              'Tài liệu PDF, DOCX, TXT, MD nạp tại đây sẽ được nhúng vào ChromaDB để Chatbot trên cả Web và App Mobile cùng trả lời ngay.',
-                              'PDF, DOCX, TXT, MD files uploaded here are embedded into ChromaDB for both Web & Mobile Chatbots.',
+                              'Tài liệu PDF, DOCX, TXT, MD nạp tại đây sẽ được xử lý vào kho tri thức chung (RAG/BM25) để Chatbot trên cả Web và App Mobile cùng trả lời ngay.',
+                              'PDF, DOCX, TXT, MD files uploaded here are indexed into the shared AI knowledge base (RAG/BM25) for both Web & Mobile Chatbots.',
                             ),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.85),
