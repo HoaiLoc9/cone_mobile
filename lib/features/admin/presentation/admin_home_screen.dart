@@ -11,6 +11,7 @@ import 'admin_account_screen.dart';
 import 'admin_activities_screen.dart';
 import 'admin_appellation_registrations_screen.dart';
 import 'admin_business_list_screen.dart';
+import 'admin_chatbot_knowledge_screen.dart';
 import 'admin_drl_assessments_screen.dart';
 import 'admin_students_screen.dart';
 
@@ -274,6 +275,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                     physics: const BouncingScrollPhysics(),
                                     clipBehavior: Clip.none,
                                     children: [
+                                      _AdminCircleAction(
+                                        icon: Icons.psychology_rounded,
+                                        label: tr('Train AI', 'Train AI'),
+                                        onTap: () => _push(
+                                          AdminChatbotKnowledgeScreen(
+                                            service: _service,
+                                          ),
+                                        ),
+                                      ),
                                       _AdminCircleAction(
                                         icon: Icons.report_problem_outlined,
                                         label: 'Khiếu nại',

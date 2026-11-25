@@ -349,6 +349,87 @@ class AdminService {
       body: {'admin_note': note},
     );
   }
+
+  /// Lấy danh sách tài liệu tri thức đã train cho AI Chatbot (đồng bộ với Web)
+  Future<List<ChatbotKnowledgeDoc>> chatbotDocuments() async {
+    final data = await _apiClient.get('/mobile/admin/chatbot/documents');
+    final payload = data['data'] as Map<String, dynamic>? ?? {};
+    final rawItems = payload['items'] as List? ?? const [];
+    return rawItems
+        .whereType<Map>()
+        .map((e) => ChatbotKnowledgeDoc.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  /// Upload & train tài liệu mới (PDF, DOCX, TXT, MD) vào kho tri thức AI Chatbot
+  Future<String> uploadChatbotDocument({
+    required String filename,
+    required String base64Content,
+  }) async {
+    final data = await _apiClient.post(
+      '/mobile/admin/chatbot/upload',
+      body: {
+        'file_base64': {
+          'name': filename,
+          'content_base64': base64Content,
+        },
+      },
+    );
+    if (data['success'] != true) {
+      throw ApiException(
+        data['message']?.toString() ?? 'Không thể train tài liệu.',
+      );
+    }
+    return data['message']?.toString() ?? 'Đã train tài liệu thành công.';
+  }
+
+  /// Gỡ tài liệu tri thức khỏi kho AI Chatbot
+  Future<String> deleteChatbotDocument({
+    required String sourceKey,
+    required String filename,
+  }) async {
+    final encodedSource = Uri.encodeComponent(sourceKey);
+    final encodedFile = Uri.encodeComponent(filename);
+    final data = await _apiClient.delete(
+      '/mobile/admin/chatbot/documents/$encodedSource/$encodedFile',
+    );
+    if (data['success'] != true) {
+      throw ApiException(
+        data['message']?.toString() ?? 'Không thể gỡ tài liệu.',
+      );
+    }
+    return data['message']?.toString() ?? 'Đã gỡ tài liệu thành công.';
+  }
+}
+
+class ChatbotKnowledgeDoc {
+  const ChatbotKnowledgeDoc({
+    required this.name,
+    required this.source,
+    required this.sourceKey,
+    required this.size,
+  });
+
+  final String name;
+  final String source;
+  final String sourceKey;
+  final int size;
+
+  String get formattedSize {
+    if (size <= 0) return '';
+    if (size < 1024) return '$size B';
+    if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(1)} KB';
+    return '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+
+  factory ChatbotKnowledgeDoc.fromJson(Map<String, dynamic> json) {
+    return ChatbotKnowledgeDoc(
+      name: _text(json['name']),
+      source: _text(json['source']),
+      sourceKey: _text(json['source_key']),
+      size: (json['size'] as num?)?.toInt() ?? 0,
+    );
+  }
 }
 
 class AdminBusinessItem {
